@@ -1,2 +1,19 @@
-<h1>Transactions#show</h1>
-<p>Find me in app/views/transactions/show.html.erb</p>
+<div>
+<%= link_to transactions_path, class: 'bg-black text-white text-decoration-none p-2' do %>
+    <i class='fa-solid fa-circle-left'></i>volta
+  <% end %>
+<h1>transactions#show</h1>
+<p>R$<%= @transaction.amount %></p>
+<p>D: <%= @transaction.description %></p>
+<p><%= @transaction.date %></p>
+<p>R/P: <%= @transaction.to_whom %></p>
+<p>metodo:<%= @transaction.payment_method %></p>
+<p>Conta:<%= @transaction.account.name %>-<%= @transaction.account.bank %></p>
+<p>Categoria:<%= @transaction.category.name %></p>
+<%= link_to edit_transaction_path(@transaction), class: '' do %>
+  <%= render ButtonComponent.new(label: "Edit") %>
+  <% end %>
+<%= link_to transaction_path(@transaction), data: { turbo_method: :delete , turbo_confirm: "Tem certeza que deseja apagar esta conta?" }, class: '' do %>
+ <%= render ButtonComponent.new(label: "Apagar") %>
+<% end %>
+</div>
