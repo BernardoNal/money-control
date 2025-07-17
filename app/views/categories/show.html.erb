@@ -1,2 +1,16 @@
+<div>
+<%= link_to categories_path, class: 'bg-black text-white text-decoration-none p-2' do %>
+    <i class='fa-solid fa-circle-left'></i>volta
+  <% end %>
 <h1>Categories#show</h1>
-<p>Find me in app/views/categories/show.html.erb</p>
+<p style="background-color: <%= @category.color %>; color: white;"><%= @category.name %>- <%= @category.icon %></p>
+<p><%= @category.is_income ? "Entrada" : "Saída" %></p>
+<p>criado:<%= @category&.user&.name %></p>
+
+<%= link_to edit_category_path(@category), class: '' do %>
+  <%= render ButtonComponent.new(label: "Edit") %>
+  <% end %>
+<%= link_to category_path(@category), data: { turbo_method: :delete , turbo_confirm: "Tem certeza que deseja apagar esta conta?" }, class: '' do %>
+ <%= render ButtonComponent.new(label: "Apagar") %>
+<% end %>
+</div>
