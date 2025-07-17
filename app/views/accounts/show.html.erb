@@ -1,0 +1,19 @@
+<div>
+<%= link_to accounts_path, class: 'bg-black text-white text-decoration-none p-2' do %>
+    <i class='fa-solid fa-circle-left'></i>volta
+  <% end %>
+<h1>Accounts#show</h1>
+<p><%= @account.name %></p>
+<p><%= @account.bank %></p>
+<p><%= @account.initial_balance %></p>
+<p>cartao</p>
+<p>tipo:<%= @account.card_type %></p>
+<p>Nº:<%= @account.last_digits %></p>
+<p>limite:<%= @account.limit %></p>
+<%= link_to edit_account_path(@account), class: '' do %>
+  <%= render ButtonComponent.new(label: "Edit") %>
+  <% end %>
+<%= link_to account_path(@account), data: { turbo_method: :delete , turbo_confirm: "Tem certeza que deseja apagar esta conta?" }, class: '' do %>
+ <%= render ButtonComponent.new(label: "Apagar") %>
+<% end %>
+</div>

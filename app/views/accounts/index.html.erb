@@ -1,0 +1,12 @@
+<div>
+<h1>Accounts#index</h1>
+<%@accounts.each  do |account| %>
+<p><%= account.name %>-<%= account.bank %></p>
+<%= link_to "acessar",account_path(account), class: "text-red-700 " %>
+<% end %>
+<p>
+<%= link_to new_account_path() do %>
+  <%= render ButtonComponent.new(label: "Criar Conta") %>
+  <% end %>
+</p>
+</div>

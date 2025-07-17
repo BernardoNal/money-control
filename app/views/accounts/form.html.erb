@@ -1,0 +1,46 @@
+
+<div class="container  mt-4">
+  <%= link_to accounts_path, class: 'bg-black text-white text-decoration-none p-2' do %>
+    <i class='fa-solid fa-circle-left'></i>volta
+  <% end %>
+  <h1 class="pb-3 text-center"><%= @account.persisted? ? 'Editar Conta' : 'Nova Conta' %></h1>
+  <div class="mx-3">
+    <%= form_with model: @account, local: true do |f| %>
+      <div class="grid grid-cols-3">
+        <div class="mx-auto">
+          <%= f.label :name, "Nome", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.text_field :name,
+                          class: "m-2 border border-gray-400 text-gray-900 text-sm rounded-lg block  p-2.5 ",
+                          placeholder: "Principal, CC, ...", required: true %>
+        </div>
+        <div class="mx-auto">
+          <%= f.label :bank, "Banco", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.text_field :bank, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "BB, C6, Nubank,...", required: true  %>
+        </div>
+        <div class="mx-auto">
+          <%= f.label :initial_balance, "Saldo inicial", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.number_field :initial_balance, step: 0.01, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "0,00", required: true%>
+        </div>
+          <div class="mx-auto">
+          <%= f.label :card_type, "Categoria do Cartão", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.text_field :card_type, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "Gold,..."  %>
+        </div>
+        <div class="mx-auto">
+          <%= f.label :last_digits, "Ultimos digitos", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.text_field :last_digits, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "XXXX"  %>
+        </div>
+        <div class="mx-auto">
+          <%= f.label :limit, "Limite no cartão", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.number_field :limit, step: 0.01, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "100,00"%>
+        </div>
+          <div class="mx-auto">
+          <%= f.label :due_day, "Data de vencimento", class: "block mb-2 text-sm font-medium text-gray-900 " %>
+          <%= f.date_field :due_day, step: 0.01, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "100,00"%>
+        </div>
+      <div class="col-span-3 mx-auto my-2">
+        <%= f.button :submit, class: "text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300  rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 " %>
+      </div>
+      </div>
+    <% end %>
+  </div>
+</div>

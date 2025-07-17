@@ -1,0 +1,12 @@
+<div>
+<h1>transações</h1>
+<%@transactions.each  do |transaction| %>
+<p><%= transaction.amount %>-<%= transaction.description %></p>
+<%= link_to "acessar",transaction_path(transaction), class: "text-red-700 " %>
+<% end %>
+<p>
+<%= link_to new_transaction_path() do %>
+  <%= render ButtonComponent.new(label: "Adicionar transação") %>
+  <% end %>
+</p>
+</div>
