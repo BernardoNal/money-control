@@ -1,3 +1,6 @@
+ <%= link_to destroy_user_session_path, data: {turbo_method: :delete}, class: "dropdown-item" do %>
+              <i class="fa-solid fa-right-from-bracket"></i> Log Out
+              <% end %>
 <div>
 <h1>transações</h1>
 <%@transactions.each  do |transaction| %>
