@@ -1,29 +1,29 @@
 <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto ">
 
  <div class="w-full bg-gray-800 text-white rounded-lg shadow p-6 ">
-  <h1 class="mb-5 text-center ">Criar Usuário</h1>
+  <h1 class="mb-5 text-center">Criar Usuário</h1>
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
       <div class="m-5">
-          <%= f.label :email, class: "block   font-medium" %>
-          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm rounded-lg p-2.5" %>
+          <%= f.label :email, class: "block" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm p-2.5" %>
         </div>
 
       <div class="m-5">
-        <%= f.label :password, class: "block   font-medium" %>
+        <%= f.label :password, class: "block" %>
         <p class="text-sm">
         <% if @minimum_password_length %>
         <em>(<%= @minimum_password_length %> characters minimum)</em>
         <% end %><br />
 
         </p>
-        <%= f.password_field :password, autocomplete: "new-password", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm rounded-lg p-2.5" %>
+        <%= f.password_field :password, autocomplete: "new-password", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm p-2.5" %>
       </div>
 
       <div class="m-5">
-        <%= f.label :password_confirmation, class: "block   font-medium" %>
-        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "w-full bg-gray-400 border border-gray-400 m-2 text-sm rounded-lg p-2.5" %>
+        <%= f.label :password_confirmation, class: "block" %>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "w-full bg-gray-400 border border-gray-400 m-2 text-sm p-2.5" %>
       </div>
 
       <div class="text-center m-4">
@@ -31,7 +31,7 @@
       </div>
     <% end %>
 
-<div class = "text-center font-medium  hover:underline m-2">
+<div class = "text-center m-2">
     <%= render "devise/shared/links" %>
 
 </div>
