@@ -7,19 +7,22 @@
       <h2 class="self-center whitespace-nowrap text-white">MoneyControl</h2>
   </a>
   <div class="flex items-center order-2 space-x-0 ">
-     <el-dropdown class="relative ml-3">
-          <button class="relative flex rounded-full bg-gray-800 text-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800">
-            <span class="absolute -inset-1.5"></span>
-            <span class="sr-only">Open user menu</span>
-            <img src="app/assets/images/sem fto.jpg" alt="" class="size-8 rounded-full" />
-          </button>
+     <div class="relative ml-3">
+      <button id="user-menu-button" type="button" class="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800" onclick="document.getElementById('user-dropdown').classList.toggle('hidden')">
+        <p class="text-gray-700"><%= current_user&.name %></p>
+        <img class="size-8 rounded-full" src="<%= asset_path('sem_foto.jpg') %>" alt="">
+      </button>
 
-          <el-menu anchor="bottom end" popover class="w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition transition-discrete [--anchor-gap:--spacing(2)] focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in">
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Your Profile</a>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Settings</a>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 focus:bg-gray-100 focus:outline-hidden">Sign out</a>
-          </el-menu>
-        </el-dropdown>
+      <div id="user-dropdown" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+        <%= link_to edit_user_registration_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+              <i class="fa-solid fa-user"></i> </i> Minha Conta
+              <% end %>
+         <%= link_to destroy_user_session_path, data: {turbo_method: :delete}, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" do %>
+              <i class="fa-solid fa-right-from-bracket"></i> Sair
+              <% end %>
+      </div>
+    </div>
+
   </div>
   <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
     <ul class="flex font-medium p-0 mt-0 border rounded-lg  flex-row">
