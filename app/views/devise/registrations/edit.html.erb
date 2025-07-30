@@ -11,6 +11,11 @@
         <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm p-2.5" %>
       </div>
 
+      <div class="m-5">
+        <%= f.label :name, class: "block" %>
+        <%= f.text_field :name, autofocus: true, autocomplete: "name", class: "w-full bg-gray-50 text-gray-900 border border-gray-400 m-2 text-sm p-2.5" %>
+      </div>
+
     <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
       <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
     <% end %>
