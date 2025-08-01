@@ -48,6 +48,7 @@ gem "bootsnap", require: false
 gem 'devise'
 gem 'tailwindcss-rails'
 gem 'view_component'
+gem "font-awesome-sass"
 
 
 

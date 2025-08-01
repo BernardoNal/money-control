@@ -9,4 +9,11 @@ class Account < ApplicationRecord
 
   # Validação de comprimento
   validates :last_digits, length: { minimum: 4,maximum: 4 }, allow_nil: true
+
+  def total_balance
+    value = initial_balance.to_f + transactions.sum(:amount)
+     ActionController::Base.helpers.number_with_precision(value, precision: 2, separator: ",", delimiter: ".")
+  end
+  private
+
 end
