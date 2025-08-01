@@ -1,9 +1,9 @@
 <div class="container">
   <h1 class="text-center">Minhas Contas
-    <%= link_to new_account_path(), class: "" do %>
-      <%= render ButtonComponent.new(label: "Criar Conta") %>
+    <%= link_to new_account_path(), class: "rounded-full" do %>
+      <%= render ButtonComponent.new(label: "+") %>
       <% end %>
-
+<i class="fa-solid fa-circle-plus"></i>
   </h1>
 
 
@@ -12,7 +12,14 @@
       <div class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm ">
         <div class="p-5">
           <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 "><%= account.name %> - <%= account.bank %></h5>
-          <p class="mb-3 font-normal text-gray-700 ">Saldo Total: R$---</p>
+          <p class="mb-3 font-normal text-gray-700 ">Saldo Total: R$ <%= account.total_balance %></p>
+          <p class ="text-gray-700">Últimas Transações
+            <ul>
+              <% account.transactions.order(created_at: :desc).limit(5).each do |transaction| %>
+                <li><%= transaction.description %> : <%= content_tag :span, number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: "."), class: transaction.amount.negative? ? "text-red-600" : "text-green-600" %></li>
+              <% end %>
+            </ul>
+          </p>
           <%= link_to account_path(account), class: "inline-flex items-center px-3 py-2  text-center text-white bg-blue-600 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 " do %>
             Ver mais
             <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">

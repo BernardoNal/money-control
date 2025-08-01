@@ -35,15 +35,17 @@ class TransactionsController < ApplicationController
   def update
     @categories = Category.all
     @account = Account.first
-    @transaction = Transaction.new(transaction_params)
+    @transaction = Transaction.find(params[:id])
     @transaction.account = @account
-    if @transaction.save
+
+    if @transaction.update(transaction_params)
+      flash[:alert] = "Transação atualizada com sucesso."
       redirect_to transaction_path(@transaction)
-      flash[:alert] = "Conta alterada com sucesso."
     else
       render :edit, status: :unprocessable_entity
     end
   end
+
 
   def destroy
     @transaction.destroy
