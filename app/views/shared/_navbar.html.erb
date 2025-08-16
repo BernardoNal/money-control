@@ -2,9 +2,9 @@
 
 <nav class="border-gray-200 bg-gray-900">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-      <%= link_to root_path, class: "flex items-center space-x-3" do %>
+      <%= link_to root_path, class: "flex items-center space-x-3 text-gray-400 hover:underline" do %>
         <img src="<%= asset_path('$$$.png') %>" class="h-8" alt="Flowbite Logo" />
-        <h2 class="self-center italic text-white">MoneyControl</h2>
+        <h2 class="self-center italic">MoneyControl</h2>
       <% end %>
   <div class="flex items-center order-2 space-x-0 ">
     <% if current_user.presence %>
@@ -27,18 +27,18 @@
 
   </div>
   <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
-    <ul class="flex font-medium p-0 mt-0 border rounded-lg  flex-row">
+    <ul class="flex font-medium p-0 mt-0  flex-row">
       <li>
-        <%= link_to "Home",root_path(), class: "block py-2 px-3 text-gray-500 rounded-sm hover:bg-gray-100 " %>
+        <%= link_to "Home",root_path(), class: "block py-2 px-3 text-gray-400 rounded-sm hover:bg-gray-600 " %>
       </li>
       <li>
-        <%= link_to "Contas",accounts_path(), class: "block py-2 px-3 text-gray-500 rounded-sm hover:bg-gray-100 " %>
+        <%= link_to "Contas",accounts_path(), class: "block py-2 px-3 text-gray-400 rounded-sm hover:bg-gray-600 " %>
       </li>
       <li>
-        <%= link_to "Transações",transactions_path(), class: "block py-2 px-3 text-gray-500 rounded-sm hover:bg-gray-100 " %>
+        <%= link_to "Transações",transactions_path(), class: "block py-2 px-3 text-gray-400 rounded-sm hover:bg-gray-600 " %>
       </li>
       <li>
-       <%= link_to "Categorias",categories_path(), class: "block py-2 px-3 text-gray-500 rounded-sm hover:bg-gray-100 " %>
+       <%= link_to "Categorias",categories_path(), class: "block py-2 px-3 text-gray-400 rounded-sm hover:bg-gray-600 " %>
       </li>
     </ul>
   </div>
