@@ -1,13 +1,55 @@
 
-<div>
-<h1>transações</h1>
-<%@transactions.each  do |transaction| %>
-<p><%= transaction.amount %>-<%= transaction.description %></p>
-<%= link_to "acessar",transaction_path(transaction), class: "text-red-700 " %>
-<% end %>
-<p>
-<%= link_to new_transaction_path() do %>
-  <%= render ButtonComponent.new(label: "Adicionar transação") %>
-  <% end %>
-</p>
+<div class ="container">
+  <h1 class="text-center">Transações
+    <%= link_to new_transaction_path(), class: "text-gray-600" do %>
+        <i class="fa-solid fa-circle-plus"></i>
+        <% end %>
+  </h1>
+  <h3 class="text-center text-gray-700">Últimas Transações</h3>
+  <div class="mt-4 relative overflow-x-auto">
+      <table class="w-full text-left text-gray-400">
+          <thead class="uppercase bg-gray-600 ">
+              <tr>
+                  <th scope="col" class="px-6 py-3">
+                      Descrição
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    Valor
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+                    Data
+                  </th>
+                  <th scope="col" class="px-6 py-3">
+
+                  </th>
+              </tr>
+          </thead>
+          <tbody>
+            <%@transactions.each  do |transaction| %>
+              <tr class="border-b bg-gray-800 border-gray-700 ">
+                  <th scope="row" class="px-6 py-4 font-medium  whitespace-nowrap text-white">
+                    <%= transaction.description %>
+                  </th>
+                  <td class="px-6 py-4">
+                    <%= content_tag :span, number_to_currency(transaction.amount, unit: "R$", separator: ",", delimiter: "."), class: transaction.amount.negative? ? "text-red-600" : "text-green-600" %>
+                  </td>
+                  <td class="px-6 py-4 text-white">
+                    <%= transaction.date.strftime("%d/%m/%Y") %>
+                  </td>
+                  <td class="px-6 py-4">
+                    <%= link_to transaction_path(transaction), class: "text-gray-400" do %>
+                      <i class="fa-solid fa-eye"></i>
+                    <% end %>
+                    <%= link_to edit_transaction_path(transaction), class: 'text-green-600 mx-2' do %>
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    <% end %>
+                    <%= link_to transaction_path(transaction), data: { turbo_method: :delete , turbo_confirm: "Tem certeza que deseja apagar esta transação?" }, class: 'text-red-600' do %>
+                      <i class="fa-solid fa-trash"></i>
+                    <% end %>
+                  </td>
+              </tr>
+            <% end %>
+          </tbody>
+      </table>
+  </div>
 </div>
