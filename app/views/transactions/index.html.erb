@@ -6,6 +6,8 @@
         <% end %>
   </h1>
   <h3 class="text-center text-gray-700">Últimas Transações</h3>
+  <% total_transactions = 10 %>
+  <% offset = params[:set].to_i % total_transactions == 0 ? params[:set].to_i : 0 %>
   <div class="mt-4 relative overflow-x-auto">
       <table class="w-full text-left text-gray-400">
           <thead class="uppercase bg-gray-600 ">
@@ -25,7 +27,7 @@
               </tr>
           </thead>
           <tbody>
-            <%@transactions.each  do |transaction| %>
+            <%@transactions.limit(total_transactions).offset(offset).each  do |transaction| %>
               <tr class="border-b bg-gray-800 border-gray-700 ">
                   <th scope="row" class="px-6 py-4 font-medium  whitespace-nowrap text-white">
                     <%= transaction.description %>
@@ -52,4 +54,17 @@
           </tbody>
       </table>
   </div>
+  <p class="text-right text-gray-700  mt-2 text-lg">
+    <% if offset > 0 %>
+      <%= link_to transactions_path(request.query_parameters.merge(set: offset - total_transactions)), class: " text-gray-700" do %>
+        <i class="fa-solid fa-arrow-left"></i>
+      <% end %>
+    <% end %>
+    Página <%=(offset/total_transactions)+1 %>
+    <% if offset+total_transactions < @transactions.count %>
+      <%= link_to transactions_path(request.query_parameters.merge(set: offset + total_transactions)), class: " text-gray-700" do %>
+        <i class="fa-solid fa-arrow-right"></i>
+      <% end %>
+    <% end %>
+  </p>
 </div>
