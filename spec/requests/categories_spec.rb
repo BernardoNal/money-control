@@ -60,4 +60,14 @@ RSpec.describe "Categories", type: :request do
       expect(category.color).to eq("#ff6600")
     end
   end
+
+  describe "DELETE /destroy" do
+    it "removes the category and redirects to categories index" do
+      expect do
+        delete category_path(category)
+      end.to change(Category, :count).by(-1)
+
+      expect(response).to redirect_to(categories_path)
+    end
+  end
 end

@@ -42,7 +42,7 @@ class CategoriesController < ApplicationController
     @category.destroy
     flash[:alert] = "Categoria excluída com sucesso."
 
-    redirect_to categorys_path()
+    redirect_to categories_path
   end
 
   private
