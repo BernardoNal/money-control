@@ -30,15 +30,11 @@ class AccountsController < ApplicationController
   end
 
   def update
-    # @user = current_user
-     @user = User.first
-    @account = Account.new(account_params)
-    @account.user = @user
-    if @account.save
+    if @account.update(account_params)
       redirect_to account_path(@account)
       flash[:alert] = "Conta alterada com sucesso."
     else
-      render :edit, status: :unprocessable_entity
+      render :form, status: :unprocessable_entity
     end
   end
 
