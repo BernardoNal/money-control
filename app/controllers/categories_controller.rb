@@ -30,13 +30,11 @@ class CategoriesController < ApplicationController
   end
 
   def update
-    @category = Category.new(category_params)
-    @category.user = @user
-    if @category.save
+    if @category.update(category_params)
       redirect_to category_path(@category)
       flash[:alert] = "Categoria alterada com sucesso."
     else
-      render :edit, status: :unprocessable_entity
+      render :form, status: :unprocessable_entity
     end
   end
 
