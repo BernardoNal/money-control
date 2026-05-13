@@ -3,9 +3,19 @@
   <%= link_to transactions_path, class: 'bg-black text-white text-decoration-none p-2' do %>
     <i class='fa-solid fa-circle-left'></i>volta
   <% end %>
-  <h1 class="pb-3 text-center"><%= @transaction.persisted? ? 'Editar Conta' : 'Nova Conta' %></h1>
+  <h1 class="pb-3 text-center"><%= @transaction.persisted? ? 'Editar Transação' : 'Nova Transação' %></h1>
   <div class="mx-3">
     <%= form_with model: @transaction, local: true do |f| %>
+      <% if @transaction.errors.any? %>
+        <div class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">
+          <h2 class="font-semibold">Não foi possível salvar a transação:</h2>
+          <ul class="mt-2 list-disc pl-5">
+            <% @transaction.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
       <div class="grid grid-cols-3">
         <div class="mx-auto">
           <%= f.label :amount, "Valor", class: "block mb-2 text-sm font-medium text-gray-900 " %>

@@ -23,7 +23,7 @@ class TransactionsController < ApplicationController
       redirect_to transaction_path(@transaction)
       flash[:alert] = "Conta criada com sucesso."
     else
-      render :new, status: :unprocessable_entity
+      render :form, status: :unprocessable_entity
     end
   end
 
@@ -42,7 +42,7 @@ class TransactionsController < ApplicationController
       flash[:alert] = "Transação atualizada com sucesso."
       redirect_to transaction_path(@transaction)
     else
-      render :edit, status: :unprocessable_entity
+      render :form, status: :unprocessable_entity
     end
   end
 
