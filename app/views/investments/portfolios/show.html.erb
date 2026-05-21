@@ -1,0 +1,21 @@
+<div class="container mt-4">
+  <%= link_to investments_portfolios_path, class: "bg-black text-white text-decoration-none p-2" do %>
+    <i class="fa-solid fa-circle-left"></i>volta
+  <% end %>
+
+  <div class="mt-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <h1 class="text-2xl font-bold text-gray-900"><%= @portfolio.name %></h1>
+    <p class="mt-2 text-gray-600">Responsavel: <%= @portfolio.user.name %></p>
+    <p class="text-gray-600">Criado em: <%= l(@portfolio.created_at.to_date) %></p>
+
+    <div class="mt-4 flex gap-3">
+      <%= link_to edit_investments_portfolio_path(@portfolio) do %>
+        <%= render ButtonComponent.new(label: "Edit") %>
+      <% end %>
+
+      <%= link_to investments_portfolio_path(@portfolio), data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar este portfolio?" } do %>
+        <%= render ButtonComponent.new(label: "Apagar") %>
+      <% end %>
+    </div>
+  </div>
+</div>

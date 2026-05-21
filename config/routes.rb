@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   resources :accounts
   resources :categories
   resources :transactions
+  namespace :investments do
+    resources :portfolios
+  end
 
   root to: "transactions#dashboard"
   devise_for :users

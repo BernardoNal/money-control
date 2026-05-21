@@ -62,6 +62,12 @@ For longer changes, keep progress visible:
 - blockers or risks
 - strategy changes
 
+When the change affects an important domain, add lightweight documentation:
+
+- update a relevant project doc when the module changes the code map
+- add short code comments only where intent is not obvious
+- document security-sensitive conventions such as user scoping
+
 ## 6. Mandatory Review
 
 After implementation, review:
@@ -155,6 +161,7 @@ When touching a module:
 - improve poor names
 - improve local organization
 - reduce small technical debt
+- leave the area easier to understand through focused documentation when useful
 
 Do not expand into large unrelated refactors.
 
