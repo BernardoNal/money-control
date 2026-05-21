@@ -14,6 +14,8 @@ Its goal is to help contributors understand where the main responsibilities live
   money movement records linked to accounts and categories
 - `app/models/investments/portfolio.rb`
   base structure for investment portfolios owned by a user
+- `app/models/investments/asset.rb`
+  global catalog of market assets used as a base for future investment features
 
 ## Authentication And User Scope
 
