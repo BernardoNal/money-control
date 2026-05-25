@@ -18,6 +18,8 @@ Its goal is to help contributors understand where the main responsibilities live
   global catalog of market assets used as a base for future investment features
 - `app/models/investments/transaction.rb`
   operation history connecting user portfolios to global investment assets
+- `app/models/investments/income.rb`
+  income history linked to a portfolio context and the asset that generated the payment
 
 ## Authentication And User Scope
 

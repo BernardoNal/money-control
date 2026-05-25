@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_24_223202) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_25_163318) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,6 +48,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_24_223202) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["symbol"], name: "index_investments_assets_on_symbol", unique: true
+  end
+
+  create_table "investments_incomes", force: :cascade do |t|
+    t.bigint "portfolio_id", null: false
+    t.bigint "asset_id", null: false
+    t.integer "income_type", null: false
+    t.decimal "gross_amount", precision: 15, scale: 4, null: false
+    t.decimal "net_amount", precision: 15, scale: 4, null: false
+    t.decimal "tax_amount", precision: 15, scale: 4, default: "0.0", null: false
+    t.date "payment_date", null: false
+    t.date "reference_date"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["asset_id"], name: "index_investments_incomes_on_asset_id"
+    t.index ["payment_date"], name: "index_investments_incomes_on_payment_date"
+    t.index ["portfolio_id"], name: "index_investments_incomes_on_portfolio_id"
   end
 
   create_table "investments_portfolios", force: :cascade do |t|
@@ -105,6 +122,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_24_223202) do
 
   add_foreign_key "accounts", "users"
   add_foreign_key "categories", "users"
+  add_foreign_key "investments_incomes", "investments_assets", column: "asset_id"
+  add_foreign_key "investments_incomes", "investments_portfolios", column: "portfolio_id"
   add_foreign_key "investments_portfolios", "users"
   add_foreign_key "investments_transactions", "investments_assets", column: "asset_id"
   add_foreign_key "investments_transactions", "investments_portfolios", column: "portfolio_id"
