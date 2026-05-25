@@ -3,6 +3,8 @@ module Investments
     # Assets are modeled as a global market catalog, not as user-owned records.
     self.table_name = "investments_assets"
 
+    has_many :transactions, class_name: "Investments::Transaction", dependent: :restrict_with_exception
+
     enum :category, {
       stock: 0,
       fii: 1,

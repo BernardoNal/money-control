@@ -16,6 +16,8 @@ Its goal is to help contributors understand where the main responsibilities live
   base structure for investment portfolios owned by a user
 - `app/models/investments/asset.rb`
   global catalog of market assets used as a base for future investment features
+- `app/models/investments/transaction.rb`
+  operation history connecting user portfolios to global investment assets
 
 ## Authentication And User Scope
 
