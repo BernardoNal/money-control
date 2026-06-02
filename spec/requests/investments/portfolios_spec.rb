@@ -24,6 +24,15 @@ RSpec.describe "Investments::Portfolios", type: :request do
     )
   end
 
+  let!(:asset) do
+    Investments::Asset.create!(
+      name: "Apple Inc.",
+      symbol: "AAPL",
+      category: :international,
+      currency: "USD"
+    )
+  end
+
   before do
     sign_in user
   end
@@ -46,6 +55,53 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Main Portfolio")
       expect(response.body).not_to include(other_portfolio.name)
+    end
+  end
+
+  describe "GET /show" do
+    before do
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: asset,
+        transaction_type: :buy,
+        quantity: 2,
+        price: 10,
+        fees: 0,
+        date: Date.current
+      )
+
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 5,
+        net_amount: 5,
+        tax_amount: 0,
+        payment_date: Date.current
+      )
+    end
+
+    it "renders the initial dashboard metrics for the portfolio" do
+      get investments_portfolio_path(portfolio)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Portfolio Dashboard")
+      expect(response.body).to include("Total investido")
+      expect(response.body).to include("Renda passiva liquida")
+      expect(response.body).to include("AAPL")
+    end
+
+    it "returns not found for a portfolio from another user" do
+      other_user = User.create!(
+        name: "Another User",
+        email: "another-user@example.com",
+        password: "password123"
+      )
+      other_portfolio = Investments::Portfolio.create!(user: other_user, name: "Private Portfolio")
+
+      get investments_portfolio_path(other_portfolio)
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 

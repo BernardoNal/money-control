@@ -7,6 +7,7 @@ module Investments
     end
 
     def show
+      @dashboard = Investments::PortfolioDashboardBuilder.call(portfolio: @portfolio)
     end
 
     def new
