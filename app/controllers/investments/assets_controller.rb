@@ -14,6 +14,7 @@ module Investments
 
     def new
       @asset = Investments::Asset.new
+      @subcategories = subcategory_options
       @categories = category_options
       render :form
     end
@@ -31,6 +32,7 @@ module Investments
 
     def edit
       @categories = category_options
+      @subcategories = subcategory_options
       render :form
     end
 
@@ -56,6 +58,10 @@ module Investments
 
     def category_options
       Investments::Asset.categories.keys.map { |key| [key.humanize, key] }
+    end
+
+    def subcategory_options
+      Investments::Asset.subcategories.keys.map { |key| [key.humanize, key] }
     end
 
     def permitted_category(value)

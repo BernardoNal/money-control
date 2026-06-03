@@ -15,6 +15,14 @@ module Investments
       international: 5
     }
 
+    enum :subcategory, {
+      paper: 0,
+      brick: 1,
+      banks: 2,
+      energy: 3,
+      technology: 4
+    }
+
     validates :name, :symbol, :category, :currency, presence: true
     validates :symbol, uniqueness: true
   end

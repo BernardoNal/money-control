@@ -42,6 +42,14 @@
                          class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
+           <div>
+            <%= f.label :subcategory, "SubCategoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.select :subcategory,
+                         options_for_select(@subcategories, @asset.subcategory),
+                         {},
+                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+          </div>
+
           <div>
             <%= f.label :currency, "Moeda", class: "mb-2 block text-sm font-medium text-gray-900" %>
             <%= f.text_field :currency, class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100", placeholder: "BRL, USD...", required: true %>
