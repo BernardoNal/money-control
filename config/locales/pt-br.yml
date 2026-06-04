@@ -1,0 +1,26 @@
+pt-BR:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+
+  activerecord:
+    attributes:
+      investments/asset:
+        categories:
+          stock: "Ações"
+          fii: "Fundos Imobiliários"
+          etf: "ETFs"
+          crypto: "Criptomoedas"
+          fixed_income: "Renda Fixa"
+          international: "Internacional"
+
+        subcategories:
+          paper: "Papel"
+          brick: "Tijolo"
+          banks: "Bancos"
+          energy: "Energia"
+          technology: "Tecnologia"

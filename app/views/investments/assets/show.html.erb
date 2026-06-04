@@ -11,13 +11,17 @@
         <p class="mt-2 text-sm text-gray-600"><%= @asset.name %></p>
       </div>
 
-      <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-700"><%= @asset.category.humanize %></span>
+
     </div>
 
     <dl class="mt-6 grid gap-4 md:grid-cols-3">
       <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
         <dt class="text-sm text-gray-500">Categoria</dt>
-        <dd class="mt-2 text-lg font-semibold text-gray-900"><%= @asset.category.humanize %></dd>
+        <dd class="mt-2 text-lg font-semibold text-gray-900"><%= @asset.human_category %></dd>
+      </div>
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">SubCategoria</dt>
+        <dd class="mt-2 text-lg font-semibold text-gray-900"><%= @asset.human_subcategory  %></dd>
       </div>
       <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
         <dt class="text-sm text-gray-500">Moeda</dt>
