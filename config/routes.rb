@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   namespace :investments do
     resources :assets, except: :destroy
     resources :portfolios
+    resources :incomes
   end
 
   root to: "transactions#dashboard"
