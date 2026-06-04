@@ -1,0 +1,2 @@
+module Investments::IncomesHelper
+end

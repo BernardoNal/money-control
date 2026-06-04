@@ -24,3 +24,12 @@ pt-BR:
           banks: "Bancos"
           energy: "Energia"
           technology: "Tecnologia"
+
+      investments/income:
+        income_types:
+          dividends: "Dividendos"
+          jcp: "JCP"
+          stock_lending: "Aluguel de Ações"
+          fii_income: "Rendimento de FII"
+          amortization: "Amortização"
+          staking: "Staking"

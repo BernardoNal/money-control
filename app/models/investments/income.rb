@@ -19,6 +19,13 @@ module Investments
               numericality: { greater_than_or_equal_to: 0 }
     validate :net_amount_cannot_exceed_gross_amount
 
+    def human_income_type
+      I18n.t(
+        "activerecord.attributes.investments/income.income_types.#{income_type}",
+        default: income_type&.humanize
+      )
+    end
+
     private
 
     def net_amount_cannot_exceed_gross_amount
@@ -27,5 +34,6 @@ module Investments
 
       errors.add(:net_amount, "cannot be greater than gross amount")
     end
+
   end
 end
