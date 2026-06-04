@@ -25,5 +25,21 @@ module Investments
 
     validates :name, :symbol, :category, :currency, presence: true
     validates :symbol, uniqueness: true
+
+
+    def human_category
+      I18n.t(
+        "activerecord.attributes.investments/asset.categories.#{category}"
+      )
+    end
+
+    def human_subcategory
+      return "-" if subcategory.blank?
+
+      I18n.t(
+        "activerecord.attributes.investments/asset.subcategories.#{subcategory}"
+      )
+    end
+
   end
 end

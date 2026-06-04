@@ -65,6 +65,16 @@ RSpec.describe Investments::Asset, type: :model do
     )
   end
 
+  it "defines the expected subcategories" do
+  expect(described_class.subcategories.keys).to contain_exactly(
+    "paper",
+    "brick",
+    "banks",
+    "energy",
+    "technology"
+  )
+end
+
   it "defaults active to true" do
     asset.save!
 

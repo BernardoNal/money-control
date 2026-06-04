@@ -13,18 +13,29 @@
 
   <div class="mt-6 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm lg:p-6">
     <%= form_with url: investments_assets_path, method: :get, local: true, class: "grid gap-4 md:grid-cols-[minmax(0,280px)_auto]" do |f| %>
-      <div>
-        <%= f.label :category, "Filtrar por categoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
+       <div class="flex  gap-4">
+        <div>
+
+        <%= f.label :category, "Categoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
         <%= f.select :category,
                      options_for_select([["Todas", ""]] + @categories, @selected_category),
                      {},
-                     class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                     class: "block  rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+        </div>
+        <div>
+
+        <%= f.label :category, "Ramo", class: "mb-2 block text-sm font-medium text-gray-900" %>
+        <%= f.select :subcategory,
+                     options_for_select([["Todos", ""]] + @subcategories, @selected_subcategory),
+                     {},
+                     class: "block rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+        </div>
+        <div class="flex items-end gap-4">
+          <%= f.button "Aplicar filtro", class: "rounded-full bg-gray-900 px-5 py-0 text-sm font-medium text-white transition hover:bg-gray-700" %>
+          <%= link_to "Limpar", investments_assets_path, class: "rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
+        </div>
       </div>
 
-      <div class="flex items-end gap-3">
-        <%= f.button "Aplicar filtro", class: "rounded-full bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700" %>
-        <%= link_to "Limpar", investments_assets_path, class: "rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
-      </div>
     <% end %>
   </div>
 
@@ -45,8 +56,8 @@
             <dd class="font-medium text-gray-900"><%= asset.currency %></dd>
           </div>
           <div class="flex justify-between gap-4">
-            <dt class="text-gray-500">Status</dt>
-            <dd class="font-medium <%= asset.active? ? 'text-green-700' : 'text-red-700' %>"><%= asset.active? ? "Ativo" : "Inativo" %></dd>
+            <dt class="text-gray-500">Ramo</dt>
+            <dd class="font-medium text-gray-900"><%= asset.human_subcategory %></dd>
           </div>
         </dl>
 
