@@ -1,50 +1,100 @@
-
-<div class="container  mt-4">
-  <%= link_to transactions_path, class: 'bg-black text-white text-decoration-none p-2' do %>
-    <i class='fa-solid fa-circle-left'></i>volta
+<div class="container mx-auto mt-4 max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
+  <%= link_to transactions_path,
+      class: "inline-flex items-center gap-2 rounded bg-black px-3 py-2 text-white no-underline" do %>
+    <i class="fa-solid fa-circle-left"></i>
+    Voltar
   <% end %>
-  <h1 class="pb-3 text-center"><%= @transaction.persisted? ? 'Editar Transação' : 'Nova Transação' %></h1>
-  <div class="mx-3">
-    <%= form_with model: @transaction, local: true do |f| %>
-      <% if @transaction.errors.any? %>
-        <div class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">
-          <h2 class="font-semibold">Não foi possível salvar a transação:</h2>
-          <ul class="mt-2 list-disc pl-5">
-            <% @transaction.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-      <div class="grid grid-cols-3">
-        <div class="mx-auto">
-          <%= f.label :amount, "Valor", class: "block mb-2 text-sm font-medium text-gray-900 " %>
-          <%= f.number_field :amount, step: 0.01, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "0,00", required: true%>
-        </div>
-          <div class="mx-auto">
-          <%= f.label :description, "Descrição", class: "block mb-2 text-sm font-medium text-gray-900 " %>
-          <%= f.text_field :description, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "Energia, lanche, estudos"  %>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :to_whom, "Recebedor/Pagador", class: "block mb-2 text-sm font-medium text-gray-900 " %>
-          <%= f.text_field :to_whom, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "Banco X, Amazon..."  %>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :payment_method, "Método de pagamento", class: "block mb-2 text-sm font-medium text-gray-900 " %>
-          <%= f.text_field :payment_method, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "Débito,PIX,.."%>
-        </div>
-          <div class="mx-auto">
-          <%= f.label :date, "Data", class: "block mb-2 text-sm font-medium text-gray-900 " %>
-          <%= f.date_field :date, step: 0.01, class: "border border-gray-400 m-2  text-sm rounded-lg p-2.5", placeholder: "100,00"%>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :category_id, "Selecione a Categoria", class: "block mb-2 text-sm font-medium text-gray-900" %>
-          <%= f.select :category_id, @categories.collect { |c| [c.name, c.id] }, { prompt: "Selecione" }, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5" %>
-        </div>
-      <div class="col-span-3 mx-auto my-2">
-        <%= f.button :submit, class: "text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300  rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 " %>
-      </div>
+
+  <h1 class="my-6 text-center text-2xl font-semibold">
+    <%= @transaction.persisted? ? "Editar Transação" : "Nova Transação" %>
+  </h1>
+
+  <%= form_with model: @transaction, local: true do |f| %>
+    <% if @transaction.errors.any? %>
+      <div class="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">
+        <h2 class="font-semibold">
+          Não foi possível salvar a transação:
+        </h2>
+
+        <ul class="mt-2 list-disc pl-5">
+          <% @transaction.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
       </div>
     <% end %>
-  </div>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <%= f.label :amount,
+                    "Valor",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.number_field :amount,
+                           step: 0.01,
+                           required: true,
+                           placeholder: "0,00",
+                           class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+
+      <div>
+        <%= f.label :description,
+                    "Descrição",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.text_field :description,
+                         placeholder: "Energia, lanche, estudos",
+                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+
+      <div>
+        <%= f.label :to_whom,
+                    "Recebedor/Pagador",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.text_field :to_whom,
+                         placeholder: "Banco X, Amazon...",
+                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+
+      <div>
+        <%= f.label :payment_method,
+                    "Método de pagamento",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.text_field :payment_method,
+                         placeholder: "Débito, PIX...",
+                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+
+      <div>
+        <%= f.label :date,
+                    "Data",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.date_field :date,
+                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+
+      <div>
+        <%= f.label :category_id,
+                    "Categoria",
+                    class: "mb-2 block text-sm font-medium text-gray-900" %>
+
+        <%= f.collection_select :category_id,
+                                @categories,
+                                :id,
+                                :name,
+                                { prompt: "Selecione" },
+                                class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-center">
+      <%= f.submit(
+            @transaction.persisted? ? "Atualizar Transação" : "Criar Transação",
+            class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800"
+          ) %>
+    </div>
+  <% end %>
 </div>

@@ -1,0 +1,126 @@
+<div class="container mt-6 max-w-4xl">
+  <%= link_to investments_transactions_path,
+              class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
+    <i class="fa-solid fa-circle-left"></i>Voltar
+  <% end %>
+
+  <div class="mt-5 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+    <div class="border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+        Investimentos
+      </p>
+
+      <h1 class="mt-2 text-3xl font-semibold text-gray-900">
+        Movimentação #<%= @transaction.id %>
+      </h1>
+
+      <p class="mt-2 text-sm text-gray-600">
+        Detalhes da movimentação registrada na carteira.
+      </p>
+    </div>
+
+    <div class="px-6 py-6">
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Carteira
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= @transaction.portfolio.name %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Ativo
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= @transaction.asset.symbol %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Tipo da movimentação
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= t("activerecord.attributes.investments/transaction.transaction_types.#{@transaction.transaction_type}") %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Data
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= l(@transaction.date) %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Quantidade
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= @transaction.quantity %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Preço
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= number_with_precision(@transaction.price, precision: 2) if @transaction.price.present? %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Taxas
+          </p>
+
+          <p class="mt-1 text-lg font-medium text-gray-900">
+            <%= number_with_precision(@transaction.fees, precision: 3) %>
+          </p>
+        </div>
+
+      </div>
+
+      <% if @transaction.notes.present? %>
+        <div class="mt-8 border-t border-gray-100 pt-6">
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Observações
+          </p>
+
+          <p class="mt-2 whitespace-pre-line text-gray-700">
+            <%= @transaction.notes %>
+          </p>
+        </div>
+      <% end %>
+
+      <div class="mt-8 flex flex-wrap gap-3 border-t border-gray-100 pt-6">
+        <%= link_to "Editar",
+                    edit_investments_transaction_path(@transaction),
+                    class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800" %>
+
+        <%= button_to "Excluir",
+                      investments_transaction_path(@transaction),
+                      method: :delete,
+                      form: {
+                        data: {
+                          turbo_confirm: "Tem certeza que deseja excluir esta movimentação?"
+                        }
+                      },
+                      class: "rounded-full border border-red-300 px-5 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50" %>
+      </div>
+    </div>
+  </div>
+</div>

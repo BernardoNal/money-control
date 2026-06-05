@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_05_004454) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_02_230054) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -37,6 +37,60 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_05_004454) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_categories_on_user_id"
+  end
+
+  create_table "investments_assets", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "symbol", null: false
+    t.integer "category", null: false
+    t.string "currency", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "subcategory"
+    t.index ["symbol"], name: "index_investments_assets_on_symbol", unique: true
+  end
+
+  create_table "investments_incomes", force: :cascade do |t|
+    t.bigint "portfolio_id", null: false
+    t.bigint "asset_id", null: false
+    t.integer "income_type", null: false
+    t.decimal "gross_amount", precision: 15, scale: 4, null: false
+    t.decimal "net_amount", precision: 15, scale: 4, null: false
+    t.decimal "tax_amount", precision: 15, scale: 4, default: "0.0", null: false
+    t.date "payment_date", null: false
+    t.date "reference_date"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["asset_id"], name: "index_investments_incomes_on_asset_id"
+    t.index ["payment_date"], name: "index_investments_incomes_on_payment_date"
+    t.index ["portfolio_id"], name: "index_investments_incomes_on_portfolio_id"
+  end
+
+  create_table "investments_portfolios", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "name"], name: "index_investments_portfolios_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_investments_portfolios_on_user_id"
+  end
+
+  create_table "investments_transactions", force: :cascade do |t|
+    t.bigint "portfolio_id", null: false
+    t.bigint "asset_id", null: false
+    t.integer "transaction_type", null: false
+    t.decimal "quantity", precision: 15, scale: 8, null: false
+    t.decimal "price", precision: 15, scale: 4
+    t.decimal "fees", precision: 15, scale: 4, default: "0.0", null: false
+    t.date "date", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["asset_id"], name: "index_investments_transactions_on_asset_id"
+    t.index ["date"], name: "index_investments_transactions_on_date"
+    t.index ["portfolio_id"], name: "index_investments_transactions_on_portfolio_id"
   end
 
   create_table "transactions", force: :cascade do |t|
@@ -69,6 +123,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_05_004454) do
 
   add_foreign_key "accounts", "users"
   add_foreign_key "categories", "users"
+  add_foreign_key "investments_incomes", "investments_assets", column: "asset_id"
+  add_foreign_key "investments_incomes", "investments_portfolios", column: "portfolio_id"
+  add_foreign_key "investments_portfolios", "users"
+  add_foreign_key "investments_transactions", "investments_assets", column: "asset_id"
+  add_foreign_key "investments_transactions", "investments_portfolios", column: "portfolio_id"
   add_foreign_key "transactions", "accounts"
   add_foreign_key "transactions", "categories"
 end

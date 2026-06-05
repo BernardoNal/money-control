@@ -15,7 +15,7 @@
     @apply text-lg font-semibold;
   }
   p {
-    @apply text-base text-gray-300;
+    @apply text-base text-gray-400;
   }
 
   a {

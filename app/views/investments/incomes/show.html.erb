@@ -1,0 +1,108 @@
+<div class="container mt-8 max-w-4xl">
+  <%= link_to investments_incomes_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
+    <i class="fa-solid fa-circle-left"></i>Voltar
+  <% end %>
+
+  <div class="mt-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Recebíveis
+        </p>
+
+        <h1 class="mt-2 text-3xl font-semibold text-gray-900">
+          <%= @income.asset&.symbol %>
+        </h1>
+
+      </div>
+    </div>
+
+    <dl class="mt-6 grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Portfolio</dt>
+        <dd class="mt-2 text-lg font-semibold text-gray-900">
+          <%= @income.portfolio.name %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Ativo</dt>
+        <dd class="mt-2 text-lg font-semibold text-gray-900">
+          <%= @income.asset.symbol %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Tipo</dt>
+        <dd class="mt-2 text-lg font-semibold text-gray-900">
+          <%= @income.human_income_type %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Valor Bruto</dt>
+        <dd class="mt-2 text-lg font-semibold text-green-700">
+          <%= number_to_currency(@income.gross_amount) %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Valor Líquido</dt>
+        <dd class="mt-2 text-lg font-semibold text-green-700">
+          <%= number_to_currency(@income.net_amount) %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Imposto</dt>
+        <dd class="mt-2 text-lg font-semibold text-red-700">
+          <%= number_to_currency(@income.tax_amount) %>
+        </dd>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <dt class="text-sm text-gray-500">Data de Pagamento</dt>
+        <dd class="mt-2 text-lg font-semibold text-gray-900">
+          <%= l(@income.payment_date) %>
+        </dd>
+      </div>
+
+      <% if @income.reference_date.present? %>
+        <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
+          <dt class="text-sm text-gray-500">Data de Referência</dt>
+          <dd class="mt-2 text-lg font-semibold text-gray-900">
+            <%= l(@income.reference_date) %>
+          </dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <% if @income.notes.present? %>
+      <div class="mt-6 rounded-2xl border border-gray-200 bg-slate-50 p-4">
+        <h3 class="text-sm font-medium text-gray-500">
+          Observações
+        </h3>
+
+        <p class="mt-2 text-gray-900">
+          <%= @income.notes %>
+        </p>
+      </div>
+    <% end %>
+
+    <div class="mt-6 flex flex-wrap gap-3">
+      <%= link_to edit_investments_income_path(@income) do %>
+        <%= render ButtonComponent.new(label: "Edit") %>
+      <% end %>
+      <%= button_to investments_income_path(@income),
+              method: :delete,
+              form: {
+                data: {
+                  turbo_confirm: "Tem certeza que deseja remover este provento?"
+                }
+              },
+              class: "rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700" do %>
+        Excluir
+      <% end %>
+    </div>
+  </div>
+</div>
