@@ -1,7 +1,9 @@
 class TransactionsController < ApplicationController
   before_action :set_transaction, only: %i[show edit update destroy]
+  before_action :set_categories, only: %i[new create edit update]
+
   def index
-    @transactions = Transaction.all.order(date: :desc)
+    @transactions = Transaction.order(date: :desc)
   end
 
   def show
@@ -9,59 +11,57 @@ class TransactionsController < ApplicationController
 
   def new
     @transaction = Transaction.new
-    @categories = Category.all
     render :form
   end
 
   def create
-    @categories = Category.all
-    @account = Account.first
     @transaction = Transaction.new(transaction_params)
-    @transaction.account = @account
+    @transaction.account = Account.first
 
     if @transaction.save
-      redirect_to transaction_path(@transaction)
-      flash[:alert] = "Conta criada com sucesso."
+      redirect_to transaction_path(@transaction), notice: "Transação criada com sucesso."
     else
       render :form, status: :unprocessable_entity
     end
   end
 
   def edit
-    @categories = Category.all
-     render :form
+    render :form
   end
 
   def update
-    @categories = Category.all
-    @account = Account.first
-    @transaction = Transaction.find(params[:id])
-    @transaction.account = @account
-
     if @transaction.update(transaction_params)
-      flash[:alert] = "Transação atualizada com sucesso."
-      redirect_to transaction_path(@transaction)
+      redirect_to transaction_path(@transaction), notice: "Transação atualizada com sucesso."
     else
       render :form, status: :unprocessable_entity
     end
   end
 
-
   def destroy
     @transaction.destroy
-    flash[:alert] = "Conta excluída com sucesso."
 
-    redirect_to transactions_path()
+    redirect_to transactions_path,
+                notice: "Transação excluída com sucesso."
   end
 
   private
 
-  # Permits transaction parameters
   def transaction_params
-    params.require(:transaction).permit( :amount, :description, :to_whom, :payment_method, :date, :category_id)
+    params.require(:transaction).permit(
+      :amount,
+      :description,
+      :to_whom,
+      :payment_method,
+      :date,
+      :category_id
+    )
   end
 
   def set_transaction
     @transaction = Transaction.find(params[:id])
+  end
+
+  def set_categories
+    @categories = Category.all
   end
 end
