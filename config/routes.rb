@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     resources :assets, except: :destroy
     resources :portfolios
     resources :incomes
+    resources :transactions
   end
 
   root to: "transactions#dashboard"

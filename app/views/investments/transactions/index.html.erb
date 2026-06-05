@@ -1,0 +1,152 @@
+<div class="container mt-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+        Investimentos
+      </p>
+
+      <h1 class="mt-2 text-3xl font-semibold text-gray-900">
+        Movimentações
+      </h1>
+
+      <p class="mt-2 text-sm text-gray-600">
+        Histórico de compras, vendas e demais eventos registrados.
+      </p>
+    </div>
+
+    <%= link_to new_investments_transaction_path,
+                class: "inline-flex items-center gap-2 rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800" do %>
+      <i class="fa-solid fa-plus"></i>
+      Nova Movimentação
+    <% end %>
+  </div>
+
+  <div class="mt-6 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+    <% if @transactions.any? %>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Data
+              </th>
+
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Carteira
+              </th>
+
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Ativo
+              </th>
+
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Tipo
+              </th>
+
+              <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Quantidade
+              </th>
+
+              <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Preço
+              </th>
+
+              <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Taxas
+              </th>
+
+              <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Ações
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-100 bg-white">
+            <% @transactions.each do |transaction| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <%= l(transaction.date) %>
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  <%= transaction.portfolio.name %>
+                </td>
+
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                  <%= transaction.asset.symbol %>
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-700">
+                  <%= t(
+                    "activerecord.attributes.investments/transaction.transaction_types.#{transaction.transaction_type}"
+                  ) %>
+                </td>
+
+                <td class="px-6 py-4 text-right text-sm text-gray-700">
+                  <%= number_with_precision(transaction.quantity, precision: 8, strip_insignificant_zeros: true) %>
+                </td>
+
+                <td class="px-6 py-4 text-right text-sm text-gray-700">
+                  <% if transaction.price.present? %>
+                    <%= number_with_precision(transaction.price, precision: 4) %>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+
+                <td class="px-6 py-4 text-right text-sm text-gray-700">
+                  <%= number_with_precision(transaction.fees, precision: 2) %>
+                </td>
+
+                <td class="px-6 py-4">
+                  <div class="flex justify-end gap-2">
+                    <%= link_to investments_transaction_path(transaction),
+                                class: "rounded-full border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50" do %>
+                      Ver
+                    <% end %>
+
+                    <%= link_to edit_investments_transaction_path(transaction),
+                                class: "rounded-full border border-blue-300 px-3 py-1.5 text-sm text-blue-700 transition hover:bg-blue-50" do %>
+                      Editar
+                    <% end %>
+
+                    <%= button_to investments_transaction_path(transaction),
+                                  method: :delete,
+                                  form: {
+                                    data: {
+                                      turbo_confirm: "Tem certeza que deseja excluir esta movimentação?"
+                                    }
+                                  },
+                                  class: "rounded-full border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50" do %>
+                      Excluir
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+    <% else %>
+
+      <div class="px-8 py-16 text-center">
+        <i class="fa-solid fa-chart-line text-4xl text-gray-300"></i>
+
+        <h2 class="mt-4 text-lg font-medium text-gray-900">
+          Nenhuma movimentação encontrada
+        </h2>
+
+        <p class="mt-2 text-sm text-gray-500">
+          Comece registrando sua primeira compra, venda ou transferência.
+        </p>
+
+        <%= link_to "Nova Movimentação",
+                    new_investments_transaction_path,
+                    class: "mt-6 inline-flex items-center rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800" %>
+      </div>
+
+    <% end %>
+  </div>
+</div>
