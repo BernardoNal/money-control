@@ -33,3 +33,19 @@ pt-BR:
           fii_income: "Rendimento de FII"
           amortization: "Amortização"
           staking: "Staking"
+
+      investments/transaction:
+        portfolio: "Carteira"
+        asset: "Ativo"
+        transaction_type: "Tipo da movimentação"
+        quantity: "Quantidade"
+        price: "Preço"
+        fees: "Taxas"
+        date: "Data"
+        notes: "Observações"
+        transaction_types:
+          buy: "Compra"
+          sell: "Venda"
+          transfer: "Transferência"
+          split: "Split"
+          reverse_split: "Reverse Split"

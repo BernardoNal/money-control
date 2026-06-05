@@ -1,0 +1,2 @@
+module Investments::TransactionsHelper
+end
