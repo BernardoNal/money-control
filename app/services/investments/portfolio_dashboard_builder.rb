@@ -16,6 +16,8 @@ module Investments
       :current_portfolio_value,
       :unrealized_profit_loss,
       :passive_income_summary,
+      :last_transaction_date,
+      :recent_transactions,
       :asset_entries,
       keyword_init: true
     )
@@ -39,12 +41,16 @@ module Investments
       total_invested_amount = base_entries.sum { |entry| entry.invested_amount }
       asset_entries = attach_allocation(base_entries, total_invested_amount)
 
+      sorted_transactions = transactions.sort_by(&:date)
+
       Result.new(
         portfolio: portfolio,
         total_invested_amount: total_invested_amount,
         current_portfolio_value: total_invested_amount,
         unrealized_profit_loss: ZERO,
         passive_income_summary: incomes.sum(&:net_amount),
+        last_transaction_date: sorted_transactions.last&.date,
+        recent_transactions: sorted_transactions.last(3).reverse,
         asset_entries: asset_entries.sort_by { |entry| [-entry.invested_amount, entry.asset.symbol] }
       )
     end
