@@ -42,6 +42,7 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(dashboard.unrealized_profit_loss).to eq(BigDecimal("0"))
     expect(dashboard.passive_income_summary).to eq(BigDecimal("0"))
     expect(dashboard.asset_entries).to be_empty
+    expect(dashboard.category_allocations).to be_empty
   end
 
   it "builds asset entries and portfolio totals from current positions" do
@@ -68,6 +69,37 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(fii_entry.quantity).to eq(BigDecimal("20"))
     expect(fii_entry.average_price).to eq(BigDecimal("10"))
     expect(fii_entry.invested_amount).to eq(BigDecimal("200"))
+  end
+
+  it "builds category allocations from the current invested positions" do
+    local_stock_asset = Investments::Asset.create!(
+      name: "Banco do Brasil",
+      symbol: "BBAS3",
+      category: :stock,
+      currency: "BRL"
+    )
+
+    create_transaction(stock_asset, :buy, quantity: 10, price: 20, fees: 0, date: Date.new(2026, 1, 1))
+    create_transaction(fii_asset, :buy, quantity: 5, price: 10, fees: 0, date: Date.new(2026, 1, 2))
+    create_transaction(local_stock_asset, :buy, quantity: 3, price: 50, fees: 0, date: Date.new(2026, 1, 3))
+
+    expect(dashboard.category_allocations.map(&:category)).to eq(%w[international stock fii])
+
+    international_allocation = dashboard.category_allocations.find { |entry| entry.category == "international" }
+    stock_allocation = dashboard.category_allocations.find { |entry| entry.category == "stock" }
+    fii_allocation = dashboard.category_allocations.find { |entry| entry.category == "fii" }
+
+    expect(international_allocation.label).to eq("Internacional")
+    expect(international_allocation.invested_amount).to eq(BigDecimal("200"))
+    expect(international_allocation.allocation_percentage).to eq(BigDecimal("50"))
+
+    expect(stock_allocation.label).to eq("Ações")
+    expect(stock_allocation.invested_amount).to eq(BigDecimal("150"))
+    expect(stock_allocation.allocation_percentage).to eq(BigDecimal("37.5"))
+
+    expect(fii_allocation.label).to eq("Fundos Imobiliários")
+    expect(fii_allocation.invested_amount).to eq(BigDecimal("50"))
+    expect(fii_allocation.allocation_percentage).to eq(BigDecimal("12.5"))
   end
 
   it "calculates passive income summary from net amounts" do

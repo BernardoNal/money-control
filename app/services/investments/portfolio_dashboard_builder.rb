@@ -10,6 +10,14 @@ module Investments
       keyword_init: true
     )
 
+    CategoryAllocationEntry = Struct.new(
+      :category,
+      :label,
+      :invested_amount,
+      :allocation_percentage,
+      keyword_init: true
+    )
+
     Result = Struct.new(
       :portfolio,
       :total_invested_amount,
@@ -19,6 +27,7 @@ module Investments
       :last_transaction_date,
       :recent_transactions,
       :asset_entries,
+      :category_allocations,
       keyword_init: true
     )
 
@@ -40,6 +49,7 @@ module Investments
 
       total_invested_amount = base_entries.sum { |entry| entry.invested_amount }
       asset_entries = attach_allocation(base_entries, total_invested_amount)
+      category_allocations = build_category_allocations(asset_entries, total_invested_amount)
 
       sorted_transactions = transactions.sort_by(&:date)
 
@@ -51,7 +61,8 @@ module Investments
         passive_income_summary: incomes.sum(&:net_amount),
         last_transaction_date: sorted_transactions.last&.date,
         recent_transactions: sorted_transactions.last(3).reverse,
-        asset_entries: asset_entries.sort_by { |entry| [-entry.invested_amount, entry.asset.symbol] }
+        asset_entries: asset_entries.sort_by { |entry| [-entry.invested_amount, entry.asset.symbol] },
+        category_allocations: category_allocations
       )
     end
 
@@ -104,15 +115,36 @@ module Investments
 
     def attach_allocation(entries, total_invested_amount)
       entries.map do |entry|
-        entry.allocation_percentage =
-          if total_invested_amount.zero?
-            ZERO
-          else
-            (entry.invested_amount / total_invested_amount) * 100
-          end
+        entry.allocation_percentage = allocation_percentage_for(entry.invested_amount, total_invested_amount)
 
         entry
       end
+    end
+
+    def build_category_allocations(entries, total_invested_amount)
+      entries
+        .group_by { |entry| entry.asset.category }
+        .map do |category, category_entries|
+          invested_amount = category_entries.sum(&:invested_amount)
+
+          CategoryAllocationEntry.new(
+            category: category,
+            label: human_category(category),
+            invested_amount: invested_amount,
+            allocation_percentage: allocation_percentage_for(invested_amount, total_invested_amount)
+          )
+        end
+        .sort_by { |entry| [-entry.invested_amount, entry.label] }
+    end
+
+    def allocation_percentage_for(amount, total_amount)
+      return ZERO if total_amount.zero?
+
+      (amount / total_amount) * 100
+    end
+
+    def human_category(category)
+      I18n.t("activerecord.attributes.investments/asset.categories.#{category}")
     end
 
     def average_price_for(quantity, total_cost)
