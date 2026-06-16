@@ -33,6 +33,15 @@ RSpec.describe "Investments::Portfolios", type: :request do
     )
   end
 
+  let!(:stock_asset) do
+    Investments::Asset.create!(
+      name: "Banco do Brasil",
+      symbol: "BBAS3",
+      category: :stock,
+      currency: "BRL"
+    )
+  end
+
   before do
     sign_in user
   end
@@ -79,6 +88,16 @@ RSpec.describe "Investments::Portfolios", type: :request do
         tax_amount: 0,
         payment_date: Date.current
       )
+
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: stock_asset,
+        transaction_type: :buy,
+        quantity: 1,
+        price: 30,
+        fees: 0,
+        date: Date.current
+      )
     end
 
     it "renders the initial dashboard metrics for the portfolio" do
@@ -88,7 +107,10 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include("Portfolio Dashboard")
       expect(response.body).to include("Total investido")
       expect(response.body).to include("Renda passiva liquida")
+      expect(response.body).to include("Alocacao por categoria")
       expect(response.body).to include("AAPL")
+      expect(response.body).to include("Internacional")
+      expect(response.body).to include("Ações")
     end
 
     it "returns not found for a portfolio from another user" do
