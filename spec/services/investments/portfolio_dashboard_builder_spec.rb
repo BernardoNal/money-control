@@ -21,6 +21,7 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
       name: "Apple Inc.",
       symbol: "AAPL",
       category: :international,
+      subcategory: :technology,
       currency: "USD"
     )
   end
@@ -30,6 +31,7 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
       name: "XP Malls",
       symbol: "XPML11",
       category: :fii,
+      subcategory: :brick,
       currency: "BRL"
     )
   end
@@ -43,6 +45,7 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(dashboard.passive_income_summary).to eq(BigDecimal("0"))
     expect(dashboard.asset_entries).to be_empty
     expect(dashboard.category_allocations).to be_empty
+    expect(dashboard.subcategory_allocations).to be_empty
   end
 
   it "builds asset entries and portfolio totals from current positions" do
@@ -100,6 +103,52 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(fii_allocation.label).to eq("Fundos Imobiliários")
     expect(fii_allocation.invested_amount).to eq(BigDecimal("50"))
     expect(fii_allocation.allocation_percentage).to eq(BigDecimal("12.5"))
+  end
+
+  it "builds subcategory allocations from the current invested positions" do
+    local_stock_asset = Investments::Asset.create!(
+      name: "Banco do Brasil",
+      symbol: "BBAS3",
+      category: :stock,
+      subcategory: :banks,
+      currency: "BRL"
+    )
+
+    no_subcategory_asset = Investments::Asset.create!(
+      name: "Tesouro Selic",
+      symbol: "SELIC2029",
+      category: :fixed_income,
+      currency: "BRL"
+    )
+
+    create_transaction(stock_asset, :buy, quantity: 10, price: 20, fees: 0, date: Date.new(2026, 1, 1))
+    create_transaction(fii_asset, :buy, quantity: 5, price: 10, fees: 0, date: Date.new(2026, 1, 2))
+    create_transaction(local_stock_asset, :buy, quantity: 3, price: 50, fees: 0, date: Date.new(2026, 1, 3))
+    create_transaction(no_subcategory_asset, :buy, quantity: 2, price: 25, fees: 0, date: Date.new(2026, 1, 4))
+
+    expected_total = BigDecimal("450")
+
+    expect(dashboard.subcategory_allocations.map(&:label)).to eq(
+      ["Tecnologia", "Bancos", "Sem subcategoria", "Tijolo"]
+    )
+
+    technology_allocation = dashboard.subcategory_allocations.find { |entry| entry.subcategory == "technology" }
+    banks_allocation = dashboard.subcategory_allocations.find { |entry| entry.subcategory == "banks" }
+    brick_allocation = dashboard.subcategory_allocations.find { |entry| entry.subcategory == "brick" }
+    uncategorized_allocation = dashboard.subcategory_allocations.find { |entry| entry.subcategory.nil? }
+
+    expect(technology_allocation.invested_amount).to eq(BigDecimal("200"))
+    expect(technology_allocation.allocation_percentage).to eq((BigDecimal("200") / expected_total) * 100)
+
+    expect(banks_allocation.invested_amount).to eq(BigDecimal("150"))
+    expect(banks_allocation.allocation_percentage).to eq((BigDecimal("150") / expected_total) * 100)
+
+    expect(brick_allocation.invested_amount).to eq(BigDecimal("50"))
+    expect(brick_allocation.allocation_percentage).to eq((BigDecimal("50") / expected_total) * 100)
+
+    expect(uncategorized_allocation.label).to eq("Sem subcategoria")
+    expect(uncategorized_allocation.invested_amount).to eq(BigDecimal("50"))
+    expect(uncategorized_allocation.allocation_percentage).to eq((BigDecimal("50") / expected_total) * 100)
   end
 
   it "calculates passive income summary from net amounts" do

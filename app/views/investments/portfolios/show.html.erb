@@ -178,40 +178,78 @@
         </div>
       </div>
 
-      <div class="mt-6 rounded-2xl border border-gray-400 bg-white p-4 lg:p-5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900">Alocacao por categoria</h2>
-          <span class="text-sm text-gray-500"><%= @dashboard.category_allocations.count %> categorias</span>
-        </div>
+      <div class="mt-6 grid gap-4 xl:grid-cols-2">
+        <div class="rounded-2xl border border-gray-400 bg-white p-4 lg:p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Alocacao por categoria</h2>
+            <span class="text-sm text-gray-500"><%= @dashboard.category_allocations.count %> categorias</span>
+          </div>
 
-        <% if @dashboard.category_allocations.any? %>
-          <div class="mt-4 space-y-2.5">
-            <% @dashboard.category_allocations.each do |allocation| %>
-              <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
-                <div class="flex items-center justify-between gap-4">
-                  <div>
-                    <p class="font-medium text-gray-900"><%= allocation.label %></p>
-                    <p class="text-sm text-gray-500">
-                      <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
-                    </p>
+          <% if @dashboard.category_allocations.any? %>
+            <div class="mt-4 space-y-2.5">
+              <% @dashboard.category_allocations.each do |allocation| %>
+                <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
+                  <div class="flex items-center justify-between gap-4">
+                    <div>
+                      <p class="font-medium text-gray-900"><%= allocation.label %></p>
+                      <p class="text-sm text-gray-500">
+                        <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                      </p>
+                    </div>
+
+                    <span class="text-sm font-medium text-gray-700">
+                      <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                    </span>
                   </div>
 
-                  <span class="text-sm font-medium text-gray-700">
-                    <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
-                  </span>
+                  <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                    <div class="h-full rounded-full bg-emerald-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
+                  </div>
                 </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+              Nenhuma alocacao por categoria disponivel para este portfolio.
+            </div>
+          <% end %>
+        </div>
 
-                <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-emerald-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
+        <div class="rounded-2xl border border-gray-400 bg-white p-4 lg:p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Alocacao por subcategoria</h2>
+            <span class="text-sm text-gray-500"><%= @dashboard.subcategory_allocations.count %> grupos</span>
+          </div>
+
+          <% if @dashboard.subcategory_allocations.any? %>
+            <div class="mt-4 space-y-2.5">
+              <% @dashboard.subcategory_allocations.each do |allocation| %>
+                <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
+                  <div class="flex items-center justify-between gap-4">
+                    <div>
+                      <p class="font-medium text-gray-900"><%= allocation.label %></p>
+                      <p class="text-sm text-gray-500">
+                        <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                      </p>
+                    </div>
+
+                    <span class="text-sm font-medium text-gray-700">
+                      <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                    </span>
+                  </div>
+
+                  <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                    <div class="h-full rounded-full bg-cyan-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
+                  </div>
                 </div>
-              </div>
-            <% end %>
-          </div>
-        <% else %>
-          <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-            Nenhuma alocacao por categoria disponivel para este portfolio.
-          </div>
-        <% end %>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+              Nenhuma alocacao por subcategoria disponivel para este portfolio.
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>

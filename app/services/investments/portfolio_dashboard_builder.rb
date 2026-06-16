@@ -18,6 +18,14 @@ module Investments
       keyword_init: true
     )
 
+    SubcategoryAllocationEntry = Struct.new(
+      :subcategory,
+      :label,
+      :invested_amount,
+      :allocation_percentage,
+      keyword_init: true
+    )
+
     Result = Struct.new(
       :portfolio,
       :total_invested_amount,
@@ -28,6 +36,7 @@ module Investments
       :recent_transactions,
       :asset_entries,
       :category_allocations,
+      :subcategory_allocations,
       keyword_init: true
     )
 
@@ -50,6 +59,7 @@ module Investments
       total_invested_amount = base_entries.sum { |entry| entry.invested_amount }
       asset_entries = attach_allocation(base_entries, total_invested_amount)
       category_allocations = build_category_allocations(asset_entries, total_invested_amount)
+      subcategory_allocations = build_subcategory_allocations(asset_entries, total_invested_amount)
 
       sorted_transactions = transactions.sort_by(&:date)
 
@@ -62,7 +72,8 @@ module Investments
         last_transaction_date: sorted_transactions.last&.date,
         recent_transactions: sorted_transactions.last(3).reverse,
         asset_entries: asset_entries.sort_by { |entry| [-entry.invested_amount, entry.asset.symbol] },
-        category_allocations: category_allocations
+        category_allocations: category_allocations,
+        subcategory_allocations: subcategory_allocations
       )
     end
 
@@ -137,6 +148,22 @@ module Investments
         .sort_by { |entry| [-entry.invested_amount, entry.label] }
     end
 
+    def build_subcategory_allocations(entries, total_invested_amount)
+      entries
+        .group_by { |entry| entry.asset.subcategory.presence }
+        .map do |subcategory, subcategory_entries|
+          invested_amount = subcategory_entries.sum(&:invested_amount)
+
+          SubcategoryAllocationEntry.new(
+            subcategory: subcategory,
+            label: human_subcategory(subcategory),
+            invested_amount: invested_amount,
+            allocation_percentage: allocation_percentage_for(invested_amount, total_invested_amount)
+          )
+        end
+        .sort_by { |entry| [-entry.invested_amount, entry.label] }
+    end
+
     def allocation_percentage_for(amount, total_amount)
       return ZERO if total_amount.zero?
 
@@ -145,6 +172,12 @@ module Investments
 
     def human_category(category)
       I18n.t("activerecord.attributes.investments/asset.categories.#{category}")
+    end
+
+    def human_subcategory(subcategory)
+      return "Sem subcategoria" if subcategory.blank?
+
+      I18n.t("activerecord.attributes.investments/asset.subcategories.#{subcategory}")
     end
 
     def average_price_for(quantity, total_cost)

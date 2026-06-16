@@ -29,6 +29,7 @@ RSpec.describe "Investments::Portfolios", type: :request do
       name: "Apple Inc.",
       symbol: "AAPL",
       category: :international,
+      subcategory: :technology,
       currency: "USD"
     )
   end
@@ -38,6 +39,16 @@ RSpec.describe "Investments::Portfolios", type: :request do
       name: "Banco do Brasil",
       symbol: "BBAS3",
       category: :stock,
+      subcategory: :banks,
+      currency: "BRL"
+    )
+  end
+
+  let!(:fixed_income_asset) do
+    Investments::Asset.create!(
+      name: "Tesouro Selic",
+      symbol: "SELIC2029",
+      category: :fixed_income,
       currency: "BRL"
     )
   end
@@ -98,6 +109,16 @@ RSpec.describe "Investments::Portfolios", type: :request do
         fees: 0,
         date: Date.current
       )
+
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: fixed_income_asset,
+        transaction_type: :buy,
+        quantity: 1,
+        price: 15,
+        fees: 0,
+        date: Date.current
+      )
     end
 
     it "renders the initial dashboard metrics for the portfolio" do
@@ -108,9 +129,13 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include("Total investido")
       expect(response.body).to include("Renda passiva liquida")
       expect(response.body).to include("Alocacao por categoria")
+      expect(response.body).to include("Alocacao por subcategoria")
       expect(response.body).to include("AAPL")
       expect(response.body).to include("Internacional")
       expect(response.body).to include("Ações")
+      expect(response.body).to include("Tecnologia")
+      expect(response.body).to include("Bancos")
+      expect(response.body).to include("Sem subcategoria")
     end
 
     it "returns not found for a portfolio from another user" do
