@@ -20,6 +20,10 @@ Its goal is to help contributors understand where the main responsibilities live
   operation history connecting user portfolios to global investment assets
 - `app/models/investments/income.rb`
   income history linked to a portfolio context and the asset that generated the payment
+- `lib/market_data/*`
+  provider abstraction and normalized service boundary for future external market data integrations
+- `app/services/market_data/asset_lookup_service.rb`
+  application-facing entrypoint for asset lookup so controllers and future flows do not call providers directly
 
 ## Authentication And User Scope
 
