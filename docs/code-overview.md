@@ -24,6 +24,8 @@ Its goal is to help contributors understand where the main responsibilities live
   provider abstraction and normalized service boundary for future external market data integrations
 - `app/services/market_data/asset_lookup_service.rb`
   application-facing entrypoint for asset lookup so controllers and future flows do not call providers directly
+- `lib/market_data/providers/brapi_provider.rb`
+  first concrete provider implementation with Brazil-first asset metadata lookup
 
 ## Authentication And User Scope
 
@@ -42,6 +44,11 @@ Its goal is to help contributors understand where the main responsibilities live
 - prefer explicit foreign keys for user-owned data
 - add indexes for lookup and uniqueness rules that matter to the domain
 - do not modify old migrations; create new ones instead
+
+## Local Configuration
+
+- development-only secrets may live in a local `.env` file, which is already ignored by git
+- keep a versioned `.env.example` with the variable names required to run integrations locally
 
 ## Tests
 

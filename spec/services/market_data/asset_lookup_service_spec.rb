@@ -22,8 +22,23 @@ RSpec.describe MarketData::AssetLookupService do
     end
 
     it "uses the null provider by default" do
-      expect { described_class.new.call(symbol: "AAPL") }
-        .to raise_error(MarketData::ConfigurationError, "No market data provider configured")
+      provider = instance_double(MarketData::Providers::BrapiProvider)
+      allow(MarketData::Providers::BrapiProvider).to receive(:new).and_return(provider)
+      allow(provider).to receive(:lookup_asset).with(symbol: "AAPL").and_return(
+        MarketData::AssetData.new(
+          symbol: "AAPL",
+          name: "Apple Inc.",
+          currency: "USD",
+          category: "international",
+          subcategory: nil,
+          active: true
+        )
+      )
+
+      result = described_class.new.call(symbol: "AAPL")
+
+      expect(result.symbol).to eq("AAPL")
+      expect(provider).to have_received(:lookup_asset).with(symbol: "AAPL")
     end
   end
 end

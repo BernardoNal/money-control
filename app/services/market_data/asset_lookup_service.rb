@@ -1,6 +1,6 @@
 module MarketData
   class AssetLookupService
-    def initialize(provider: NullProvider.new)
+    def initialize(provider: Providers::BrapiProvider.new)
       @provider = provider
     end
 
