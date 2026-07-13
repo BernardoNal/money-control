@@ -1,3 +1,7 @@
+<% subcategory_map = Investments::Asset::CATEGORY_SUBCATEGORY_MAP.transform_values do |keys| %>
+  <% keys.map { |key| [I18n.t("activerecord.attributes.investments/asset.subcategories.#{key}"), key] } %>
+<% end %>
+
 <div class="container mt-8 max-w-3xl">
   <%= link_to investments_assets_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
     <i class="fa-solid fa-circle-left"></i>Voltar
@@ -8,6 +12,9 @@
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Investments</p>
       <h1 class="mt-2 text-3xl font-semibold text-gray-900"><%= @asset.persisted? ? "Editar Ativo" : "Novo Ativo" %></h1>
       <p class="mt-2 text-sm text-gray-600">Cadastre ativos com categoria, moeda e status para uso no dominio de investimentos.</p>
+      <% unless @asset.persisted? %>
+        <p class="mt-2 text-sm text-slate-500">Voce pode informar apenas o ticker para tentar o preenchimento automatico, ou continuar com o cadastro manual.</p>
+      <% end %>
     </div>
 
     <div class="px-6 py-6">
@@ -26,7 +33,7 @@
         <div class="grid gap-5 md:grid-cols-2">
           <div>
             <%= f.label :name, "Nome", class: "mb-2 block text-sm font-medium text-gray-900" %>
-            <%= f.text_field :name, class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100", required: true %>
+            <%= f.text_field :name, class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
@@ -38,21 +45,23 @@
             <%= f.label :category, "Categoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
             <%= f.select :category,
                          options_for_select(@categories, @asset.category),
-                         {},
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                         { include_blank: @asset.persisted? ? false : "Selecione uma categoria" },
+                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
+                         data: { subcategory_map: json_escape(subcategory_map.to_json) } %>
           </div>
 
            <div>
             <%= f.label :subcategory, "SubCategoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
             <%= f.select :subcategory,
                          options_for_select(@subcategories, @asset.subcategory),
-                         {},
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                         { include_blank: "Opcional" },
+                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
+                         data: { role: "asset-subcategory-select" } %>
           </div>
 
           <div>
             <%= f.label :currency, "Moeda", class: "mb-2 block text-sm font-medium text-gray-900" %>
-            <%= f.text_field :currency, class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100", placeholder: "BRL, USD...", required: true %>
+            <%= f.text_field :currency, class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100", placeholder: "BRL, USD..." %>
           </div>
         </div>
 

@@ -18,7 +18,7 @@ module Investments
 
     def new
       @asset = Investments::Asset.new
-      @subcategories = subcategory_options
+      @subcategories = form_subcategory_options(@asset.category)
       @categories = category_options
       render :form
     end
@@ -26,7 +26,10 @@ module Investments
     def create
       @asset = Investments::Asset.new(asset_params)
       @categories = category_options
-      @subcategories = subcategory_options
+      @subcategories = form_subcategory_options(@asset.category)
+      apply_lookup_metadata(@asset)
+      @subcategories = form_subcategory_options(@asset.category)
+      return render(:form, status: :unprocessable_entity) if @asset.errors.any?
 
       if @asset.save
         redirect_to investments_asset_path(@asset), notice: "Ativo criado com sucesso."
@@ -37,13 +40,13 @@ module Investments
 
     def edit
       @categories = category_options
-      @subcategories = subcategory_options
+      @subcategories = form_subcategory_options(@asset.category)
       render :form
     end
 
     def update
       @categories = category_options
-      @subcategories = subcategory_options
+      @subcategories = form_subcategory_options(asset_params[:category].presence || @asset.category)
       if @asset.update(asset_params)
         redirect_to investments_asset_path(@asset), notice: "Ativo alterado com sucesso."
       else
@@ -57,8 +60,38 @@ module Investments
       params.require(:investments_asset).permit(:name, :symbol, :category, :subcategory, :currency, :active)
     end
 
+    def apply_lookup_metadata(asset)
+      return unless lookup_only_submission?(asset)
+
+      asset_data = MarketData::AssetLookupService.new.call(symbol: asset.symbol)
+
+      asset.name = asset_data.name
+      asset.category = asset_data.category if asset_data.category.present?
+      asset.subcategory = asset_data.subcategory if asset_data.subcategory.present?
+      asset.currency = asset_data.currency
+      asset.active = asset_data.active
+    rescue MarketData::NotFoundError
+      asset.errors.add(:symbol, "nao foi encontrado no provedor de mercado")
+      preserve_lookup_only_defaults(asset)
+    rescue MarketData::ProviderError, MarketData::ConfigurationError => e
+      asset.errors.add(:base, "Nao foi possivel buscar os dados do ativo: #{e.message}")
+      preserve_lookup_only_defaults(asset)
+    end
+
     def set_asset
       @asset = Investments::Asset.find(params[:id])
+    end
+
+    def lookup_only_submission?(asset)
+      asset.symbol.present? &&
+        asset.name.blank? &&
+        asset.category.blank? &&
+        asset.currency.blank? &&
+        asset.subcategory.blank?
+    end
+
+    def preserve_lookup_only_defaults(asset)
+      asset.active = true if asset.active.nil?
     end
 
     def category_options
@@ -72,6 +105,15 @@ module Investments
 
     def subcategory_options
       Investments::Asset.subcategories.keys.map do |key|
+        [
+          I18n.t("activerecord.attributes.investments/asset.subcategories.#{key}"),
+          key
+        ]
+      end
+    end
+
+    def form_subcategory_options(category)
+      Investments::Asset.allowed_subcategories_for(category).map do |key|
         [
           I18n.t("activerecord.attributes.investments/asset.subcategories.#{key}"),
           key

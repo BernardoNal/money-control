@@ -10,6 +10,12 @@ pt-BR:
   activerecord:
     attributes:
       investments/asset:
+        name: "Nome"
+        symbol: "Ticker / Simbolo"
+        category: "Categoria"
+        subcategory: "SubCategoria"
+        currency: "Moeda"
+        active: "Ativo"
         categories:
           stock: "Ações"
           fii: "Fundos Imobiliários"
@@ -24,6 +30,15 @@ pt-BR:
           banks: "Bancos"
           energy: "Energia"
           technology: "Tecnologia"
+          retail: "Varejo"
+          mining: "Mineração"
+          agribusiness: "Agronegócio"
+          logistics: "Logística"
+          shopping_malls: "Shoppings"
+          offices: "Lajes Corporativas"
+          receivables: "Recebíveis"
+          utilities: "Utilidades Públicas"
+          healthcare: "Saúde"
 
       investments/income:
         income_types:
@@ -49,3 +64,9 @@ pt-BR:
           transfer: "Transferência"
           split: "Split"
           reverse_split: "Reverse Split"
+
+    errors:
+      messages:
+        blank: "não pode ficar em branco"
+        taken: "já está em uso"
+        invalid_for_category: "não é compatível com a categoria selecionada"
