@@ -58,11 +58,66 @@ RSpec.describe "Investments::Assets", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Apple Inc.")
-      expect(response.body).to include("International")
+      expect(response.body).to include("Internacional")
     end
   end
 
   describe "POST /create" do
+    it "creates an asset by auto-filling fields from the market data provider" do
+      asset_data = MarketData::AssetData.new(
+        symbol: "PETR4",
+        name: "Petroleo Brasileiro SA Pfd",
+        currency: "BRL",
+        category: "stock",
+        subcategory: nil,
+        active: true
+      )
+
+      lookup_service = instance_double(MarketData::AssetLookupService, call: asset_data)
+      allow(MarketData::AssetLookupService).to receive(:new).and_return(lookup_service)
+
+      expect do
+        post investments_assets_path, params: {
+          investments_asset: {
+            name: "",
+            symbol: "PETR4",
+            category: "",
+            subcategory: "",
+            currency: ""
+          }
+        }
+      end.to change(Investments::Asset, :count).by(1)
+
+      asset = Investments::Asset.order(:created_at).last
+      expect(response).to redirect_to(investments_asset_path(asset))
+      expect(asset.name).to eq("Petroleo Brasileiro SA Pfd")
+      expect(asset.category).to eq("stock")
+      expect(asset.currency).to eq("BRL")
+      expect(asset.active).to be(true)
+      expect(lookup_service).to have_received(:call).with(symbol: "PETR4")
+    end
+
+    it "renders the form with an error when the ticker is not found" do
+      lookup_service = instance_double(MarketData::AssetLookupService)
+      allow(MarketData::AssetLookupService).to receive(:new).and_return(lookup_service)
+      allow(lookup_service).to receive(:call).and_raise(MarketData::NotFoundError, "missing")
+
+      expect do
+        post investments_assets_path, params: {
+          investments_asset: {
+            name: "",
+            symbol: "INVALIDO",
+            category: "",
+            subcategory: "",
+            currency: ""
+          }
+        }
+      end.not_to change(Investments::Asset, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Ticker / Simbolo nao foi encontrado no provedor de mercado")
+    end
+
     it "creates an asset with category support" do
       expect do
         post investments_assets_path, params: {
@@ -70,6 +125,7 @@ RSpec.describe "Investments::Assets", type: :request do
             name: "XP Malls",
             symbol: "XPML11",
             category: "fii",
+            subcategory: "shopping_malls",
             currency: "BRL",
             active: "1"
           }
@@ -79,6 +135,24 @@ RSpec.describe "Investments::Assets", type: :request do
       asset = Investments::Asset.order(:created_at).last
       expect(response).to redirect_to(investments_asset_path(asset))
       expect(asset.category).to eq("fii")
+    end
+
+    it "rejects incompatible category and subcategory combinations" do
+      expect do
+        post investments_assets_path, params: {
+          investments_asset: {
+            name: "Petrobras",
+            symbol: "PETR4-MANUAL",
+            category: "stock",
+            subcategory: "paper",
+            currency: "BRL",
+            active: "1"
+          }
+        }
+      end.not_to change(Investments::Asset, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("SubCategoria não é compatível com a categoria selecionada")
     end
   end
 
