@@ -43,7 +43,24 @@ module MarketData
       end
 
       def fetch_price(symbol:)
-        raise NotImplementedError, "#{self.class.name} does not implement #fetch_price yet"
+        payload = get_json(
+          path: "/stocks/quote",
+          query_params: { symbols: symbol }
+        )
+        quote = payload.fetch("results", []).find do |item|
+          item["symbol"].to_s.casecmp?(symbol)
+        end
+        price_payload = quote&.fetch("data", {}) || {}
+
+        raise NotFoundError, "Price not found for symbol #{symbol}" if quote.blank?
+        raise NotFoundError, "Price not found for symbol #{symbol}" if price_payload["regularMarketPrice"].blank?
+
+        PriceData.new(
+          symbol: quote.fetch("symbol", symbol),
+          price: BigDecimal(price_payload.fetch("regularMarketPrice").to_s),
+          currency: price_payload["currency"],
+          as_of: parse_time(price_payload["regularMarketTime"])
+        )
       end
 
       private
@@ -52,7 +69,7 @@ module MarketData
 
       def get_json(path:, query_params:)
         uri = URI("#{BASE_URL}#{path}")
-        uri.query = URI.encode_www_form(query_params)
+        uri.query = URI.encode_www_form(query_params) if query_params.present?
 
         request = Net::HTTP::Get.new(uri)
         request["Authorization"] = "Bearer #{api_token}" if api_token.present?
@@ -92,6 +109,14 @@ module MarketData
 
       def active_from(metadata)
         metadata["isActive"].nil? ? (metadata["longName"].present? || metadata["name"].present?) : metadata["isActive"]
+      end
+
+      def parse_time(value)
+        return if value.blank?
+
+        Time.zone.parse(value.to_s)
+      rescue ArgumentError
+        nil
       end
     end
   end
