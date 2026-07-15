@@ -100,6 +100,52 @@ RSpec.describe MarketData::Providers::BrapiProvider do
     end
   end
 
+  describe "#fetch_price" do
+    it "returns normalized market price data for a quoted asset" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "PETR4",
+              "data" => {
+                "currency" => "BRL",
+                "regularMarketPrice" => 32.15,
+                "regularMarketTime" => "2026-07-13T10:00:00.000Z"
+              }
+            }
+          ]
+        }.to_json
+      )
+
+      expect_quote_request(response, "PETR4")
+
+      result = provider.fetch_price(symbol: "PETR4")
+
+      expect(result).to eq(
+        MarketData::PriceData.new(
+          symbol: "PETR4",
+          price: BigDecimal("32.15"),
+          currency: "BRL",
+          as_of: Time.zone.parse("2026-07-13T10:00:00Z")
+        )
+      )
+    end
+
+    it "raises not found when BRAPI returns no current price" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: { "results" => [{ "symbol" => "PETR4", "data" => { "currency" => "BRL" } }] }.to_json
+      )
+      expect_quote_request(response, "PETR4")
+
+      expect { provider.fetch_price(symbol: "PETR4") }
+        .to raise_error(MarketData::NotFoundError, "Price not found for symbol PETR4")
+    end
+  end
+
   def expect_request(response, symbol)
     allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
       expect(hostname).to eq("brapi.dev")
@@ -110,6 +156,23 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(http).to receive(:request) do |request|
         expect(request.path).to include("/api/v2/tickers")
         expect(request.path).to include("search=#{symbol}")
+        expect(request["Authorization"]).to eq("Bearer test-token")
+        response
+      end
+
+      block.call(http)
+    end
+  end
+
+  def expect_quote_request(response, symbol)
+    allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
+      expect(hostname).to eq("brapi.dev")
+      expect(port).to eq(443)
+      expect(use_ssl).to be(true)
+
+      http = instance_double("Net::HTTP")
+      expect(http).to receive(:request) do |request|
+        expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{symbol}")
         expect(request["Authorization"]).to eq("Bearer test-token")
         response
       end

@@ -24,8 +24,12 @@ Its goal is to help contributors understand where the main responsibilities live
   provider abstraction and normalized service boundary for future external market data integrations
 - `app/services/market_data/asset_lookup_service.rb`
   application-facing entrypoint for asset lookup so controllers and future flows do not call providers directly
+- `app/services/market_data/price_lookup_service.rb`
+  application-facing entrypoint for latest price retrieval so dashboard flows can consume market prices without depending on provider details
 - `lib/market_data/providers/brapi_provider.rb`
-  first concrete provider implementation with Brazil-first asset metadata lookup
+  first concrete provider implementation with Brazil-first asset metadata lookup and latest price retrieval
+- `app/services/investments/portfolio_dashboard_builder.rb`
+  central aggregation service for portfolio analytics, including cost-based history and current market-value summaries
 
 ## Authentication And User Scope
 
