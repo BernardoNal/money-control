@@ -68,6 +68,12 @@ When the change affects an important domain, add lightweight documentation:
 - add short code comments only where intent is not obvious
 - document security-sensitive conventions such as user scoping
 
+Method-level comments should be concise and purposeful:
+
+- add a short comment to methods with business rules, calculations, or external integrations
+- explain intent and behavior, not line-by-line mechanics
+- avoid comments for trivial setters, readers, or obvious framework code
+
 ## 6. Mandatory Review
 
 After implementation, review:

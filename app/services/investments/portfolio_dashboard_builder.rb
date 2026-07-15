@@ -64,6 +64,7 @@ module Investments
       new(portfolio: portfolio, price_lookup_service: price_lookup_service).call
     end
 
+    # Builds the full dashboard snapshot, keeping transaction history separate from market-price valuation.
     def call
       grouped_transactions = transactions.group_by(&:asset)
       base_entries = grouped_transactions.filter_map do |asset, asset_transactions|
@@ -117,6 +118,7 @@ module Investments
       @incomes ||= portfolio.incomes.to_a
     end
 
+    # Reconstructs the current open position for one asset from its buy and sell history.
     def build_asset_entry(asset, asset_transactions)
       quantity = ZERO
       total_cost = ZERO
@@ -151,6 +153,7 @@ module Investments
       )
     end
 
+    # Enriches position entries with the latest available market quote, falling back to cost basis when unavailable.
     def attach_market_prices(entries)
       entries.map do |entry|
         price_data = fetch_price_for(entry.asset.symbol)
@@ -169,6 +172,7 @@ module Investments
       end
     end
 
+    # Produces a cost-based historical series using only recorded transactions grouped by date.
     def build_historical_evolution_points(sorted_transactions)
       running_positions = Hash.new { |hash, key| hash[key] = { quantity: ZERO, total_cost: ZERO } }
 
@@ -199,6 +203,7 @@ module Investments
         end
     end
 
+    # Applies percentage allocation after total invested capital has been calculated.
     def attach_allocation(entries, total_invested_amount)
       entries.map do |entry|
         entry.allocation_percentage = allocation_percentage_for(entry.invested_amount, total_invested_amount)
@@ -207,6 +212,7 @@ module Investments
       end
     end
 
+    # Groups invested capital by category for dashboard allocation summaries.
     def build_category_allocations(entries, total_invested_amount)
       entries
         .group_by { |entry| entry.asset.category }
@@ -223,6 +229,7 @@ module Investments
         .sort_by { |entry| [-entry.invested_amount, entry.label] }
     end
 
+    # Groups invested capital by subcategory while keeping uncategorized assets visible.
     def build_subcategory_allocations(entries, total_invested_amount)
       entries
         .group_by { |entry| entry.asset.subcategory.presence }
@@ -261,6 +268,7 @@ module Investments
       total_cost / quantity
     end
 
+    # Returns nil instead of raising so the dashboard can degrade gracefully when market data is missing.
     def fetch_price_for(symbol)
       price_lookup_service.call(symbol: symbol)
     rescue MarketData::ConfigurationError, MarketData::NotFoundError, MarketData::ProviderError

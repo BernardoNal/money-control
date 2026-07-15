@@ -11,6 +11,7 @@ module MarketData
         @api_token = api_token
       end
 
+      # Looks up normalized asset metadata from BRAPI's ticker search endpoint.
       def lookup_asset(symbol:)
         payload = fetch_asset_metadata(symbol: symbol)
         metadata = payload
@@ -25,6 +26,7 @@ module MarketData
         )
       end
 
+      # Retrieves raw asset metadata so lookup flows can normalize names, categories and currency.
       def fetch_asset_metadata(symbol:)
         payload = get_json(
           path: "/tickers",
@@ -42,6 +44,7 @@ module MarketData
         asset_payload
       end
 
+      # Retrieves the latest available quote for a symbol and normalizes it into PriceData.
       def fetch_price(symbol:)
         payload = get_json(
           path: "/stocks/quote",
@@ -67,6 +70,7 @@ module MarketData
 
       attr_reader :api_token
 
+      # Executes a BRAPI request and translates transport or payload errors into provider-level failures.
       def get_json(path:, query_params:)
         uri = URI("#{BASE_URL}#{path}")
         uri.query = URI.encode_www_form(query_params) if query_params.present?
@@ -111,6 +115,7 @@ module MarketData
         metadata["isActive"].nil? ? (metadata["longName"].present? || metadata["name"].present?) : metadata["isActive"]
       end
 
+      # Parses provider timestamps leniently so quote failures do not cascade from malformed dates alone.
       def parse_time(value)
         return if value.blank?
 
