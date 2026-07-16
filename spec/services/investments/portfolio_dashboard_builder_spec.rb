@@ -238,6 +238,54 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(dashboard.asset_entries.first.quantity).to eq(BigDecimal("2"))
   end
 
+  it "filters dashboard calculations by category" do
+    fixed_income_asset = Investments::Asset.create!(
+      name: "Tesouro Selic",
+      symbol: "SELIC2029",
+      category: :fixed_income,
+      currency: "BRL"
+    )
+
+    create_transaction(stock_asset, :buy, quantity: 2, price: 10, date: Date.new(2026, 1, 1))
+    create_transaction(fii_asset, :buy, quantity: 5, price: 10, date: Date.new(2026, 1, 2))
+    create_transaction(fixed_income_asset, :buy, quantity: 3, price: 20, date: Date.new(2026, 1, 3))
+    create_income(stock_asset, net_amount: 15, gross_amount: 15, tax_amount: 0)
+    create_income(fii_asset, net_amount: 25, gross_amount: 25, tax_amount: 0)
+
+    filtered_dashboard = described_class.call(
+      portfolio: portfolio,
+      price_lookup_service: price_lookup_service,
+      category: "fii"
+    )
+
+    expect(filtered_dashboard.asset_entries.map { |entry| entry.asset.symbol }).to eq(["XPML11"])
+    expect(filtered_dashboard.total_invested_amount).to eq(BigDecimal("50"))
+    expect(filtered_dashboard.passive_income_summary).to eq(BigDecimal("25"))
+    expect(filtered_dashboard.category_allocations.map(&:category)).to eq(["fii"])
+  end
+
+  it "filters dashboard calculations by date range" do
+    create_transaction(stock_asset, :buy, quantity: 2, price: 10, date: Date.new(2026, 1, 1))
+    create_transaction(fii_asset, :buy, quantity: 5, price: 10, date: Date.new(2026, 2, 1))
+    create_transaction(stock_asset, :buy, quantity: 1, price: 12, date: Date.new(2026, 3, 1))
+    create_income(stock_asset, net_amount: 5, gross_amount: 5, tax_amount: 0, payment_date: Date.new(2026, 1, 15))
+    create_income(fii_asset, net_amount: 12, gross_amount: 12, tax_amount: 0, payment_date: Date.new(2026, 2, 15))
+
+    filtered_dashboard = described_class.call(
+      portfolio: portfolio,
+      price_lookup_service: price_lookup_service,
+      from_date: Date.new(2026, 2, 1),
+      to_date: Date.new(2026, 3, 1)
+    )
+
+    expect(filtered_dashboard.asset_entries.map { |entry| entry.asset.symbol }).to eq(%w[XPML11 AAPL])
+    expect(filtered_dashboard.total_invested_amount).to eq(BigDecimal("62"))
+    expect(filtered_dashboard.passive_income_summary).to eq(BigDecimal("12"))
+    expect(filtered_dashboard.historical_evolution_points.map(&:date)).to eq(
+      [Date.new(2026, 2, 1), Date.new(2026, 3, 1)]
+    )
+  end
+
   def create_transaction(asset, transaction_type, quantity:, price:, fees: 0, date: Date.new(2026, 1, 1), portfolio: self.portfolio)
     Investments::Transaction.create!(
       portfolio: portfolio,
