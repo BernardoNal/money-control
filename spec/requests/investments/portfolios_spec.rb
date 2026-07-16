@@ -141,6 +141,43 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include("Sem subcategoria")
     end
 
+    it "filters dashboard data by category and preserves selected filters" do
+      get investments_portfolio_path(portfolio), params: { category: "stock" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Banco do Brasil")
+      expect(response.body).not_to include("Apple Inc.")
+      expect(response.body).to include('option selected="selected" value="stock"')
+    end
+
+    it "filters dashboard data by date range and preserves date fields" do
+      older_only_asset = Investments::Asset.create!(
+        name: "Old Position",
+        symbol: "OLD1",
+        category: :stock,
+        currency: "BRL"
+      )
+
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: older_only_asset,
+        transaction_type: :buy,
+        quantity: 3,
+        price: 12,
+        fees: 0,
+        date: Date.new(2026, 1, 10)
+      )
+
+      get investments_portfolio_path(portfolio), params: {
+        from_date: Date.current.to_s,
+        to_date: Date.current.to_s
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Old Position")
+      expect(response.body).to include(%(value="#{Date.current}"))
+    end
+
     it "returns not found for a portfolio from another user" do
       other_user = User.create!(
         name: "Another User",

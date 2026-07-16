@@ -55,13 +55,34 @@ module Investments
 
     ZERO = BigDecimal("0")
 
-    def initialize(portfolio:, price_lookup_service: MarketData::PriceLookupService.new)
+    def initialize(
+      portfolio:,
+      price_lookup_service: MarketData::PriceLookupService.new,
+      from_date: nil,
+      to_date: nil,
+      category: nil
+    )
       @portfolio = portfolio
       @price_lookup_service = price_lookup_service
+      @from_date = from_date
+      @to_date = to_date
+      @category = category
     end
 
-    def self.call(portfolio:, price_lookup_service: MarketData::PriceLookupService.new)
-      new(portfolio: portfolio, price_lookup_service: price_lookup_service).call
+    def self.call(
+      portfolio:,
+      price_lookup_service: MarketData::PriceLookupService.new,
+      from_date: nil,
+      to_date: nil,
+      category: nil
+    )
+      new(
+        portfolio: portfolio,
+        price_lookup_service: price_lookup_service,
+        from_date: from_date,
+        to_date: to_date,
+        category: category
+      ).call
     end
 
     # Builds the full dashboard snapshot, keeping transaction history separate from market-price valuation.
@@ -104,18 +125,27 @@ module Investments
 
     private
 
-    attr_reader :portfolio, :price_lookup_service
+    attr_reader :portfolio, :price_lookup_service, :from_date, :to_date, :category
 
     def transactions
-      portfolio
+      scope = portfolio
         .transactions
         .includes(:asset)
         .where(transaction_type: [:buy, :sell])
-        .order(:date, :id)
+      scope = scope.where(date: from_date..) if from_date.present?
+      scope = scope.where(date: ..to_date) if to_date.present?
+      scope = scope.joins(:asset).where(investments_assets: { category: Investments::Asset.categories[category] }) if category.present?
+      scope.order(:date, :id)
     end
 
     def incomes
-      @incomes ||= portfolio.incomes.to_a
+      @incomes ||= begin
+        scope = portfolio.incomes.includes(:asset)
+        scope = scope.where(payment_date: from_date..) if from_date.present?
+        scope = scope.where(payment_date: ..to_date) if to_date.present?
+        scope = scope.joins(:asset).where(investments_assets: { category: Investments::Asset.categories[category] }) if category.present?
+        scope.to_a
+      end
     end
 
     # Reconstructs the current open position for one asset from its buy and sell history.
