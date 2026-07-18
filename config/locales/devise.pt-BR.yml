@@ -1,0 +1,4 @@
+pt-BR:
+  devise:
+    failure:
+      unauthenticated: "Voce precisa entrar ou criar uma conta antes de continuar."
