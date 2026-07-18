@@ -48,6 +48,7 @@ Authentication:
 - redesign the Devise pages with a consistent card/layout structure, improved hierarchy, and responsive behavior
 - keep all existing authentication flows intact, including sign in, registration, password recovery, confirmation, unlock, and account editing
 - preserve Devise error rendering and shared links while modernizing presentation and accessibility
+- adopt `#000080` as the preferred primary button color for the refreshed authentication experience, keeping semantic exceptions such as destructive actions in red
 
 Implementation approach:
 

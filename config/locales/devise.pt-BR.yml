@@ -1,4 +1,39 @@
 pt-BR:
   devise:
+    confirmations:
+      confirmed: "Seu e-mail foi confirmado com sucesso."
+      send_instructions: "Voce recebera um e-mail com instrucoes para confirmar sua conta em alguns minutos."
+      send_paranoid_instructions: "Se o e-mail existir em nossa base, voce recebera instrucoes de confirmacao em alguns minutos."
     failure:
+      already_authenticated: "Voce ja esta autenticado."
+      inactive: "Sua conta ainda nao foi ativada."
+      invalid: "%{authentication_keys} ou senha invalidos."
+      locked: "Sua conta esta bloqueada."
+      last_attempt: "Voce tem mais uma tentativa antes que sua conta seja bloqueada."
+      not_found_in_database: "%{authentication_keys} ou senha invalidos."
+      timeout: "Sua sessao expirou. Entre novamente para continuar."
       unauthenticated: "Voce precisa entrar ou criar uma conta antes de continuar."
+      unconfirmed: "Voce precisa confirmar seu e-mail antes de continuar."
+    passwords:
+      no_token: "Voce nao pode acessar esta pagina sem usar o link enviado no e-mail de redefinicao de senha."
+      send_instructions: "Voce recebera um e-mail com instrucoes para redefinir sua senha em alguns minutos."
+      send_paranoid_instructions: "Se o e-mail existir em nossa base, voce recebera um link de recuperacao em alguns minutos."
+      updated: "Sua senha foi alterada com sucesso. Voce ja esta autenticado."
+      updated_not_active: "Sua senha foi alterada com sucesso."
+    registrations:
+      destroyed: "Sua conta foi cancelada com sucesso."
+      signed_up: "Conta criada com sucesso. Seja bem-vindo."
+      signed_up_but_inactive: "Sua conta foi criada, mas ainda nao pode ser acessada porque nao foi ativada."
+      signed_up_but_locked: "Sua conta foi criada, mas ainda nao pode ser acessada porque esta bloqueada."
+      signed_up_but_unconfirmed: "Enviamos um link de confirmacao para o seu e-mail."
+      update_needs_confirmation: "Conta atualizada com sucesso. Confirme seu novo e-mail para concluir a alteracao."
+      updated: "Sua conta foi atualizada com sucesso."
+      updated_but_not_signed_in: "Sua conta foi atualizada com sucesso, mas voce precisa entrar novamente porque a senha foi alterada."
+    sessions:
+      already_signed_out: "Voce ja saiu da sua conta."
+      signed_in: "Login realizado com sucesso."
+      signed_out: "Voce saiu da sua conta com sucesso."
+    unlocks:
+      send_instructions: "Voce recebera um e-mail com instrucoes para desbloquear sua conta em alguns minutos."
+      send_paranoid_instructions: "Se a conta existir, voce recebera instrucoes de desbloqueio em alguns minutos."
+      unlocked: "Sua conta foi desbloqueada com sucesso. Entre para continuar."
