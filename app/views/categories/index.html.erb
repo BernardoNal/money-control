@@ -7,10 +7,7 @@
         <p class="mt-2 text-sm leading-6 text-slate-600">Organize entradas e saidas com categorias mais legiveis e consistentes.</p>
       </div>
 
-      <%= link_to new_category_path, class: "inline-flex items-center justify-center gap-2 rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200" do %>
-        <i class="fa-solid fa-circle-plus"></i>
-        Criar categoria
-      <% end %>
+      <%= render ButtonComponent.new(label: "Criar categoria", href: new_category_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
     <% if @categories.any? %>
@@ -30,10 +27,7 @@
             </div>
 
             <div class="mt-5">
-              <%= link_to category_path(category), class: "inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
-                Acessar
-                <i class="fa-solid fa-arrow-right"></i>
-              <% end %>
+              <%= render ButtonComponent.new(label: "Acessar", href: category_path(category), variant: :soft_olive, icon: "fa-solid fa-arrow-right", classes: "bg-white text-slate-700 hover:text-slate-900") %>
             </div>
           </article>
         <% end %>

@@ -1,6 +1,17 @@
 <nav class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950 text-white shadow-lg">
   <div class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-    <div class="overflow-visible">
+    <div class="flex items-center justify-between gap-4 lg:hidden">
+      <%= link_to root_path, class: "inline-flex min-w-0 items-center gap-3 text-white no-underline" do %>
+        <img src="<%= asset_path('$$$.png') %>" class="h-9 w-9 object-contain" alt="Money Control" />
+        <p class="truncate text-sm font-semibold uppercase tracking-[0.22em] text-slate-300">Money Control</p>
+      <% end %>
+
+      <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800 hover:text-white" data-mobile-nav-trigger aria-expanded="false" aria-controls="mobile-sidebar">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+
+    <div class="hidden overflow-visible lg:block">
       <div class="flex min-w-max items-center gap-3 whitespace-nowrap">
         <%= link_to root_path, class: "mr-2 inline-flex items-center gap-3 text-white no-underline" do %>
           <img src="<%= asset_path('$$$.png') %>" class="h-9 w-9 object-contain" alt="Money Control" />
@@ -56,5 +67,92 @@
         <% end %>
       </div>
     </div>
+  </div>
+
+  <div class="pointer-events-none fixed inset-0 z-50 hidden lg:hidden" data-mobile-nav-root>
+    <div class="absolute inset-0 bg-slate-950/60 opacity-0 transition" data-mobile-nav-backdrop></div>
+
+    <aside id="mobile-sidebar" class="absolute left-0 top-0 flex h-full w-full max-w-sm -translate-x-full flex-col border-r border-slate-800 bg-slate-950 shadow-2xl transition-transform duration-200" aria-hidden="true">
+      <div class="flex items-center justify-between gap-4 border-b border-slate-800 px-5 py-5">
+        <%= link_to root_path, class: "inline-flex min-w-0 items-center gap-3 text-white no-underline", data: { mobile_nav_close: true } do %>
+          <img src="<%= asset_path('$$$.png') %>" class="h-9 w-9 object-contain" alt="Money Control" />
+          <div>
+            <p class="truncate text-sm font-semibold uppercase tracking-[0.22em] text-slate-300">Money Control</p>
+            <p class="mt-1 text-xs text-slate-500">Menu principal</p>
+          </div>
+        <% end %>
+
+        <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-slate-300 transition hover:bg-slate-800 hover:text-white" data-mobile-nav-close aria-label="Fechar menu">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 space-y-6 overflow-y-auto px-5 py-6">
+        <section>
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Navegacao</p>
+          <div class="space-y-2">
+            <% primary_navigation_items.each do |item| %>
+              <%= link_to item[:path], class: "flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium no-underline transition #{item[:active].call ? 'bg-white text-slate-950 shadow-sm' : 'bg-slate-900 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-800 hover:text-white'}", data: { mobile_nav_close: true } do %>
+                <span class="flex items-center gap-3">
+                  <i class="<%= item[:icon] %> w-4"></i>
+                  <span><%= item[:label] %></span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+
+        <section>
+          <details class="group rounded-3xl border border-slate-800 bg-slate-900/80 p-2" <%= "open" if investments_navigation_items.any? { |item| item[:active].call } %>>
+            <summary class="flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white">
+              <span class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-pie w-4"></i>
+                <span>Investimentos</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-xs transition group-open:rotate-180"></i>
+            </summary>
+
+            <div class="mt-2 space-y-2 px-1 pb-1">
+              <% investments_navigation_items.each do |item| %>
+                <%= link_to item[:path], class: "flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium no-underline transition #{item[:active].call ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-200 hover:bg-slate-800 hover:text-white'}", data: { mobile_nav_close: true } do %>
+                  <span class="flex items-center gap-3">
+                    <i class="<%= item[:icon] %> w-4"></i>
+                    <span><%= item[:label] %></span>
+                  </span>
+                  <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                <% end %>
+              <% end %>
+            </div>
+          </details>
+        </section>
+      </div>
+
+      <% if current_user.present? %>
+        <div class="border-t border-slate-800 px-5 py-5">
+          <div class="mb-4 flex items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 ring-1 ring-slate-800">
+            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300">
+              <%= user_initials(current_user) %>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-white"><%= user_display_name(current_user) %></p>
+              <p class="truncate text-xs text-slate-500"><%= current_user.email %></p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <%= link_to edit_user_registration_path, class: "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white", data: { mobile_nav_close: true } do %>
+              <i class="fa-solid fa-user-gear w-4"></i>
+              <span>Minha conta</span>
+            <% end %>
+
+            <%= button_to destroy_user_session_path, method: :delete, form: { class: "w-full" }, class: "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-emerald-300 transition hover:bg-slate-800 hover:text-emerald-200" do %>
+              <i class="fa-solid fa-right-from-bracket w-4"></i>
+              <span>Sair</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </aside>
   </div>
 </nav>

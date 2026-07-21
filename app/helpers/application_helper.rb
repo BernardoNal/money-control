@@ -29,11 +29,11 @@ module ApplicationHelper
   def flash_banner_classes(type)
     case type.to_sym
     when :notice
-      "border-emerald-200 bg-emerald-50 text-emerald-800"
+      "border-emerald-200 bg-emerald-50/90 text-emerald-800"
     when :alert
-      "border-amber-200 bg-amber-50 text-amber-900"
+      "border-amber-200 bg-amber-50/95 text-amber-900"
     else
-      "border-slate-200 bg-white text-slate-700"
+      "border-slate-200 bg-white/95 text-slate-700"
     end
   end
 

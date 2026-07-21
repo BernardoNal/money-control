@@ -1,7 +1,25 @@
-<% flash.each do |type, message| %>
-  <% next if message.blank? %>
+<% visible_flash = flash.to_h.select { |_type, message| message.present? } %>
 
-  <div class="mb-4 rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm <%= flash_banner_classes(type) %>">
-    <%= message %>
+<% if visible_flash.any? %>
+  <div class="mb-6 space-y-3">
+    <% visible_flash.each do |type, message| %>
+      <div class="rounded-3xl border px-5 py-4 text-sm font-medium shadow-sm backdrop-blur-sm <%= flash_banner_classes(type) %>">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5">
+            <% if type.to_sym == :notice %>
+              <i class="fa-solid fa-circle-check"></i>
+            <% elsif type.to_sym == :alert %>
+              <i class="fa-solid fa-circle-exclamation"></i>
+            <% else %>
+              <i class="fa-solid fa-circle-info"></i>
+            <% end %>
+          </div>
+
+          <div class="leading-6">
+            <%= message %>
+          </div>
+        </div>
+      </div>
+    <% end %>
   </div>
 <% end %>
