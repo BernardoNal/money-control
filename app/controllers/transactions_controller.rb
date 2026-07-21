@@ -1,9 +1,10 @@
 class TransactionsController < ApplicationController
   before_action :set_transaction, only: %i[show edit update destroy]
   before_action :set_categories, only: %i[new create edit update]
+  before_action :set_accounts, only: %i[new create edit update]
 
   def index
-    @transactions = Transaction.order(date: :desc)
+    @transactions = current_user_transactions.order(date: :desc)
   end
 
   def show
@@ -16,7 +17,6 @@ class TransactionsController < ApplicationController
 
   def create
     @transaction = Transaction.new(transaction_params)
-    @transaction.account = Account.first
 
     if @transaction.save
       redirect_to transaction_path(@transaction), notice: "Transação criada com sucesso."
@@ -53,15 +53,24 @@ class TransactionsController < ApplicationController
       :to_whom,
       :payment_method,
       :date,
-      :category_id
+      :category_id,
+      :account_id
     )
   end
 
   def set_transaction
-    @transaction = Transaction.find(params[:id])
+    @transaction = current_user_transactions.find(params[:id])
   end
 
   def set_categories
     @categories = Category.all
+  end
+
+  def set_accounts
+    @accounts = Account.where(user: current_user)
+  end
+
+  def current_user_transactions
+    Transaction.joins(:account).where(accounts: { user_id: current_user.id })
   end
 end

@@ -43,6 +43,7 @@ Its goal is to help contributors understand where the main responsibilities live
 - shared navigation lives in `app/views/shared/_navbar.html.erb`
 - new modules should be added to navigation only when they are already usable
 - primary action buttons should prefer the project navy tone `#000080`, with a slightly darker hover state, unless a specific flow requires a semantic color such as danger red
+- reusable buttons should prefer `ButtonComponent`; for soft return and secondary navigation actions, use the olive variant instead of repeating inline utility strings
 
 ## Database Conventions
 
