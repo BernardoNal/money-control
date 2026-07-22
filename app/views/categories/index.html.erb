@@ -1,13 +1,42 @@
-<div>
-<h1>Categories#index</h1>
+<div class="mx-auto w-full max-w-7xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Categorias</p>
+        <h1 class="mt-3 text-3xl font-semibold text-slate-950">Classificacao financeira</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Organize entradas e saidas com categorias mais legiveis e consistentes.</p>
+      </div>
 
-<%@categories.each  do |category| %>
-<p><%= category.name %>-<%= category.is_income ? "Entrada" : "Saída" %></p>
-<%= link_to "acessar",category_path(category), class: "text-red-700 " %>
-<% end %>
-<p>
-<%= link_to new_category_path() do %>
-  <%= render ButtonComponent.new(label: "Criar Categoria") %>
-  <% end %>
-</p>
+      <%= render ButtonComponent.new(label: "Criar categoria", href: new_category_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+    </div>
+
+    <% if @categories.any? %>
+      <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <% @categories.each do |category| %>
+          <article class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-sm" style="background-color: <%= category.color %>;">
+                  <i class="<%= category.icon %>"></i>
+                </div>
+                <div>
+                  <h2 class="text-lg font-semibold text-slate-950"><%= category.name %></h2>
+                  <p class="text-sm text-slate-500"><%= category.is_income ? "Entrada" : "Saida" %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5">
+              <%= render ButtonComponent.new(label: "Acessar", href: category_path(category), variant: :soft_olive, icon: "fa-solid fa-arrow-right", classes: "bg-white text-slate-700 hover:text-slate-900") %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+        <h2 class="text-xl font-semibold text-slate-950">Nenhuma categoria cadastrada</h2>
+        <p class="mt-2 text-sm text-slate-600">Crie categorias para melhorar a leitura das suas movimentacoes.</p>
+      </div>
+    <% end %>
+  </section>
 </div>

@@ -13,26 +13,23 @@ class CategoriesController < ApplicationController
   end
 
   def create
-
     @category = Category.new(category_params)
-    @category.user = @user
+    @category.user = current_user
 
     if @category.save
-      redirect_to category_path(@category)
-      flash[:alert] = "Categoria criada com sucesso."
+      redirect_to category_path(@category), notice: "Categoria criada com sucesso."
     else
-      render :new, status: :unprocessable_entity
+      render :form, status: :unprocessable_entity
     end
   end
 
   def edit
-     render :form
+    render :form
   end
 
   def update
     if @category.update(category_params)
-      redirect_to category_path(@category)
-      flash[:alert] = "Categoria alterada com sucesso."
+      redirect_to category_path(@category), notice: "Categoria alterada com sucesso."
     else
       render :form, status: :unprocessable_entity
     end
@@ -40,9 +37,8 @@ class CategoriesController < ApplicationController
 
   def destroy
     @category.destroy
-    flash[:alert] = "Categoria excluída com sucesso."
 
-    redirect_to categories_path
+    redirect_to categories_path, notice: "Categoria excluida com sucesso."
   end
 
   private

@@ -1,100 +1,79 @@
-<div class="container mx-auto mt-4 max-w-5xl rounded-3xl bg-white p-8 shadow-sm">
-  <%= link_to transactions_path,
-      class: "inline-flex items-center gap-2 rounded bg-black px-3 py-2 text-white no-underline" do %>
-    <i class="fa-solid fa-circle-left"></i>
-    Voltar
-  <% end %>
-
-  <h1 class="my-6 text-center text-2xl font-semibold">
-    <%= @transaction.persisted? ? "Editar Transação" : "Nova Transação" %>
-  </h1>
-
-  <%= form_with model: @transaction, local: true do |f| %>
-    <% if @transaction.errors.any? %>
-      <div class="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">
-        <h2 class="font-semibold">
-          Não foi possível salvar a transação:
-        </h2>
-
-        <ul class="mt-2 list-disc pl-5">
-          <% @transaction.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
-
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div>
-        <%= f.label :amount,
-                    "Valor",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.number_field :amount,
-                           step: 0.01,
-                           required: true,
-                           placeholder: "0,00",
-                           class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
-
-      <div>
-        <%= f.label :description,
-                    "Descrição",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.text_field :description,
-                         placeholder: "Energia, lanche, estudos",
-                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
-
-      <div>
-        <%= f.label :to_whom,
-                    "Recebedor/Pagador",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.text_field :to_whom,
-                         placeholder: "Banco X, Amazon...",
-                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
-
-      <div>
-        <%= f.label :payment_method,
-                    "Método de pagamento",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.text_field :payment_method,
-                         placeholder: "Débito, PIX...",
-                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
-
-      <div>
-        <%= f.label :date,
-                    "Data",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.date_field :date,
-                         class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
-
-      <div>
-        <%= f.label :category_id,
-                    "Categoria",
-                    class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-        <%= f.collection_select :category_id,
-                                @categories,
-                                :id,
-                                :name,
-                                { prompt: "Selecione" },
-                                class: "w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-600" %>
-      </div>
+<div class="mx-auto w-full max-w-6xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <div>
+      <%= render ButtonComponent.new(label: "Voltar para transacoes", href: transactions_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Transacoes</p>
+      <h1 class="mt-3"><%= @transaction.persisted? ? "Editar transacao" : "Nova transacao" %></h1>
+      <p class="mt-2 text-sm leading-6">Registre a movimentacao e vincule corretamente a conta e a categoria.</p>
     </div>
 
-    <div class="mt-6 flex justify-center">
-      <%= f.submit(
-            @transaction.persisted? ? "Atualizar Transação" : "Criar Transação",
-            class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800"
-          ) %>
+    <div class="mt-8">
+      <%= form_with model: @transaction, local: true do |f| %>
+        <% if @transaction.errors.any? %>
+          <div class="mb-6 rounded-2xl border border-red-300 bg-red-50 p-4 text-red-700">
+            <h2 class="font-semibold">Nao foi possivel salvar a transacao:</h2>
+            <ul class="mt-2 list-disc pl-5">
+              <% @transaction.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div>
+            <%= f.label :amount, "Valor", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.number_field :amount, step: 0.01, required: true, placeholder: "0,00", class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :description, "Descricao", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.text_field :description, placeholder: "Energia, lanche, estudos", class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :to_whom, "Recebedor/Pagador", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.text_field :to_whom, placeholder: "Banco X, Amazon...", class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :payment_method, "Metodo de pagamento", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.text_field :payment_method, placeholder: "Debito, PIX...", class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :date, "Data", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.date_field :date, class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :account_id, "Conta", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.collection_select :account_id,
+                                    @accounts,
+                                    :id,
+                                    :name,
+                                    { prompt: "Selecione a conta" },
+                                    class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :category_id, "Categoria", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.collection_select :category_id,
+                                    @categories,
+                                    :id,
+                                    :name,
+                                    { prompt: "Selecione a categoria" },
+                                    class: "w-full" %>
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+          <%= f.submit(
+                @transaction.persisted? ? "Salvar alteracoes" : "Criar transacao",
+                class: "inline-flex items-center justify-center rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200"
+              ) %>
+        </div>
+      <% end %>
     </div>
-  <% end %>
+  </section>
 </div>

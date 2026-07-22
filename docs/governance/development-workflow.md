@@ -62,6 +62,14 @@ For longer changes, keep progress visible:
 - blockers or risks
 - strategy changes
 
+For work executed in approved stages or checkpoints:
+
+- stop after each significant approved checkpoint for review
+- do not continue to the next checkpoint without explicit approval
+- create a commit after each approved checkpoint that should be preserved as a stable recovery point
+- mention in the implementation plan when the work will be split into checkpoints
+- if a checkpoint is rejected, revert only that checkpoint before continuing
+
 When the change affects an important domain, add lightweight documentation:
 
 - update a relevant project doc when the module changes the code map

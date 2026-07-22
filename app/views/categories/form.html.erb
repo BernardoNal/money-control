@@ -1,34 +1,39 @@
+<div class="mx-auto w-full max-w-5xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <div>
+      <%= render ButtonComponent.new(label: "Voltar para categorias", href: categories_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Categorias</p>
+      <h1 class="mt-3"><%= @category.persisted? ? "Editar categoria" : "Nova categoria" %></h1>
+    </div>
 
-<div class="container  mt-4">
-  <%= link_to categories_path, class: 'bg-black text-white text-decoration-none p-2' do %>
-    <i class='fa-solid fa-circle-left'></i>volta
-  <% end %>
-  <h1 class="pb-3 text-center"><%= @category.persisted? ? 'Editar Conta' : 'Nova Conta' %></h1>
-  <div class="mx-3">
-    <%= form_with model: @category, local: true do |f| %>
-      <div class="grid grid-cols-4 gap-4 w-full ">
-        <div class="mx-auto">
-          <%= f.label :name, "Nome da Categoria", class: "block mb-2 text-sm font-medium text-gray-900" %>
-          <%= f.text_field :name, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5",  placeholder: "Energia, lanche, estudos" %>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :is_income, "Tipo", class: "block mb-2 text-sm font-medium text-gray-900" %>
-          <%= f.select :is_income, [["Entrada", true], ["Saída", false]], {}, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5" %>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :icon, "Ícone", class: "block mb-2 text-sm font-medium text-gray-900" %>
-          <%= f.select :icon, Category::ICONS.map { |i| [i, i] }, {}, class: "border border-gray-400 m-2 text-sm rounded-lg p-2.5 text-lg" %>
-        </div>
-        <div class="mx-auto">
-          <%= f.label :color, "Cor da Categoria", class: "block mb-2 text-sm font-medium text-gray-900" %>
-          <%= f.color_field :color, class: "border border-gray-400 m-2 w-16 h-10 p-0.5  cursor-pointer rounded-lg  " %>
+    <div class="mt-8">
+      <%= form_with model: @category, local: true do |f| %>
+        <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div class="xl:col-span-2">
+            <%= f.label :name, "Nome da categoria", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.text_field :name, class: "w-full", placeholder: "Energia, lanche, estudos" %>
+          </div>
+
+          <div>
+            <%= f.label :is_income, "Tipo", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.select :is_income, [["Entrada", true], ["Saida", false]], {}, class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :icon, "Icone", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.select :icon, Category::ICONS.map { |i| [i, i] }, {}, class: "w-full" %>
+          </div>
+
+          <div>
+            <%= f.label :color, "Cor da categoria", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.color_field :color, class: "h-12 w-20 cursor-pointer rounded-2xl border border-slate-300 bg-white p-1" %>
+          </div>
         </div>
 
+        <div class="mt-8 flex justify-center">
+          <%= f.button :submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
         </div>
-      <div class="col-span-3 mx-auto my-2">
-        <%= f.button :submit, class: "text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300  rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 " %>
-      </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 </div>
