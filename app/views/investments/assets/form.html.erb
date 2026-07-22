@@ -2,14 +2,12 @@
   <% keys.map { |key| [I18n.t("activerecord.attributes.investments/asset.subcategories.#{key}"), key] } %>
 <% end %>
 
-<div class="container mt-8 max-w-3xl">
-  <%= link_to investments_assets_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
-    <i class="fa-solid fa-circle-left"></i>Voltar
-  <% end %>
+<div class="container mx-auto w-full max-w-6xl">
 
   <div class="mt-6 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
     <div class="border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white px-6 py-6">
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Investments</p>
+      <%= render ButtonComponent.new(label: "Voltar para Ativos", href: investments_assets_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      <p class="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Investments</p>
       <h1 class="mt-2 text-3xl font-semibold text-gray-900"><%= @asset.persisted? ? "Editar Ativo" : "Novo Ativo" %></h1>
       <p class="mt-2 text-sm text-gray-600">Cadastre ativos com categoria, moeda e status para uso no dominio de investimentos.</p>
       <% unless @asset.persisted? %>
@@ -73,8 +71,8 @@
         </div>
 
         <div class="mt-8 flex flex-wrap gap-3">
-          <%= f.button :submit, class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300" %>
-          <%= link_to "Cancelar", investments_assets_path, class: "rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
+          <%= f.button :submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
+          <%= render ButtonComponent.new(label: "Cancelar", href: investments_assets_path, variant: :soft_olive, icon: "") %>
         </div>
       <% end %>
     </div>
