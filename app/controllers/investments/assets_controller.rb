@@ -1,8 +1,11 @@
 module Investments
   class AssetsController < ApplicationController
-    before_action :set_asset, only: %i[show edit update]
+    before_action :set_asset, only: %i[edit update]
 
     def index
+      @total_assets = 10
+      @offset = params[:set].to_i % @total_assets == 0 ? params[:set].to_i : 0
+
       @selected_category = permitted_category(params[:category])
       @selected_subcategory = permitted_subcategory(params[:subcategory])
       @categories = category_options
@@ -10,10 +13,8 @@ module Investments
       @assets = Investments::Asset.order(:symbol)
       @assets = @assets.where(category: @selected_category) if @selected_category.present?
       @assets = @assets.where(subcategory: @selected_subcategory) if @selected_subcategory.present?
-
-    end
-
-    def show
+      @visible_assets = @assets.limit(@total_assets).offset(@offset)
+      @asset_prices = build_asset_prices(@visible_assets)
     end
 
     def new
@@ -32,7 +33,7 @@ module Investments
       return render(:form, status: :unprocessable_entity) if @asset.errors.any?
 
       if @asset.save
-        redirect_to investments_asset_path(@asset), notice: "Ativo criado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: "Ativo criado com sucesso."
       else
         render :form, status: :unprocessable_entity
       end
@@ -48,7 +49,7 @@ module Investments
       @categories = category_options
       @subcategories = form_subcategory_options(asset_params[:category].presence || @asset.category)
       if @asset.update(asset_params)
-        redirect_to investments_asset_path(@asset), notice: "Ativo alterado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: "Ativo alterado com sucesso."
       else
         render :form, status: :unprocessable_entity
       end
@@ -132,6 +133,20 @@ module Investments
       return if value.blank?
       return value if Investments::Asset.subcategories.key?(value)
 
+      nil
+    end
+
+    def build_asset_prices(assets)
+      price_lookup_service = MarketData::PriceLookupService.new
+
+      assets.each_with_object({}) do |asset, prices|
+        prices[asset.id] = fetch_price_for(price_lookup_service, asset.symbol)
+      end
+    end
+
+    def fetch_price_for(price_lookup_service, symbol)
+      price_lookup_service.call(symbol: symbol)
+    rescue MarketData::ConfigurationError, MarketData::NotFoundError, MarketData::ProviderError
       nil
     end
   end

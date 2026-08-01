@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   resources :categories
   resources :transactions
   namespace :investments do
-    resources :assets, except: :destroy
+    resources :assets, except: %i[show destroy]
     resources :portfolios
     resources :incomes
     resources :transactions

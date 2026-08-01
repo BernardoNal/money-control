@@ -1,103 +1,112 @@
-<div class="container mt-8 max-w-7xl">
-  <% total_assets = 10 %>
-  <% offset = params[:set].to_i % total_assets == 0 ? params[:set].to_i : 0 %>
-  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-    <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Investments</p>
-      <h1 class="mt-2 text-3xl font-semibold text-gray-900">Ativos</h1>
-      <p class="mt-2 text-sm text-gray-600">Catalogo global de ativos com filtro por categoria.</p>
-    </div>
-
-
-    <%= render ButtonComponent.new(label: "Novo ativo", href: new_investments_asset_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
-  </div>
-
-  <div class="mt-6 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm lg:p-6">
-    <%= form_with url: investments_assets_path, method: :get, local: true, class: "grid gap-4 md:grid-cols-[minmax(0,280px)_auto]" do |f| %>
-       <div class="flex  gap-4">
-        <div>
-
-        <%= f.label :category, "Categoria", class: "mb-2 block text-sm font-medium text-gray-900" %>
-        <%= f.select :category,
-                     options_for_select([["Todas", ""]] + @categories, @selected_category),
-                     {},
-                     class: "block  rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-        </div>
-        <div>
-
-        <%= f.label :category, "Ramo", class: "mb-2 block text-sm font-medium text-gray-900" %>
-        <%= f.select :subcategory,
-                     options_for_select([["Todos", ""]] + @subcategories, @selected_subcategory),
-                     {},
-                     class: "block rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-        </div>
-        <div class="flex items-end gap-4">
-          <%= f.button "Aplicar filtro", class: ButtonComponent::VARIANT_STYLES[:primary] %>
-          <%= render ButtonComponent.new(label: "Limpar", href: investments_assets_path, variant: :soft_olive, icon: "") %>
-        </div>
+<div class="mx-auto w-full max-w-7xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Investimentos</p>
+        <h1 class="mt-3 text-3xl font-semibold text-slate-950">Ativos</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Explore o catalogo global de ativos com filtros mais claros e uma leitura mais consistente.</p>
       </div>
 
-    <% end %>
-  </div>
+      <%= render ButtonComponent.new(label: "Novo ativo", href: new_investments_asset_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+    </div>
 
-<div class="mt-8 overflow-x-auto rounded-3xl border border-slate-200">
-      <table class="min-w-full text-left text-sm">
-        <thead class="bg-slate-100 text-slate-600">
-          <tr>
-            <th class="px-5 py-4 font-semibold">Nome</th>
-            <th class="px-5 py-4 font-semibold">Preço atual</th>
-            <th class="px-5 py-4 font-semibold">Moeda</th>
-            <th class="px-5 py-4 font-semibold">Categoria-Subcategoria</th>
-            <th class="px-5 py-4 font-semibold text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          <% @assets.limit(total_assets).offset(offset).each do |asset| %>
-            <tr class="border-t border-slate-200">
-              <td class="px-5 py-4 font-medium text-slate-900"><%= asset.name %> - <%= asset.symbol %></td>
-              <td class="px-5 py-4">
+    <div class="rounded-3xl bg-slate-50 p-6">
+      <%= form_with url: investments_assets_path, method: :get, local: true, class: "grid gap-5 lg:grid-cols-[1fr_1fr_auto]" do |f| %>
+        <div>
+          <%= f.label :category, "Categoria", class: "mb-1.5 block text-sm font-medium" %>
+          <%= f.select :category,
+                       options_for_select([["Todas", ""]] + @categories, @selected_category),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
 
-                      Sem cotação
-              </td>
-              <td class="px-5 py-4 text-slate-700"><%= asset.currency %></td>
-              <td class="px-5 py-4 text-slate-700"><%= "#{asset.category.capitalize} - #{asset.subcategory&.capitalize}" %></td>
-              <td class="px-5 py-4">
-                <div class="flex items-center justify-end gap-3">
-                  <%= link_to investments_asset_path(asset), class: "text-slate-500 transition hover:text-slate-900" do %>
-                    <i class="fa-solid fa-eye"></i>
-                  <% end %>
-                  <%= link_to edit_investments_asset_path(asset), class: "text-emerald-600 transition hover:text-emerald-700" do %>
-                    <i class="fa-solid fa-pen-to-square"></i>
-                  <% end %>
-                </div>
-              </td>
+        <div>
+          <%= f.label :subcategory, "Ramo", class: "mb-1.5 block text-sm font-medium" %>
+          <%= f.select :subcategory,
+                       options_for_select([["Todos", ""]] + @subcategories, @selected_subcategory),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3 lg:justify-end">
+          <%= f.button "Aplicar filtro", class: ButtonComponent::VARIANT_STYLES[:primary] %>
+          <%= render ButtonComponent.new(label: "Limpar", href: investments_assets_path, variant: :soft_olive) %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @assets.any? %>
+      <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-200">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-100 text-slate-600">
+            <tr>
+              <th class="px-5 py-4 font-semibold">Ativo</th>
+              <th class="px-5 py-4 font-semibold">Cotacao</th>
+              <th class="px-5 py-4 font-semibold">Classificacao</th>
+              <th class="px-5 py-4 font-semibold text-right">Acoes</th>
             </tr>
+          </thead>
+          <tbody class="bg-white">
+            <% @visible_assets.each do |asset| %>
+              <% price_data = @asset_prices[asset.id] %>
+              <tr class="border-t border-slate-200">
+                <td class="px-5 py-4">
+                  <div class="font-semibold text-slate-950"><%= asset.symbol %></div>
+                  <div class="mt-1 text-sm text-slate-600"><%= asset.name %></div>
+                </td>
+                <td class="px-5 py-4">
+                  <% if price_data.present? %>
+                    <div class="font-semibold text-slate-950">
+                      <%= number_to_currency(price_data.price, unit: "", separator: ",", delimiter: ".", precision: 2) %>
+                      <span class="ml-1 text-sm font-medium text-slate-500"><%= price_data.currency.presence || asset.currency %></span>
+                    </div>
+                  <% else %>
+                    <div class="text-slate-600">Sem cotacao</div>
+                    <div class="mt-1 text-xs text-slate-500"><%= asset.currency %></div>
+                  <% end %>
+                </td>
+                <td class="px-5 py-4">
+                  <div class="font-medium text-slate-900"><%= asset.human_category %></div>
+                  <div class="mt-1 text-sm text-slate-600"><%= asset.human_subcategory %></div>
+                </td>
+                <td class="px-5 py-4">
+                  <div class="flex items-center justify-end gap-3">
+                    <%= link_to edit_investments_asset_path(asset), class: "text-emerald-600 transition hover:text-emerald-700" do %>
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-5 flex items-center justify-end gap-4 text-sm font-medium text-slate-600">
+        <% if @offset > 0 %>
+          <%= link_to investments_assets_path(request.query_parameters.merge(set: @offset - @total_assets)), class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
+            <i class="fa-solid fa-arrow-left"></i>
+            Anterior
           <% end %>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-5 flex items-center justify-end gap-4 text-sm font-medium text-slate-600">
-      <% if offset > 0 %>
-        <%= link_to investments_assets_path(request.query_parameters.merge(set: offset - total_assets)), class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
-          <i class="fa-solid fa-arrow-left"></i>
-          Anterior
         <% end %>
-      <% end %>
 
-      <span>Pagina <%= (offset / total_assets) + 1 %></span>
+        <span>Pagina <%= (@offset / @total_assets) + 1 %></span>
 
-      <% if offset + total_assets < @assets.count %>
-        <%= link_to investments_assets_path(request.query_parameters.merge(set: offset + total_assets)), class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
-          Proxima
-          <i class="fa-solid fa-arrow-right"></i>
+        <% if @offset + @total_assets < @assets.count %>
+          <%= link_to investments_assets_path(request.query_parameters.merge(set: @offset + @total_assets)), class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
+            Proxima
+            <i class="fa-solid fa-arrow-right"></i>
+          <% end %>
         <% end %>
-      <% end %>
-    </div>
-
-  <% if @assets.empty? %>
-    <div class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-      Nenhum ativo encontrado para o filtro selecionado.
-    </div>
-  <% end %>
+      </div>
+    <% else %>
+      <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+        <h2 class="text-xl font-semibold text-slate-950">Nenhum ativo encontrado</h2>
+        <p class="mt-2 text-sm text-slate-600">Ajuste os filtros ou cadastre um novo ativo para alimentar o catalogo.</p>
+        <div class="mt-6 flex justify-center">
+          <%= render ButtonComponent.new(label: "Novo ativo", href: new_investments_asset_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+        </div>
+      </div>
+    <% end %>
+  </section>
 </div>
