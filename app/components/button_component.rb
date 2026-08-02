@@ -2,8 +2,8 @@
 
 class ButtonComponent < ViewComponent::Base
   VARIANT_STYLES = {
-    primary: "inline-flex items-center justify-center gap-2 rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200",
-    soft_olive: "inline-flex items-center gap-2 rounded-full border border-[#808000]/40 bg-[#808000]/10 px-4 py-2 text-sm font-medium text-[#808000] no-underline transition hover:bg-[#808000]/20 hover:text-[#6b6b00]",
+    primary: "whitespace-nowrap inline-flex items-center justify-center gap-2 rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200",
+    soft_olive: "inline-flex items-center gap-2 rounded-full border border-[#808000]/40 bg-[#808000]/10 px-5 py-3 text-sm font-medium text-[#808000] no-underline transition hover:bg-[#808000]/20 hover:text-[#6b6b00]",
     danger: "inline-flex items-center justify-center gap-2 rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white no-underline transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-200"
   }.freeze
 
