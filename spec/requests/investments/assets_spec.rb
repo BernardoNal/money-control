@@ -52,16 +52,6 @@ RSpec.describe "Investments::Assets", type: :request do
     end
   end
 
-  describe "GET /show" do
-    it "renders the selected asset" do
-      get investments_asset_path(stock_asset)
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Apple Inc.")
-      expect(response.body).to include("Internacional")
-    end
-  end
-
   describe "POST /create" do
     it "creates an asset by auto-filling fields from the market data provider" do
       asset_data = MarketData::AssetData.new(
@@ -89,7 +79,7 @@ RSpec.describe "Investments::Assets", type: :request do
       end.to change(Investments::Asset, :count).by(1)
 
       asset = Investments::Asset.order(:created_at).last
-      expect(response).to redirect_to(investments_asset_path(asset))
+      expect(response).to redirect_to(edit_investments_asset_path(asset))
       expect(asset.name).to eq("Petroleo Brasileiro SA Pfd")
       expect(asset.category).to eq("stock")
       expect(asset.currency).to eq("BRL")
@@ -133,7 +123,7 @@ RSpec.describe "Investments::Assets", type: :request do
       end.to change(Investments::Asset, :count).by(1)
 
       asset = Investments::Asset.order(:created_at).last
-      expect(response).to redirect_to(investments_asset_path(asset))
+      expect(response).to redirect_to(edit_investments_asset_path(asset))
       expect(asset.category).to eq("fii")
     end
 
@@ -167,7 +157,7 @@ RSpec.describe "Investments::Assets", type: :request do
         }
       end.not_to change(Investments::Asset, :count)
 
-      expect(response).to redirect_to(investments_asset_path(stock_asset))
+      expect(response).to redirect_to(edit_investments_asset_path(stock_asset))
 
       stock_asset.reload
       expect(stock_asset.category).to eq("stock")
