@@ -1,9 +1,19 @@
 class Investments::IncomesController < ApplicationController
   before_action :set_income, only: %i[show edit update]
-  before_action :load_form_collections, only: %i[new create edit update destroy]
+  before_action :load_form_collections, only: %i[index new create edit update destroy]
 
   def index
+    @total_incomes = 10
+    @offset = params[:set].to_i % @total_incomes == 0 ? params[:set].to_i : 0
+
+    @selected_income_type = permitted_income_type(params[:income_type])
+    @selected_asset = permitted_asset(params[:asset])
+    @selected_portfolio = permitted_asset(params[:portfolio])
     @incomes = Investments::Income.includes(:asset, :portfolio)
+    @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
+    @incomes = @incomes.where(asset: @selected_asset) if @selected_asset.present?
+    @incomes = @incomes.where(portfolio: @selected_portfolio) if @selected_portfolio.present?
+    @visible_incomes = @incomes.limit(@total_incomes).offset(@offset)
   end
 
   def show
@@ -66,11 +76,12 @@ class Investments::IncomesController < ApplicationController
   end
 
   def load_form_collections
-    @portfolios = Investments::Portfolio.order(:name)
-                                        .map { |p| [p.name, p.id] }
+    @portfolios = Investments::Portfolio.where(user: current_user)
+                                    .order(:name)
+                                    .map { |portfolio| [portfolio.name, portfolio.id] }
 
     @assets = Investments::Asset.order(:symbol)
-                                .map { |a| ["#{a.symbol} - #{a.name}", a.id] }
+                                .map { |a| ["#{a.symbol} - #{a.name.first(20)}", a.id] }
 
     @income_types = income_options
   end
@@ -85,5 +96,26 @@ class Investments::IncomesController < ApplicationController
         key
       ]
     end
+  end
+
+  def permitted_income_type(value)
+    return if value.blank?
+    return value if Investments::Income.income_types.key?(value)
+
+    nil
+  end
+
+  def permitted_asset(value)
+    return if value.blank?
+    return value if Investments::Asset.exists?(id: value)
+
+    nil
+  end
+
+  def permitted_income_type(value)
+    return if value.blank?
+    return value if Investments::Portfolio.where(user: current_user).key?(value)
+
+    nil
   end
 end
