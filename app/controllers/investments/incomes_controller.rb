@@ -9,7 +9,8 @@ class Investments::IncomesController < ApplicationController
     @selected_income_type = permitted_income_type(params[:income_type])
     @selected_asset = permitted_asset(params[:asset])
     @selected_portfolio = permitted_asset(params[:portfolio])
-    @incomes = Investments::Income.includes(:asset, :portfolio)
+    @incomes = current_user.investment_incomes
+                       .includes(:asset, :portfolio)
     @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
     @incomes = @incomes.where(asset: @selected_asset) if @selected_asset.present?
     @incomes = @incomes.where(portfolio: @selected_portfolio) if @selected_portfolio.present?

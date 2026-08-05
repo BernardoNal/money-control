@@ -6,6 +6,9 @@ class User < ApplicationRecord
 
   has_many :accounts, dependent: :destroy
   has_many :investment_portfolios, class_name: "Investments::Portfolio", dependent: :destroy
+  has_many :investment_incomes,
+         through: :investment_portfolios,
+         source: :incomes
 
   validates :name, presence: true
 end
