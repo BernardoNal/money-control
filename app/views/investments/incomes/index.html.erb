@@ -63,8 +63,8 @@
                   <div class="mt-1 text-sm text-slate-600"><%= income.income_type %></div>
                 </td>
                 <td class="px-4 py-4">
-                  <span class="<%= income.gross_amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
-                    <%= number_to_currency(income.gross_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                  <span class="<%= income.net_amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
+                    <%= number_to_currency(income.net_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
                   </span>
                 </td>
                 <td class="px-4 py-4">

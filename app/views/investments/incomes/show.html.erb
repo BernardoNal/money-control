@@ -1,108 +1,145 @@
-<div class="container mt-8 max-w-4xl">
-  <%= link_to investments_incomes_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
-    <i class="fa-solid fa-circle-left"></i>Voltar
-  <% end %>
+<div class="mx-auto w-full max-w-6xl">
+  <section class="overflow-hidden rounded-[2rem] border border-slate-300 bg-white shadow-sm">
+    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-8 py-6">
+      <%= render ButtonComponent.new(
+            label: "Voltar",
+            href: investments_incomes_path,
+            variant: :soft_olive,
+            icon: "fa-solid fa-arrow-left"
+          ) %>
 
-  <div class="mt-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Recebíveis
-        </p>
+      <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+        Investments
+      </p>
 
-        <h1 class="mt-2 text-3xl font-semibold text-gray-900">
-          <%= @income.asset&.symbol %>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <h1 class="text-3xl font-semibold text-slate-950">
+          <%= @income.asset.symbol %>
         </h1>
 
+        <span class="rounded-full bg-[#000080]/10 px-3 py-1 text-sm font-medium text-[#000080]">
+          <%= @income.human_income_type %>
+        </span>
       </div>
+
+         <dd class="mt-2 font-semibold text-slate-400">
+              <%= @income.portfolio.name %>
+            </dd>
+      <p class="mt-2 text-sm leading-6 text-slate-600">
+        Visualize todas as informações deste provento.
+      </p>
     </div>
 
-    <dl class="mt-6 grid gap-4 md:grid-cols-3">
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Portfolio</dt>
-        <dd class="mt-2 text-lg font-semibold text-gray-900">
-          <%= @income.portfolio.name %>
-        </dd>
-      </div>
+    <div class="px-8 py-6">
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Ativo</dt>
-        <dd class="mt-2 text-lg font-semibold text-gray-900">
-          <%= @income.asset.symbol %>
-        </dd>
-      </div>
+      <!-- Valores -->
+      <section class="">
+        <h2 class="mb-5 text-lg font-semibold text-slate-900">
+          Valores
+        </h2>
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Tipo</dt>
-        <dd class="mt-2 text-lg font-semibold text-gray-900">
-          <%= @income.human_income_type %>
-        </dd>
-      </div>
+        <div class="grid gap-5 md:grid-cols-3">
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Valor Bruto</dt>
-        <dd class="mt-2 text-lg font-semibold text-green-700">
-          <%= number_to_currency(@income.gross_amount) %>
-        </dd>
-      </div>
+          <div class="rounded-2xl border border-emerald-300 bg-emerald-50 p-6">
+            <p class="text-sm font-medium text-emerald-700">
+              Valor Líquido
+            </p>
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Valor Líquido</dt>
-        <dd class="mt-2 text-lg font-semibold text-green-700">
-          <%= number_to_currency(@income.net_amount) %>
-        </dd>
-      </div>
+            <p class="mt-3 text-3xl font-bold text-emerald-700">
+              <%= number_to_currency(@income.net_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+            </p>
+          </div>
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Imposto</dt>
-        <dd class="mt-2 text-lg font-semibold text-red-700">
-          <%= number_to_currency(@income.tax_amount) %>
-        </dd>
-      </div>
+          <div class="rounded-2xl border border-slate-300 bg-slate-50 p-6">
+            <p class="text-sm font-medium text-slate-500">
+              Valor Bruto
+            </p>
 
-      <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <dt class="text-sm text-gray-500">Data de Pagamento</dt>
-        <dd class="mt-2 text-lg font-semibold text-gray-900">
-          <%= l(@income.payment_date) %>
-        </dd>
-      </div>
+            <p class="mt-3 text-2xl font-semibold text-slate-900">
+              <%= number_to_currency(@income.gross_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+            </p>
+          </div>
 
-      <% if @income.reference_date.present? %>
-        <div class="rounded-2xl border border-gray-200 bg-slate-50 p-4">
-          <dt class="text-sm text-gray-500">Data de Referência</dt>
-          <dd class="mt-2 text-lg font-semibold text-gray-900">
-            <%= l(@income.reference_date) %>
-          </dd>
+          <div class="rounded-2xl border border-red-300 bg-red-50 p-6">
+            <p class="text-sm font-medium text-red-500">
+              Imposto Retido
+            </p>
+
+            <p class="mt-3 text-2xl font-semibold text-red-600">
+              <%= number_to_currency(@income.tax_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+            </p>
+          </div>
+
         </div>
+      </section>
+
+      <!-- Datas -->
+      <section class="mt-10">
+        <h2 class="mb-5 text-lg font-semibold text-slate-900">
+          Datas
+        </h2>
+
+        <div class="grid gap-5 md:grid-cols-2">
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <p class="text-sm font-medium text-slate-500">
+              Data de Pagamento
+            </p>
+
+            <p class="mt-2 text-lg font-semibold text-slate-900">
+              <%= l(@income.payment_date) %>
+            </p>
+          </div>
+
+          <% if @income.reference_date.present? %>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p class="text-sm font-medium text-slate-500">
+                Data de Referência
+              </p>
+
+              <p class="mt-2 text-lg font-semibold text-slate-900">
+                <%= l(@income.reference_date) %>
+              </p>
+            </div>
+          <% end %>
+
+        </div>
+      </section>
+
+      <% if @income.notes.present? %>
+        <section class="mt-10">
+          <h2 class="mb-5 text-lg font-semibold text-slate-900">
+            Observações
+          </h2>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <p class="leading-7 text-slate-700">
+              <%= @income.notes %>
+            </p>
+          </div>
+        </section>
       <% end %>
-    </dl>
 
-    <% if @income.notes.present? %>
-      <div class="mt-6 rounded-2xl border border-gray-200 bg-slate-50 p-4">
-        <h3 class="text-sm font-medium text-gray-500">
-          Observações
-        </h3>
+      <div class="mt-10 flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(
+              label: "Editar",
+              href: edit_investments_income_path(@income),
+              icon: "fa-solid fa-pen"
+            ) %>
 
-        <p class="mt-2 text-gray-900">
-          <%= @income.notes %>
-        </p>
-      </div>
-    <% end %>
-
-    <div class="mt-6 flex flex-wrap gap-3">
-      <%= link_to edit_investments_income_path(@income) do %>
-        <%= render ButtonComponent.new(label: "Edit") %>
-      <% end %>
-      <%= button_to investments_income_path(@income),
+        <%= button_to investments_income_path(@income),
               method: :delete,
               form: {
                 data: {
                   turbo_confirm: "Tem certeza que deseja remover este provento?"
                 }
               },
-              class: "rounded-full bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700" do %>
-        Excluir
-      <% end %>
+              class: "inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700" do %>
+          <i class="fa-solid fa-trash"></i>
+          Excluir
+        <% end %>
+      </div>
+
     </div>
-  </div>
+  </section>
 </div>

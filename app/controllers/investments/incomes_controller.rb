@@ -14,7 +14,7 @@ class Investments::IncomesController < ApplicationController
     @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
     @incomes = @incomes.where(asset: @selected_asset) if @selected_asset.present?
     @incomes = @incomes.where(portfolio: @selected_portfolio) if @selected_portfolio.present?
-    @visible_incomes = @incomes.limit(@total_incomes).offset(@offset)
+    @visible_incomes = @incomes.order(payment_date: :desc).limit(@total_incomes).offset(@offset)
   end
 
   def show
