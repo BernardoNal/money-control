@@ -1,24 +1,19 @@
-<div class="container mt-8 max-w-3xl">
-  <%= link_to investments_incomes_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
-    <i class="fa-solid fa-circle-left"></i>Voltar
-  <% end %>
+<div class="mx-auto w-full max-w-6xl">
+  <section class="overflow-hidden rounded-[2rem] border border-slate-300 bg-white shadow-sm">
+    <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-8 py-7">
+      <%= render ButtonComponent.new(label: "Voltar", href: investments_incomes_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Investments</p>
 
-  <div class="mt-6 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-    <div class="border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white px-6 py-6">
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-        Investments
-      </p>
-
-      <h1 class="mt-2 text-3xl font-semibold text-gray-900">
+      <h1 class="mt-3 text-3xl font-semibold text-slate-950">
         <%= @income.persisted? ? "Editar Provento" : "Novo Provento" %>
       </h1>
 
-      <p class="mt-2 text-sm text-gray-600">
+      <p class="mt-2 text-sm leading-6 text-slate-600">
         Cadastre dividendos, JCP e outros rendimentos recebidos.
       </p>
     </div>
 
-    <div class="px-6 py-6">
+    <div class="px-8 py-7">
       <%= form_with model: @income,
                     url: @income.persisted? ? investments_income_path(@income) : investments_incomes_path,
                     scope: :investments_income,
@@ -38,93 +33,74 @@
           </div>
         <% end %>
 
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="grid gap-5 md:grid-cols-3">
           <div>
-            <%= f.label :portfolio_id, "Portfolio", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :portfolio_id, "Portfolio", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.select :portfolio_id,
-                         options_for_select(@portfolios, @income.portfolio_id),
-                         {},
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                        options_for_select(@portfolios, @income.portfolio_id),
+                        {include_blank: @income.persisted? ? false : "Selecione um portifólio"},
+                        class: "w-full " %>
           </div>
 
           <div>
-            <%= f.label :asset_id, "Ativo", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :asset_id, "Ativo", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.select :asset_id,
-                         options_for_select(@assets, @income.asset_id),
-                         {},
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                        options_for_select(@assets, @income.asset_id),
+                        {include_blank: @income.persisted? ? false : "Selecione um ativo"},
+                        class: "w-full " %>
           </div>
 
           <div>
-            <%= f.label :income_type, "Tipo de Provento", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :income_type, "Tipo de Provento", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.select :income_type,
-                         options_for_select(@income_types, @income.human_income_type),
-                         {},
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                        options_for_select(@income_types, @income.human_income_type),
+                        {include_blank: @income.persisted? ? false : "Selecione o tipo"},
+                        class: "w-full " %>
           </div>
 
           <div>
-            <%= f.label :gross_amount, "Valor Bruto", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :gross_amount, "Valor Bruto", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.number_field :gross_amount,
-                               step: 0.0001,
-                               class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-                               required: true %>
+                              step: 0.0001,
+                              class: "w-full",
+                              required: true %>
           </div>
 
-          <div>
-            <%= f.label :net_amount, "Valor Líquido", class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-            <%= f.number_field :net_amount,
-                               step: 0.0001,
-                               class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-                               required: true %>
-          </div>
 
           <div>
-            <%= f.label :tax_amount, "Imposto", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :tax_amount, "Imposto retido", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.number_field :tax_amount,
-                               step: 0.0001,
-                               class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                              step: 0.0001,
+                              class: "w-full" %>
           </div>
 
           <div>
-            <%= f.label :payment_date, "Data de Pagamento", class: "mb-2 block text-sm font-medium text-gray-900" %>
+            <%= f.label :payment_date, "Data de Pagamento", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.date_field :payment_date,
-                             class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-                             required: true %>
+                            class: "w-full",
+                            required: true %>
           </div>
 
-          <div>
-            <%= f.label :reference_date, "Data de Referência", class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-            <%= f.date_field :reference_date,
-                             class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-          </div>
-
-          <div class="md:col-span-2">
-            <%= f.label :notes, "Observações", class: "mb-2 block text-sm font-medium text-gray-900" %>
+          <div class="mt-4 md:col-span-3">
+            <%= f.label :notes, "Observações", class: "mb-1.5 block text-sm font-medium" %>
 
             <%= f.text_area :notes,
                             rows: 4,
-                            class: "block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                            class: "w-full" %>
           </div>
         </div>
 
-        <div class="mt-8 flex flex-wrap gap-3">
-          <%= f.button :submit,
-                       class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300" %>
-
-          <%= link_to "Cancelar",
-                      investments_incomes_path,
-                      class: "rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
+        <div class="mt-8 flex flex-wrap justify-end gap-3">
+          <%= f.button :submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
+          <%= render ButtonComponent.new(label: "Cancelar", href: investments_incomes_path, variant: :soft_olive) %>
         </div>
       <% end %>
     </div>
-  </div>
+  </section>
 </div>
