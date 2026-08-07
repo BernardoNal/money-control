@@ -37,15 +37,18 @@
         </div>
 
         <div class="flex flex-wrap items-end gap-3 lg:justify-end">
-          <%= f.button "Aplicar filtro", class: ButtonComponent::VARIANT_STYLES[:primary] %>
-          <%= render ButtonComponent.new(label: "Limpar", href: investments_incomes_path, variant: :soft_olive) %>
+          <%= f.button class: ButtonComponent::VARIANT_STYLES[:primary] do %>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Aplicar filtro
+          <% end %>
+          <%= render ButtonComponent.new(label: "Limpar", href: investments_incomes_path, variant: :soft_olive, icon:"fa-solid fa-eraser") %>
         </div>
       <% end %>
     </div>
-
+ <p class="mt-2 text-sm leading-6 text-slate-500"><%= @incomes.count%> proventos encontrados</p>
     <% if @incomes.any? %>
-      <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-700">
-        <table class="min-w-full text-left text-sm">
+      <div class="mt-4 overflow-x-auto rounded-3xl border border-slate-700">
+        <table class="min-w-full text-left text-base">
           <thead class="bg-slate-700 text-slate-200">
             <tr>
               <th class="px-4 py-3 font-semibold">Ativo</th>
@@ -57,13 +60,13 @@
           </thead>
           <tbody class="bg-white">
             <% @visible_incomes.each do |income| %>
-              <tr class="border-t border-slate-200">
+              <tr class="border-t border-slate-200 ">
                 <td class="px-4 py-3">
                   <div class="font-semibold text-slate-950"><%= income.asset.symbol %></div>
                   <div class="mt-1 text-sm text-slate-600"><%= income.income_type %></div>
                 </td>
                 <td class="px-4 py-4">
-                  <span class="<%= income.net_amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
+                  <span class="<%= income.net_amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-bold text-lg">
                     <%= number_to_currency(income.net_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
                   </span>
                 </td>
@@ -75,10 +78,10 @@
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center justify-end gap-3">
-                    <%= link_to investments_income_path(income),  class: "text-slate-500 transition hover:text-slate-900" do %>
+                    <%= link_to investments_income_path(income),  class: "text-lg text-slate-500 transition hover:text-slate-900" do %>
                     <i class="fa-solid fa-eye"></i>
                     <% end %>
-                    <%= link_to edit_investments_income_path(income), class: "text-emerald-600 transition hover:text-emerald-700" do %>
+                    <%= link_to edit_investments_income_path(income), class: "text-lg text-emerald-600 transition hover:text-emerald-700" do %>
                       <i class="fa-solid fa-pen-to-square"></i>
                     <% end %>
                   </div>

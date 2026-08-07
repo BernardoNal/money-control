@@ -1,34 +1,60 @@
 <div class="mx-auto w-full max-w-6xl">
   <section class="overflow-hidden rounded-[2rem] border border-slate-300 bg-white shadow-sm">
     <div class="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-8 py-6">
-      <%= render ButtonComponent.new(
-            label: "Voltar",
-            href: investments_incomes_path,
-            variant: :soft_olive,
-            icon: "fa-solid fa-arrow-left"
-          ) %>
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <%= render ButtonComponent.new(
+              label: "Voltar",
+              href: investments_incomes_path,
+              variant: :soft_olive,
+              icon: "fa-solid fa-arrow-left"
+            ) %>
 
-      <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-        Investments
-      </p>
+          <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+            Investimentos
+          </p>
 
-      <div class="mt-3 flex flex-wrap items-center gap-3">
-        <h1 class="text-3xl font-semibold text-slate-950">
-          <%= @income.asset.symbol %>
-        </h1>
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <h1 class="text-3xl font-semibold text-slate-950">
+              <%= @income.asset.symbol %>
+            </h1>
 
-        <span class="rounded-full bg-[#000080]/10 px-3 py-1 text-sm font-medium text-[#000080]">
-          <%= @income.human_income_type %>
-        </span>
+            <span class="rounded-full bg-[#000080]/10 px-3 py-1 text-sm font-medium text-[#000080]">
+              <%= @income.human_income_type %>
+            </span>
+          </div>
+
+            <dd class="mt-2 font-semibold text-slate-400">
+                  <%= @income.portfolio.name %>
+                </dd>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Visualize todas as informações deste provento.
+          </p>
+        </div>
+        <div class="mt-6 flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(
+              label: "Editar",
+              href: edit_investments_income_path(@income),
+              icon: "fa-solid fa-pen"
+            ) %>
+
+        <%= button_to investments_income_path(@income),
+              method: :delete,
+              form: {
+                data: {
+                  turbo_confirm: "Tem certeza que deseja remover este provento?"
+                }
+              },
+              class: "inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700" do %>
+          <i class="fa-solid fa-trash"></i>
+          Excluir
+        <% end %>
       </div>
 
-         <dd class="mt-2 font-semibold text-slate-400">
-              <%= @income.portfolio.name %>
-            </dd>
-      <p class="mt-2 text-sm leading-6 text-slate-600">
-        Visualize todas as informações deste provento.
-      </p>
+      </div>
     </div>
+
+
 
     <div class="px-8 py-6">
 
@@ -74,7 +100,7 @@
       </section>
 
       <!-- Datas -->
-      <section class="mt-10">
+      <section class="mt-6">
         <h2 class="mb-5 text-lg font-semibold text-slate-900">
           Datas
         </h2>
@@ -107,38 +133,18 @@
       </section>
 
       <% if @income.notes.present? %>
-        <section class="mt-10">
+        <section class="mt-6">
           <h2 class="mb-5 text-lg font-semibold text-slate-900">
             Observações
           </h2>
 
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <div class="rounded-2xl border border-slate-300 bg-slate-50 p-5">
             <p class="leading-7 text-slate-700">
               <%= @income.notes %>
             </p>
           </div>
         </section>
       <% end %>
-
-      <div class="mt-10 flex flex-wrap gap-3">
-        <%= render ButtonComponent.new(
-              label: "Editar",
-              href: edit_investments_income_path(@income),
-              icon: "fa-solid fa-pen"
-            ) %>
-
-        <%= button_to investments_income_path(@income),
-              method: :delete,
-              form: {
-                data: {
-                  turbo_confirm: "Tem certeza que deseja remover este provento?"
-                }
-              },
-              class: "inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700" do %>
-          <i class="fa-solid fa-trash"></i>
-          Excluir
-        <% end %>
-      </div>
 
     </div>
   </section>

@@ -70,14 +70,6 @@
                               required: true %>
           </div>
 
-          <div>
-            <%= f.label :net_amount, "Valor Líquido", class: "mb-1.5 block text-sm font-medium" %>
-
-            <%= f.number_field :net_amount,
-                              step: 0.0001,
-                              class: "w-full",
-                              required: true %>
-          </div>
 
           <div>
             <%= f.label :tax_amount, "Imposto retido", class: "mb-1.5 block text-sm font-medium" %>
@@ -95,13 +87,6 @@
                             required: true %>
           </div>
 
-          <div>
-            <%= f.label :reference_date, "Data de Referência", class: "mb-1.5 block text-sm font-medium" %>
-
-            <%= f.date_field :reference_date,
-                            class: "w-full" %>
-          </div>
-
           <div class="mt-4 md:col-span-3">
             <%= f.label :notes, "Observações", class: "mb-1.5 block text-sm font-medium" %>
 
@@ -111,7 +96,7 @@
           </div>
         </div>
 
-        <div class="mt-8 flex flex-wrap gap-3">
+        <div class="mt-8 flex flex-wrap justify-end gap-3">
           <%= f.button :submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
           <%= render ButtonComponent.new(label: "Cancelar", href: investments_incomes_path, variant: :soft_olive) %>
         </div>
