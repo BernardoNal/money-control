@@ -11,6 +11,9 @@ module Investments
 
     def index
       @portfolios = current_user.investment_portfolios.order(:name)
+      @portfolio_summaries = @portfolios.each_with_object({}) do |portfolio, summaries|
+        summaries[portfolio.id] = Investments::PortfolioDashboardBuilder.call(portfolio: portfolio)
+      end
     end
 
     def show
