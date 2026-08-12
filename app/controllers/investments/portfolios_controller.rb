@@ -11,10 +11,7 @@ module Investments
     before_action :set_portfolio, only: %i[show edit update destroy]
 
     def index
-      @portfolios = current_user.investment_portfolios.order(:name)
-      @portfolio_summaries = @portfolios.each_with_object({}) do |portfolio, summaries|
-        summaries[portfolio.id] = Investments::PortfolioDashboardBuilder.call(portfolio: portfolio)
-      end
+      prepare_index_view
     end
 
     def show
@@ -29,8 +26,7 @@ module Investments
     end
 
     def new
-      @portfolio = current_user.investment_portfolios.new
-      render :form
+      redirect_to investments_portfolios_path(modal: "new")
     end
 
     def create
@@ -39,19 +35,21 @@ module Investments
       if @portfolio.save
         redirect_to investments_portfolio_path(@portfolio), notice: "Portfolio criado com sucesso."
       else
-        render :form, status: :unprocessable_entity
+        prepare_index_view(modal: "new", portfolio: @portfolio)
+        render :index, status: :unprocessable_entity
       end
     end
 
     def edit
-      render :form
+      redirect_to investments_portfolios_path(modal: "edit", portfolio_id: @portfolio.id)
     end
 
     def update
       if @portfolio.update(portfolio_params)
         redirect_to investments_portfolio_path(@portfolio), notice: "Portfolio alterado com sucesso."
       else
-        render :form, status: :unprocessable_entity
+        prepare_index_view(modal: "edit", portfolio: @portfolio)
+        render :index, status: :unprocessable_entity
       end
     end
 
@@ -67,9 +65,32 @@ module Investments
       params.require(:investments_portfolio).permit(:name)
     end
 
+    def prepare_index_view(modal: params[:modal], portfolio: nil)
+      @portfolios = current_user.investment_portfolios.order(:name)
+      @portfolio_summaries = @portfolios.each_with_object({}) do |user_portfolio, summaries|
+        summaries[user_portfolio.id] = Investments::PortfolioDashboardBuilder.call(portfolio: user_portfolio)
+      end
+
+      @portfolio_modal = permitted_portfolio_modal(modal)
+      @portfolio = portfolio || modal_portfolio_record(@portfolio_modal)
+    end
+
     def set_portfolio
       # User-owned portfolios must always be resolved through the authenticated user.
       @portfolio = current_user.investment_portfolios.find(params[:id])
+    end
+
+    def permitted_portfolio_modal(value)
+      %w[new edit].include?(value) ? value : nil
+    end
+
+    def modal_portfolio_record(modal)
+      case modal
+      when "edit"
+        current_user.investment_portfolios.find_by(id: params[:portfolio_id]) || current_user.investment_portfolios.new
+      when "new"
+        current_user.investment_portfolios.new
+      end
     end
 
     def build_dashboard_filters

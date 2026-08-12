@@ -7,7 +7,7 @@
         <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe suas carteiras em um resumo mais claro antes de entrar na analise detalhada.</p>
       </div>
 
-      <%= render ButtonComponent.new(label: "Novo portfolio", href: new_investments_portfolio_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+      <%= render ButtonComponent.new(label: "Novo portfolio", href: investments_portfolios_path(modal: "new"), variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
     <% if @portfolios.any? %>
@@ -22,7 +22,14 @@
           <% negative_variation = variation_amount.negative? %>
           <article class="rounded-3xl border border-slate-500 bg-slate-300  p-6 shadow-sm">
             <div>
-              <h2 class="text-lg font-semibold text-slate-950"><%= portfolio.name %></h2>
+              <div class="flex items-start justify-between gap-3">
+                <h2 class="text-lg font-semibold text-slate-950"><%= portfolio.name %></h2>
+                <%= link_to investments_portfolios_path(modal: "edit", portfolio_id: portfolio.id),
+                            class: "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-300 bg-white text-slate-500 no-underline transition hover:border-slate-400 hover:text-slate-950",
+                            aria: { label: "Editar nome de #{portfolio.name}" } do %>
+                  <i class="fa-solid fa-pen"></i>
+                <% end %>
+              </div>
             </div>
 
             <div class="mt-4 grid gap-5 sm:grid-cols-2">
@@ -62,7 +69,7 @@
               </div>
             </div>
 
-            <div class="mt-7">
+            <div class="mt-7 flex flex-wrap gap-3">
               <%= render ButtonComponent.new(label: "Ver em detalhes", href: investments_portfolio_path(portfolio), variant: :primary, icon: "fa-solid fa-arrow-right", classes: "px-6" ) %>
             </div>
           </article>
@@ -73,9 +80,13 @@
         <h2 class="text-xl font-semibold text-slate-950">Nenhum portfolio cadastrado</h2>
         <p class="mt-2 text-sm text-slate-600">Crie sua primeira carteira para acompanhar ativos, alocacao e evolucao patrimonial.</p>
         <div class="mt-6 flex justify-center">
-          <%= render ButtonComponent.new(label: "Novo portfolio", href: new_investments_portfolio_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+          <%= render ButtonComponent.new(label: "Novo portfolio", href: investments_portfolios_path(modal: "new"), variant: :primary, icon: "fa-solid fa-circle-plus") %>
         </div>
       </div>
     <% end %>
   </section>
 </div>
+
+<% if @portfolio_modal.present? && @portfolio.present? %>
+  <%= render "modal_form", portfolio: @portfolio, modal: @portfolio_modal %>
+<% end %>
