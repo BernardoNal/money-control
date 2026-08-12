@@ -125,7 +125,10 @@ RSpec.describe "Investments::Portfolios", type: :request do
       get investments_portfolio_path(portfolio)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Portfolio Dashboard")
+      expect(response.body).to include("Investimentos")
+      expect(response.body).to include("Main Portfolio")
+      expect(response.body).to include("Visao geral")
+      expect(response.body).to include("Carteira")
       expect(response.body).to include("Total investido")
       expect(response.body).to include("Evolucao historica")
       expect(response.body).to include("Renda passiva liquida")
@@ -176,6 +179,38 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("Old Position")
       expect(response.body).to include(%(value="#{Date.current}"))
+    end
+
+    it "applies the selected preset period to the dashboard filters" do
+      older_only_asset = Investments::Asset.create!(
+        name: "Old Position",
+        symbol: "OLD1",
+        category: :stock,
+        currency: "BRL"
+      )
+
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: older_only_asset,
+        transaction_type: :buy,
+        quantity: 3,
+        price: 12,
+        fees: 0,
+        date: Date.current - 2.months
+      )
+
+      get investments_portfolio_path(portfolio), params: { period: "30d" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Old Position")
+      expect(response.body).to include('option selected="selected" value="30d"')
+    end
+
+    it "uses tempo todo as the default preset" do
+      get investments_portfolio_path(portfolio)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('option selected="selected" value="all"')
     end
 
     it "returns not found for a portfolio from another user" do

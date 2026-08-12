@@ -1,6 +1,7 @@
 module Investments
   class PortfoliosController < ApplicationController
     DashboardFilters = Struct.new(
+      :period,
       :from_date,
       :to_date,
       :category,
@@ -72,9 +73,16 @@ module Investments
     end
 
     def build_dashboard_filters
+      period = permitted_period(params[:period])
+      range = default_period_range(period)
+      manual_from_date = parse_filter_date(params[:from_date])
+      manual_to_date = parse_filter_date(params[:to_date])
+      use_manual_dates = params[:period].blank? && (manual_from_date.present? || manual_to_date.present?)
+
       DashboardFilters.new(
-        from_date: parse_filter_date(params[:from_date]),
-        to_date: parse_filter_date(params[:to_date]),
+        period: period,
+        from_date: use_manual_dates ? manual_from_date : range[:from_date],
+        to_date: use_manual_dates ? manual_to_date : range[:to_date],
         category: permitted_category(params[:category])
       )
     end
@@ -92,6 +100,31 @@ module Investments
       return value if Investments::Asset.categories.key?(value)
 
       nil
+    end
+
+    def permitted_period(value)
+      return "all" if value.blank?
+
+      %w[all 30d 3m 6m 1y].include?(value) ? value : "all"
+    end
+
+    def default_period_range(period)
+      return { from_date: nil, to_date: nil } if period == "all"
+
+      to_date = Date.current
+      from_date =
+        case period
+        when "3m"
+          to_date - 3.months
+        when "6m"
+          to_date - 6.months
+        when "1y"
+          to_date - 1.year
+        else
+          to_date - 30.days
+        end
+
+      { from_date: from_date, to_date: to_date }
     end
 
     def dashboard_category_options
