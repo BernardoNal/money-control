@@ -61,9 +61,35 @@
           </div>
         </div>
 
-        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <%= render ButtonComponent.new(label: "Cancelar", href: investments_portfolios_path, variant: :soft_olive) %>
-          <%= f.button modal_submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
+        <div class="mt-6 flex flex-col gap-4">
+          <% if portfolio.persisted? %>
+            <div class="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-rose-700">Excluir portfolio</p>
+                  <p class="mt-1 text-sm text-rose-600">
+                    Use essa acao apenas se quiser remover esta carteira do sistema.
+                  </p>
+                </div>
+
+                <%= render ButtonComponent.new(
+                      label: "Excluir",
+                      href: investments_portfolio_path(portfolio),
+                      variant: :danger,
+                      icon: "fa-solid fa-trash",
+                      data: {
+                        turbo_method: :delete,
+                        turbo_confirm: "Tem certeza que deseja excluir este portfolio?"
+                      }
+                    ) %>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <%= render ButtonComponent.new(label: "Cancelar", href: investments_portfolios_path, variant: :soft_olive) %>
+            <%= f.button modal_submit, class: ButtonComponent::VARIANT_STYLES[:primary] %>
+          </div>
         </div>
       <% end %>
     </div>
