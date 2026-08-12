@@ -1,132 +1,218 @@
+<% current_tab = %w[overview holdings].include?(params[:tab]) ? params[:tab] : "overview" %>
 <div class="mx-auto w-full max-w-7xl">
-
-  <div class="mt-6 overflow-hidden rounded-3xl border border-gray-400 bg-white shadow-sm">
-    <div class="border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4 lg:px-8 ">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+  <div class="overflow-hidden rounded-[2rem] border border-slate-400 bg-white shadow-sm">
+    <div class="border-b border-slate-300 bg-gradient-to-r from-slate-50 to-white px-8 py-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Portfolio Dashboard</p>
-          <div class="mt-1">
-            <%= link_to investments_portfolios_path,
-                class: "inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700" do %>
-              <i class="fa-solid fa-arrow-left"></i>
-              Voltar para portfolios
-            <% end %>
-          </div>
-          <h1 class="mt-3 text-3xl font-semibold text-gray-900"><%= @portfolio.name %></h1>
+          <%= render ButtonComponent.new(label: "Voltar para portfolios", href: investments_portfolios_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+          <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Investimentos</p>
+          <h1 class="mt-3 text-3xl font-semibold text-slate-950"><%= @portfolio.name %></h1>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe a evolucao da carteira, as posicoes atuais e a distribuicao dos ativos com mais clareza.</p>
         </div>
 
-        <div class="flex flex-col items-start gap-3 lg:items-end">
+        <div class="flex flex-col items-start gap-3 lg:items-end lg:text-right">
           <% if @dashboard.market_value_approximation %>
-            <div class="rounded-2xl border border-amber-500 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 lg:max-w-sm">
+            <div class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 lg:max-w-sm">
               Valor atual com fallback por custo para ativos sem cotacao.
             </div>
           <% else %>
-            <div class="rounded-2xl border border-emerald-500 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800 lg:max-w-sm">
+            <div class="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800 lg:max-w-sm">
               Valor atual baseado nas cotacoes mais recentes.
             </div>
           <% end %>
 
-          <%= link_to investments_transactions_path,
-            class: "inline-flex items-center gap-2 rounded-full bg-green-700 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
-            <i class="fa-solid fa-circle-right"></i>Ver transações
-          <% end %>
+          <%= render ButtonComponent.new(label: "Ver transacoes", href: investments_transactions_path, variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
         </div>
       </div>
     </div>
 
-    <div class="px-4 py-4 lg:px-8 ">
-      <div class="rounded-2xl border border-gray-400 bg-white px-5 py-4 lg:px-6 lg:py-4.5 mb-6">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div class="px-5 py-6 lg:px-8 lg:py-8">
+      <div class="mb-6 flex flex-wrap gap-3" data-portfolio-tabs data-initial-tab="<%= current_tab %>">
+        <button type="button"
+                data-tab-button="overview"
+                class="inline-flex items-center rounded-full border px-5 py-2.5 text-sm font-semibold transition <%= current_tab == "overview" ? "border-[#000080] bg-[#000080] text-white shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950" %>">
+          Visao geral
+        </button>
+        <button type="button"
+                data-tab-button="holdings"
+                class="inline-flex items-center rounded-full border px-5 py-2.5 text-sm font-semibold transition <%= current_tab == "holdings" ? "border-[#000080] bg-[#000080] text-white shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950" %>">
+          Carteira
+        </button>
+      </div>
 
+      <div class="mb-6 rounded-3xl border border-slate-300 bg-slate-50 px-5 py-5 lg:px-6">
+        <%= form_with url: investments_portfolio_path(@portfolio), method: :get, local: true, class: "grid gap-4 md:grid-cols-2 xl:grid-cols-[0.75fr_0.85fr_0.85fr_0.9fr_auto]" do |f| %>
+          <%= hidden_field_tag :tab, current_tab %>
 
-          <%= form_with url: investments_portfolio_path(@portfolio), method: :get, local: true, class: "grid w-full gap-3 md:grid-cols-2 xl:grid-cols-[0.9fr_0.9fr_0.9fr_auto]" do |f| %>
-            <div>
-              <%= f.label :from_date, "Data inicial", class: "mb-1.5 block text-sm font-medium text-gray-900" %>
-              <%= f.date_field :from_date, value: @dashboard_filters.from_date, class: "block w-full rounded-2xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-            </div>
+          <div>
+            <%= f.label :period, "Periodo", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.select :period,
+                         options_for_select([["Todo o período", "all"], ["Ultimos 30 dias", "30d"], ["3 meses", "3m"], ["6 meses", "6m"], ["1 ano", "1y"]], @dashboard_filters.period),
+                         {},
+                         class: "w-full bg-white" %>
+          </div>
 
-            <div>
-              <%= f.label :to_date, "Data final", class: "mb-1.5 block text-sm font-medium text-gray-900" %>
-              <%= f.date_field :to_date, value: @dashboard_filters.to_date, class: "block w-full rounded-2xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-            </div>
+          <div>
+            <%= f.label :from_date, "Data inicial", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.date_field :from_date, value: @dashboard_filters.from_date, class: "w-full" %>
+          </div>
 
-            <div>
-              <%= f.label :category, "Categoria", class: "mb-1.5 block text-sm font-medium text-gray-900" %>
-              <%= f.select :category,
-                           options_for_select([["Todas", ""]] + @category_options, @dashboard_filters.category),
-                           {},
-                           class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-            </div>
+          <div>
+            <%= f.label :to_date, "Data final", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.date_field :to_date, value: @dashboard_filters.to_date, class: "w-full" %>
+          </div>
 
-            <div class="flex flex-wrap items-end gap-3 xl:justify-end">
-              <%= f.submit "Aplicar", class: "rounded-full bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300" %>
-              <%= link_to "Limpar", investments_portfolio_path(@portfolio), class: "rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
-            </div>
-          <% end %>
-        </div>
+          <div>
+            <%= f.label :category, "Categoria", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.select :category,
+                         options_for_select([["Todas", ""]] + @category_options, @dashboard_filters.category),
+                         {},
+                         class: "w-full bg-white" %>
+          </div>
+
+          <div class="flex flex-wrap items-end gap-3 xl:justify-end">
+            <%= f.submit "Aplicar", class: ButtonComponent::VARIANT_STYLES[:primary] %>
+            <%= render ButtonComponent.new(label: "Limpar", href: investments_portfolio_path(@portfolio), variant: :soft_olive) %>
+          </div>
+        <% end %>
       </div>
 
       <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-2xl border border-gray-400 bg-slate-50 p-5">
-          <p class="text-sm text-gray-500">Total investido</p>
-          <p class="mt-3 text-2xl font-semibold text-gray-900"><%= number_to_currency(@dashboard.total_invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
+          <p class="text-sm text-slate-500">Total investido</p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.total_invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
         </div>
 
-        <div class="rounded-2xl border border-gray-400 bg-slate-50 p-5">
-          <p class="text-sm text-gray-500">Valor atual da carteira</p>
-          <p class="mt-3 text-2xl font-semibold text-gray-900"><%= number_to_currency(@dashboard.current_portfolio_value, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
+          <p class="text-sm text-slate-500">Valor atual da carteira</p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.current_portfolio_value, unit: "R$ ", separator: ",", delimiter: ".") %></p>
           <% if @dashboard.market_value_approximation %>
             <p class="mt-2 text-xs text-amber-700">Valor parcial com fallback por custo em <%= @dashboard.unpriced_asset_symbols.count %> ativo(s).</p>
           <% end %>
         </div>
 
-        <div class="rounded-2xl border border-gray-400 bg-slate-50 p-5">
-          <p class="text-sm text-gray-500">Lucro/Prejuizo nao realizado</p>
-          <p class="mt-3 text-2xl font-semibold text-gray-900"><%= number_to_currency(@dashboard.unrealized_profit_loss, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
+          <p class="text-sm text-slate-500">Lucro/Prejuizo nao realizado</p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.unrealized_profit_loss, unit: "R$ ", separator: ",", delimiter: ".") %></p>
         </div>
 
-        <div class="rounded-2xl border border-gray-400 bg-slate-50 p-5">
-          <p class="text-sm text-gray-500">Renda passiva liquida</p>
-          <p class="mt-3 text-2xl font-semibold text-gray-900"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
+          <p class="text-sm text-slate-500">Renda passiva liquida</p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></p>
         </div>
       </div>
 
-      <div class="mt-6 rounded-2xl border border-gray-400 bg-white p-5 lg:p-6">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900">Evolucao historica</h2>
-            <p class="mt-1 text-sm text-gray-500">Serie baseada apenas nas transacoes registradas no portfolio.</p>
-          </div>
-          <span class="text-sm text-gray-500"><%= @dashboard.historical_evolution_points.count %> pontos</span>
-        </div>
-
-        <% if @dashboard.historical_evolution_points.any? %>
-          <% max_historical_amount = @dashboard.historical_evolution_points.map(&:invested_amount).max || 0 %>
-          <div class="mt-5">
-            <div class="flex h-52 items-end gap-3 overflow-x-auto pb-2">
-              <% @dashboard.historical_evolution_points.each do |point| %>
-                <% height = max_historical_amount.to_d.zero? ? 0 : ((point.invested_amount / max_historical_amount.to_d) * 100).to_f %>
-                <div class="flex min-w-20 flex-1 flex-col items-center justify-end gap-2">
-                  <span class="text-xs text-gray-500"><%= number_to_currency(point.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></span>
-                  <div class="flex h-36 w-full items-end rounded-2xl bg-slate-100 px-2 py-2">
-                    <div class="w-full rounded-xl bg-blue-600 transition-all" style="height: <%= [height.round(2), 100].min %>%"></div>
-                  </div>
-                  <span class="text-xs font-medium text-gray-600"><%= l(point.date) %></span>
-                </div>
-              <% end %>
+      <div data-tab-panel="overview" class="<%= current_tab == "overview" ? "" : "hidden" %>">
+        <div class="mt-6 rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Evolucao historica</h2>
+              <p class="mt-1 text-sm text-gray-500">Serie baseada apenas nas transacoes registradas no portfolio.</p>
             </div>
+            <span class="text-sm text-gray-500"><%= @dashboard.historical_evolution_points.count %> pontos</span>
           </div>
-        <% else %>
-          <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-            Ainda nao ha historico suficiente para montar a evolucao deste portfolio.
+
+          <% if @dashboard.historical_evolution_points.any? %>
+            <% max_historical_amount = @dashboard.historical_evolution_points.map(&:invested_amount).max || 0 %>
+            <div class="mt-5">
+              <div class="flex h-52 items-end gap-3 overflow-x-auto pb-2">
+                <% @dashboard.historical_evolution_points.each do |point| %>
+                  <% height = max_historical_amount.to_d.zero? ? 0 : ((point.invested_amount / max_historical_amount.to_d) * 100).to_f %>
+                  <div class="flex min-w-20 flex-1 flex-col items-center justify-end gap-2">
+                    <span class="text-xs text-gray-500"><%= number_to_currency(point.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                    <div class="flex h-36 w-full items-end rounded-2xl bg-slate-100 px-2 py-2">
+                      <div class="w-full rounded-xl bg-blue-600 transition-all" style="height: <%= [height.round(2), 100].min %>%"></div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600"><%= l(point.date) %></span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+              Ainda nao ha historico suficiente para montar a evolucao deste portfolio.
+            </div>
+          <% end %>
+        </div>
+
+        <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+          <div class="rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
+            <h2 class="text-lg font-semibold text-gray-900">Resumo rapido</h2>
+
+            <dl class="mt-5 space-y-4 text-sm">
+              <div class="flex items-start justify-between gap-4">
+                <dt class="text-gray-500">Ativos com posicao</dt>
+                <dd class="font-medium text-gray-900"><%= @dashboard.asset_entries.count %></dd>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <dt class="text-gray-500">Maior alocacao</dt>
+                <dd class="font-medium text-gray-900">
+                  <% top_asset = @dashboard.asset_entries.first %>
+                  <%= top_asset ? "#{top_asset.asset.symbol} (#{number_with_precision(top_asset.allocation_percentage, precision: 2)}%)" : "-" %>
+                </dd>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <dt class="text-gray-500">Renda passiva liquida</dt>
+                <dd class="font-medium text-gray-900"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></dd>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <dt class="text-gray-500">Ativos com cotacao</dt>
+                <dd class="font-medium text-gray-900"><%= @dashboard.priced_assets_count %>/<%= @dashboard.asset_entries.count %></dd>
+              </div>
+            </dl>
+
+            <% if @dashboard.unpriced_asset_symbols.any? %>
+              <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Ativos sem cotacao de mercado: <%= @dashboard.unpriced_asset_symbols.join(", ") %>.
+              </div>
+            <% end %>
           </div>
-        <% end %>
+
+          <div class="rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
+            <div class="flex items-center justify-between gap-4">
+              <h2 class="text-lg font-semibold text-gray-900">Ultima transacao</h2>
+              <span class="text-sm text-gray-500"><%= @dashboard.recent_transactions.count %> registros</span>
+            </div>
+
+            <% if @dashboard.recent_transactions.any? %>
+              <ul class="mt-5 space-y-3">
+                <% @dashboard.recent_transactions.each do |transaction| %>
+                  <li class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
+                    <div class="flex items-center gap-3">
+                      <% buy_transaction = transaction.transaction_type == "buy" %>
+                      <% badge_class =
+                        buy_transaction ?
+                          "bg-green-100 text-green-700" :
+                          "bg-red-100 text-red-700"
+                      %>
+
+                      <span class="<%= badge_class %> rounded-full px-2 py-1 text-xs font-medium">
+                        <%= t("activerecord.attributes.investments/transaction.transaction_types.#{transaction.transaction_type}") %>
+                      </span>
+
+                      <span class="font-medium text-gray-900"><%= transaction.asset.symbol %></span>
+                    </div>
+
+                    <span class="text-gray-500"><%= l(transaction.date) %></span>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+                Nenhuma transacao encontrada para o periodo selecionado.
+              </div>
+            <% end %>
+          </div>
+        </div>
       </div>
 
-      <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-        <div class="rounded-2xl border border-gray-400 bg-white p-5 lg:p-6">
+      <div data-tab-panel="holdings" class="<%= current_tab == "holdings" ? "" : "hidden" %>">
+        <div class="mt-6 rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Posicoes por ativo</h2>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900">Posicoes por ativo</h2>
+              <p class="mt-1 text-sm text-gray-500">Concentramos aqui a leitura detalhada de cada ativo da carteira.</p>
+            </div>
             <span class="text-sm text-gray-500"><%= @dashboard.asset_entries.count %> ativos</span>
           </div>
 
@@ -163,10 +249,10 @@
                               "text-gray-700"
                             end
                           %>
-                          <div class="<%= price_tone_class %> font-medium">
+                          <div class="<%= price_tone_class %> whitespace-nowrap font-medium">
                             <%= entry.market_price > entry.average_price ? "↑" : entry.market_price < entry.average_price ? "↓" : "" %>
                             <%= number_to_currency(entry.market_price, unit: "R$ ", separator: ",", delimiter: ".") %>
-                            </div>
+                          </div>
                         <% else %>
                           <div>-</div>
                           <div class="mt-1 text-xs text-amber-700">Sem cotacao</div>
@@ -192,158 +278,82 @@
           <% end %>
         </div>
 
-        <div class="rounded-2xl border border-gray-400 bg-white p-5 lg:p-6">
-          <h2 class="text-lg font-semibold text-gray-900">Resumo rapido</h2>
+        <div class="mt-6 grid gap-4 xl:grid-cols-2">
+          <div class="rounded-2xl border border-slate-400 bg-white p-4 lg:p-5">
+            <details>
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
+                <h2 class="text-lg font-semibold text-gray-900">Alocacao por categoria</h2>
+                <span class="text-sm text-gray-500"><%= @dashboard.category_allocations.count %> categorias</span>
+              </summary>
 
-          <dl class="mt-5 space-y-4 text-sm">
-            <div class="flex items-start justify-between gap-4">
-              <dt class="text-gray-500">Ativos com posicao</dt>
-              <dd class="font-medium text-gray-900"><%= @dashboard.asset_entries.count %></dd>
-            </div>
-            <div class="flex items-start justify-between gap-4">
-              <dt class="text-gray-500">Maior alocacao</dt>
-              <dd class="font-medium text-gray-900">
-                <% top_asset = @dashboard.asset_entries.first %>
-                <%= top_asset ? "#{top_asset.asset.symbol} (#{number_with_precision(top_asset.allocation_percentage, precision: 2)}%)" : "-" %>
-              </dd>
-            </div>
-            <div class="flex items-start justify-between gap-4">
-              <dt class="text-gray-500">Renda passiva liquida</dt>
-              <dd class="font-medium text-gray-900"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></dd>
-            </div>
-            <div class="flex items-start justify-between gap-4">
-              <dt class="text-gray-500">Ativos com cotacao</dt>
-              <dd class="font-medium text-gray-900"><%= @dashboard.priced_assets_count %>/<%= @dashboard.asset_entries.count %></dd>
-            </div>
-         <div class="flex items-start justify-between gap-4">
-            <dt class="text-gray-500">Última movimentação</dt>
-            <dd class="font-medium text-gray-900">
-              <%= @dashboard.last_transaction_date.present? ? l(@dashboard.last_transaction_date) : "-" %>
-            </dd>
+              <% if @dashboard.category_allocations.any? %>
+                <div class="mt-4 space-y-2.5">
+                  <% @dashboard.category_allocations.each do |allocation| %>
+                    <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
+                      <div class="flex items-center justify-between gap-4">
+                        <div>
+                          <p class="font-medium text-gray-900"><%= allocation.label %></p>
+                          <p class="text-sm text-gray-500">
+                            <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                          </p>
+                        </div>
+
+                        <span class="text-sm font-medium text-gray-700">
+                          <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                        </span>
+                      </div>
+
+                      <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                        <div class="h-full rounded-full bg-emerald-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+                  Nenhuma alocacao por categoria disponivel para este portfolio.
+                </div>
+              <% end %>
+            </details>
           </div>
-          </dl>
-          <% if @dashboard.unpriced_asset_symbols.any? %>
-            <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Ativos sem cotacao de mercado: <%= @dashboard.unpriced_asset_symbols.join(", ") %>.
-            </div>
-          <% end %>
-          <% if @dashboard.recent_transactions.any? %>
-            <div class="mt-6">
-              <h3 class="text-sm font-semibold text-gray-900">
-                Últimas movimentações
-              </h3>
 
-              <ul class="mt-4 space-y-3">
-                <% @dashboard.recent_transactions.each do |transaction| %>
+          <div class="rounded-2xl border border-slate-400 bg-white p-4 lg:p-5">
+            <details>
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
+                <h2 class="text-lg font-semibold text-gray-900">Alocacao por subcategoria</h2>
+                <span class="text-sm text-gray-500"><%= @dashboard.subcategory_allocations.count %> grupos</span>
+              </summary>
 
+              <% if @dashboard.subcategory_allocations.any? %>
+                <div class="mt-4 space-y-2.5">
+                  <% @dashboard.subcategory_allocations.each do |allocation| %>
+                    <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
+                      <div class="flex items-center justify-between gap-4">
+                        <div>
+                          <p class="font-medium text-gray-900"><%= allocation.label %></p>
+                          <p class="text-sm text-gray-500">
+                            <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                          </p>
+                        </div>
 
-                  <li class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
-                    <div class="flex items-center gap-3">
-                      <% buy_transaction = transaction.transaction_type == "buy" %>
-
-                      <% badge_class =
-                        buy_transaction ?
-                          "bg-green-100 text-green-700" :
-                          "bg-red-100 text-red-700"
-                      %>
-
-                      <span class="<%= badge_class %> rounded-full px-2 py-1 text-xs font-medium">
-                        <%= t(
-                          "activerecord.attributes.investments/transaction.transaction_types.#{transaction.transaction_type}"
-                        ) %>
-                      </span>
-
-                      <span class="font-medium text-gray-900">
-                        <%= transaction.asset.symbol %>
-                      </span>
-                    </div>
-
-                    <span class="text-gray-500">
-                      <%= l(transaction.date) %>
-                    </span>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="mt-6 grid gap-4 xl:grid-cols-2">
-        <div class="rounded-2xl border border-gray-400 bg-white p-4 lg:p-5">
-          <details>
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
-              <h2 class="text-lg font-semibold text-gray-900">Alocacao por categoria</h2>
-              <span class="text-sm text-gray-500"><%= @dashboard.category_allocations.count %> categorias</span>
-            </summary>
-
-            <% if @dashboard.category_allocations.any? %>
-              <div class="mt-4 space-y-2.5">
-                <% @dashboard.category_allocations.each do |allocation| %>
-                  <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
-                    <div class="flex items-center justify-between gap-4">
-                      <div>
-                        <p class="font-medium text-gray-900"><%= allocation.label %></p>
-                        <p class="text-sm text-gray-500">
-                          <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
-                        </p>
+                        <span class="text-sm font-medium text-gray-700">
+                          <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                        </span>
                       </div>
 
-                      <span class="text-sm font-medium text-gray-700">
-                        <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
-                      </span>
-                    </div>
-
-                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
-                      <div class="h-full rounded-full bg-emerald-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            <% else %>
-              <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-                Nenhuma alocacao por categoria disponivel para este portfolio.
-              </div>
-            <% end %>
-          </details>
-        </div>
-
-        <div class="rounded-2xl border border-gray-400 bg-white p-4 lg:p-5">
-          <details>
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
-              <h2 class="text-lg font-semibold text-gray-900">Alocacao por subcategoria</h2>
-              <span class="text-sm text-gray-500"><%= @dashboard.subcategory_allocations.count %> grupos</span>
-            </summary>
-
-            <% if @dashboard.subcategory_allocations.any? %>
-              <div class="mt-4 space-y-2.5">
-                <% @dashboard.subcategory_allocations.each do |allocation| %>
-                  <div class="rounded-xl border border-gray-100 bg-slate-50 px-3 py-2.5">
-                    <div class="flex items-center justify-between gap-4">
-                      <div>
-                        <p class="font-medium text-gray-900"><%= allocation.label %></p>
-                        <p class="text-sm text-gray-500">
-                          <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
-                        </p>
+                      <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+                        <div class="h-full rounded-full bg-cyan-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
                       </div>
-
-                      <span class="text-sm font-medium text-gray-700">
-                        <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
-                      </span>
                     </div>
-
-                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
-                      <div class="h-full rounded-full bg-cyan-600" style="width: <%= [allocation.allocation_percentage.to_f.round(2), 100].min %>%"></div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            <% else %>
-              <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-                Nenhuma alocacao por subcategoria disponivel para este portfolio.
-              </div>
-            <% end %>
-          </details>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+                  Nenhuma alocacao por subcategoria disponivel para este portfolio.
+                </div>
+              <% end %>
+            </details>
+          </div>
         </div>
       </div>
     </div>

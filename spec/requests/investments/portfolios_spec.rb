@@ -58,11 +58,10 @@ RSpec.describe "Investments::Portfolios", type: :request do
   end
 
   describe "GET /new" do
-    it "renders the new portfolio form successfully" do
+    it "redirects to the index with the new portfolio modal open" do
       get new_investments_portfolio_path
 
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Novo Portfolio")
+      expect(response).to redirect_to(investments_portfolios_path(modal: "new"))
     end
   end
 
@@ -75,6 +74,14 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Main Portfolio")
       expect(response.body).not_to include(other_portfolio.name)
+    end
+
+    it "renders the modal when requested through params" do
+      get investments_portfolios_path, params: { modal: "new" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Novo portfolio")
+      expect(response.body).to include("Criar portfolio")
     end
   end
 
@@ -125,7 +132,10 @@ RSpec.describe "Investments::Portfolios", type: :request do
       get investments_portfolio_path(portfolio)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Portfolio Dashboard")
+      expect(response.body).to include("Investimentos")
+      expect(response.body).to include("Main Portfolio")
+      expect(response.body).to include("Visao geral")
+      expect(response.body).to include("Carteira")
       expect(response.body).to include("Total investido")
       expect(response.body).to include("Evolucao historica")
       expect(response.body).to include("Renda passiva liquida")
@@ -178,6 +188,38 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include(%(value="#{Date.current}"))
     end
 
+    it "applies the selected preset period to the dashboard filters" do
+      older_only_asset = Investments::Asset.create!(
+        name: "Old Position",
+        symbol: "OLD1",
+        category: :stock,
+        currency: "BRL"
+      )
+
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: older_only_asset,
+        transaction_type: :buy,
+        quantity: 3,
+        price: 12,
+        fees: 0,
+        date: Date.current - 2.months
+      )
+
+      get investments_portfolio_path(portfolio), params: { period: "30d" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Old Position")
+      expect(response.body).to include('option selected="selected" value="30d"')
+    end
+
+    it "uses tempo todo as the default preset" do
+      get investments_portfolio_path(portfolio)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('option selected="selected" value="all"')
+    end
+
     it "returns not found for a portfolio from another user" do
       other_user = User.create!(
         name: "Another User",
@@ -205,9 +247,27 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to redirect_to(investments_portfolio_path(Investments::Portfolio.last))
       expect(Investments::Portfolio.last.user).to eq(user)
     end
+
+    it "re-renders the index modal when validation fails" do
+      post investments_portfolios_path, params: {
+        investments_portfolio: {
+          name: ""
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Novo portfolio")
+      expect(response.body).to include("Nao foi possivel salvar o portfolio")
+    end
   end
 
   describe "PATCH /update" do
+    it "redirects edit to the index modal" do
+      get edit_investments_portfolio_path(portfolio)
+
+      expect(response).to redirect_to(investments_portfolios_path(modal: "edit", portfolio_id: portfolio.id))
+    end
+
     it "updates the existing portfolio without creating a new record" do
       expect do
         patch investments_portfolio_path(portfolio), params: {
@@ -221,6 +281,18 @@ RSpec.describe "Investments::Portfolios", type: :request do
 
       portfolio.reload
       expect(portfolio.name).to eq("International Portfolio")
+    end
+
+    it "re-renders the edit modal when validation fails" do
+      patch investments_portfolio_path(portfolio), params: {
+        investments_portfolio: {
+          name: ""
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Editar portfolio")
+      expect(response.body).to include("Nao foi possivel salvar o portfolio")
     end
 
     it "returns not found for a portfolio from another user" do
