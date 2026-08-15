@@ -50,6 +50,8 @@ gem 'tailwindcss-rails'
 gem 'view_component'
 gem "font-awesome-sass"
 
+gem "pundit"
+
 
 
 group :development, :test do
