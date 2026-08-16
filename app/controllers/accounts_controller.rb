@@ -2,7 +2,7 @@ class AccountsController < ApplicationController
   before_action :set_account, only: %i[show edit update destroy]
 
   def index
-    @accounts = current_user_accounts
+    @accounts = policy_scope(Account)
   end
 
   def show
@@ -50,10 +50,8 @@ class AccountsController < ApplicationController
   end
 
   def set_account
-    @account = current_user_accounts.find(params[:id])
+    @account = Account.find(params[:id])
+    authorize @account
   end
 
-  def current_user_accounts
-    Account.where(user: current_user)
-  end
 end

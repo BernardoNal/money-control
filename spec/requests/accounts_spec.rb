@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Accounts", type: :request do
   let(:user) do
@@ -59,6 +59,34 @@ RSpec.describe "Accounts", type: :request do
       account.reload
       expect(account.name).to eq("Principal")
       expect(account.bank).to eq("Nubank")
+    end
+  end
+
+  describe "authorization" do
+    let(:other_user) do
+      User.create!(
+        name: "Other User",
+        email: "other@example.com",
+        password: "password123"
+      )
+    end
+
+    let!(:other_account) do
+      Account.create!(
+        user: other_user,
+        name: "Other Account",
+        bank: "Inter",
+        initial_balance: 500.0,
+        limit: 1000.0,
+        last_digits: "5678",
+        due_day: Date.current
+      )
+    end
+
+   it "does not expose another user's account" do
+      get account_path(other_account)
+
+      expect(response).to redirect_to(root_path)
     end
   end
 end
