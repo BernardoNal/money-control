@@ -1,4 +1,11 @@
 class AccountPolicy < ApplicationPolicy
+  def create?
+    true
+  end
+
+  def new?
+    create?
+  end
   def show?
     owner?
   end

@@ -10,12 +10,14 @@ class AccountsController < ApplicationController
 
   def new
     @account = Account.new
+    authorize @account
     render :form
   end
 
   def create
     @account = Account.new(account_params)
     @account.user = current_user
+    authorize @account
 
     if @account.save
       redirect_to account_path(@account), notice: "Conta criada com sucesso."

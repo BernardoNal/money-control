@@ -57,6 +57,17 @@ RSpec.describe AccountPolicy, type: :policy do
     expect(policy.update?).to be(false)
     expect(policy.destroy?).to be(false)
   end
+  it "permits creating an account" do
+    policy = described_class.new(user, Account.new)
+
+    expect(policy.create?).to be(true)
+  end
+
+  it "permits opening the new account form" do
+    policy = described_class.new(user, Account.new)
+
+    expect(policy.new?).to be(true)
+  end
 end
 
   describe "Scope" do

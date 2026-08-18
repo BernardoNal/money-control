@@ -25,6 +25,36 @@ RSpec.describe "Accounts", type: :request do
     sign_in user
   end
 
+  describe "GET /new" do
+    it "renders the new account form" do
+      get new_account_path
+
+      expect(response).to have_http_status(:success)
+    end
+  end
+
+  describe "POST /create" do
+    it "creates an account for the current user" do
+      expect do
+        post accounts_path, params: {
+          account: {
+            name: "Investimentos",
+            bank: "Inter",
+            initial_balance: 1000.0,
+            limit: 500.0,
+            last_digits: "5678",
+            due_day: Date.current
+          }
+        }
+      end.to change(Account, :count).by(1)
+
+      created_account = Account.order(:created_at).last
+
+      expect(created_account.user).to eq(user)
+      expect(response).to redirect_to(account_path(created_account))
+    end
+  end
+
   describe "PATCH /update" do
     it "updates the existing account without creating a new record" do
       expect do
