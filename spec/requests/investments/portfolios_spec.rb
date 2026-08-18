@@ -24,6 +24,13 @@ RSpec.describe "Investments::Portfolios", type: :request do
     )
   end
 
+  let!(:other_portfolio) do
+    Investments::Portfolio.create!(
+      user: other_user,
+      name: "Other Portfolio"
+    )
+  end
+
   let!(:asset) do
     Investments::Asset.create!(
       name: "Apple Inc.",
@@ -57,6 +64,13 @@ RSpec.describe "Investments::Portfolios", type: :request do
     sign_in user
   end
 
+  describe "authorization" do
+    it "does not expose another user's portfolio" do
+      get investments_portfolio_path(other_portfolio)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
   describe "GET /new" do
     it "redirects to the index with the new portfolio modal open" do
       get new_investments_portfolio_path
@@ -67,13 +81,12 @@ RSpec.describe "Investments::Portfolios", type: :request do
 
   describe "GET /index" do
     it "lists only portfolios from the current user" do
-      other_portfolio = Investments::Portfolio.create!(user: other_user, name: "Other Portfolio")
 
       get investments_portfolios_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Main Portfolio")
-      expect(response.body).not_to include(other_portfolio.name)
+      expect(response.body).not_to include("Other Portfolio")
     end
 
     it "renders the modal when requested through params" do
