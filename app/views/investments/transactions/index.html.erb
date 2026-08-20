@@ -1,6 +1,6 @@
 <div class="mx-auto w-full max-w-7xl">
   <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
         <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
           Investimentos
@@ -23,39 +23,107 @@
           ) %>
     </div>
 
-    <% if @transactions.any? %>
-      <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-200">
-        <table class="min-w-full text-left text-sm">
-          <thead class="bg-slate-100 text-slate-600">
+    <div class="mt-8 rounded-3xl bg-slate-50 p-6">
+      <%= form_with url: investments_transactions_path,
+                    method: :get,
+                    local: true,
+                    class: "grid gap-5 lg:grid-cols-[1fr_1fr_1fr_auto]" do |f| %>
+
+        <div>
+          <%= f.label :transaction_type,
+                      "Tipo",
+                      class: "mb-1.5 block text-sm font-medium" %>
+
+          <%= f.select :transaction_type,
+                       options_for_select(
+                         [["Todos", ""]] + @transaction_types,
+                         @selected_transaction_type
+                       ),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
+
+        <div>
+          <%= f.label :asset,
+                      "Ativo",
+                      class: "mb-1.5 block text-sm font-medium" %>
+
+          <%= f.select :asset,
+                       options_for_select(
+                         [["Todos", ""]] + @filter_assets,
+                         @selected_asset
+                       ),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
+
+        <div>
+          <%= f.label :portfolio,
+                      "Carteira",
+                      class: "mb-1.5 block text-sm font-medium" %>
+
+          <%= f.select :portfolio,
+                       options_for_select(
+                         [["Todas", ""]] + @filter_portfolios,
+                         @selected_portfolio
+                       ),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3 lg:justify-end">
+          <%= f.button class: ButtonComponent::VARIANT_STYLES[:primary] do %>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Aplicar filtro
+          <% end %>
+
+          <%= render ButtonComponent.new(
+                label: "Limpar",
+                href: investments_transactions_path,
+                variant: :soft_olive,
+                icon: "fa-solid fa-eraser"
+              ) %>
+        </div>
+      <% end %>
+    </div>
+
+    <p class="mt-2 text-sm leading-6 text-slate-500">
+      <%= @transactions.count %> movimentações encontradas
+    </p>
+
+    <% if @visible_transactions.any? %>
+      <div class="mt-4 overflow-x-auto rounded-3xl border border-slate-700">
+        <table class="min-w-full text-left text-base">
+          <thead class="bg-slate-700 text-slate-200">
             <tr>
-              <th class="px-5 py-4 font-semibold">Data</th>
-              <th class="px-5 py-4 font-semibold">Carteira</th>
-              <th class="px-5 py-4 font-semibold">Ativo</th>
-              <th class="px-5 py-4 font-semibold">Tipo</th>
-              <th class="px-5 py-4 text-right font-semibold">Quantidade</th>
-              <th class="px-5 py-4 text-right font-semibold">Preço</th>
-              <th class="px-5 py-4 text-right font-semibold">Taxas</th>
-              <th class="px-5 py-4 text-right font-semibold">Total</th>
-              <th class="px-5 py-4 text-right font-semibold">Ações</th>
+              <th class="px-4 py-3 font-semibold">Data</th>
+              <th class="px-4 py-4 font-semibold">Carteira</th>
+              <th class="px-4 py-4 font-semibold">Ativo</th>
+              <th class="px-4 py-4 font-semibold">Tipo</th>
+              <th class="px-4 py-4 text-right font-semibold">Quantidade</th>
+              <th class="px-4 py-4 text-right font-semibold">Preço</th>
+              <th class="px-4 py-4 text-right font-semibold">Taxas</th>
+              <th class="px-4 py-4 text-right font-semibold">Total</th>
+              <th class="px-4 py-4 text-right font-semibold">Ações</th>
             </tr>
           </thead>
 
           <tbody class="bg-white">
-            <% @transactions.each do |transaction| %>
+            <% @visible_transactions.each do |transaction| %>
               <tr class="border-t border-slate-200">
-                <td class="px-5 py-4 text-slate-700">
+                <td class="px-4 py-3 text-slate-700">
                   <%= l(transaction.date) %>
                 </td>
 
-                <td class="px-5 py-4 text-slate-700">
+                <td class="px-4 py-4 text-slate-700">
                   <%= transaction.portfolio.name %>
                 </td>
 
-                <td class="px-5 py-4 font-medium text-slate-900">
+                <td class="px-4 py-4 font-semibold text-slate-950">
                   <%= transaction.asset.symbol %>
                 </td>
 
-                <td class="px-5 py-4 text-slate-700">
+                <td class="px-4 py-4">
                   <span class="<%= transaction.transaction_type == "sell" ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
                     <%= t(
                       "activerecord.attributes.investments/transaction.transaction_types.#{transaction.transaction_type}"
@@ -63,49 +131,63 @@
                   </span>
                 </td>
 
-                <td class="px-5 py-4 text-right text-slate-700">
+                <td class="px-4 py-4 text-right text-slate-700">
                   <%= number_with_precision(
                         transaction.quantity,
                         precision: 8,
                         strip_insignificant_zeros: true
                       ) %>
-
                 </td>
 
-                <td class="px-5 py-4 text-right text-slate-700">
+                <td class="px-4 py-4 text-right text-slate-700">
                   <% if transaction.price.present? %>
-                    <%= number_to_currency(transaction.price, unit: "R$ ", separator: ",", delimiter: ".") %>
+                    <%= number_to_currency(
+                          transaction.price,
+                          unit: "R$ ",
+                          separator: ",",
+                          delimiter: "."
+                        ) %>
                   <% else %>
                     —
                   <% end %>
                 </td>
 
-                <td class="px-5 py-4 text-right text-slate-700">
-                   <% if transaction.fees.to_d.nonzero? %>
-                    <%= number_to_currency(transaction.fees, unit: "R$ ", separator: ",", delimiter: ".") %>
+                <td class="px-4 py-4 text-right text-slate-700">
+                  <% if transaction.fees != 0 %>
+                    <%= number_to_currency(
+                          transaction.fees,
+                          unit: "R$ ",
+                          separator: ",",
+                          delimiter: "."
+                        ) %>
                   <% else %>
                     —
                   <% end %>
                 </td>
 
-                <td class="px-5 py-4 text-right text-slate-700">
+                <td class="px-4 py-4 text-right text-slate-700">
                   <% if transaction.price.present? %>
-                    <%= number_to_currency((transaction.price * transaction.quantity), unit: "R$ ", separator: ",", delimiter: ".") %>
+                    <%= number_to_currency(
+                          transaction.price * transaction.quantity,
+                          unit: "R$ ",
+                          separator: ",",
+                          delimiter: "."
+                        ) %>
                   <% else %>
                     —
                   <% end %>
                 </td>
 
-                <td class="px-5 py-4">
+                <td class="px-4 py-4">
                   <div class="flex items-center justify-end gap-3">
                     <%= link_to investments_transaction_path(transaction),
-                                class: "text-slate-500 transition hover:text-slate-900",
+                                class: "text-lg text-slate-500 transition hover:text-slate-900",
                                 title: "Visualizar" do %>
                       <i class="fa-solid fa-eye"></i>
                     <% end %>
 
                     <%= link_to edit_investments_transaction_path(transaction),
-                                class: "text-emerald-600 transition hover:text-emerald-700",
+                                class: "text-lg text-emerald-600 transition hover:text-emerald-700",
                                 title: "Editar" do %>
                       <i class="fa-solid fa-pen-to-square"></i>
                     <% end %>
@@ -115,7 +197,7 @@
                                   turbo_method: :delete,
                                   turbo_confirm: "Tem certeza que deseja excluir esta movimentação?"
                                 },
-                                class: "text-rose-600 transition hover:text-rose-700",
+                                class: "text-lg text-rose-600 transition hover:text-rose-700",
                                 title: "Excluir" do %>
                       <i class="fa-solid fa-trash"></i>
                     <% end %>
@@ -126,24 +208,56 @@
           </tbody>
         </table>
       </div>
+
+      <div class="mt-5 flex items-center justify-end gap-4 text-sm font-medium text-slate-600">
+        <% if @offset > 0 %>
+          <%= link_to investments_transactions_path(
+                        request.query_parameters.merge(
+                          set: @offset - @total_transactions
+                        )
+                      ),
+                      class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
+            <i class="fa-solid fa-arrow-left"></i>
+            Anterior
+          <% end %>
+        <% end %>
+
+        <span>
+          Página <%= (@offset / @total_transactions) + 1 %>
+        </span>
+
+        <% if @offset + @total_transactions < @transactions.count %>
+          <%= link_to investments_transactions_path(
+                        request.query_parameters.merge(
+                          set: @offset + @total_transactions
+                        )
+                      ),
+                      class: "inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-2 text-slate-700 no-underline transition hover:bg-slate-100 hover:text-slate-900" do %>
+            Próxima
+            <i class="fa-solid fa-arrow-right"></i>
+          <% end %>
+        <% end %>
+      </div>
     <% else %>
-      <div class="mt-8 rounded-3xl border border-slate-200 px-8 py-16 text-center">
+      <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
         <i class="fa-solid fa-chart-line text-4xl text-slate-300"></i>
 
-        <h2 class="mt-4 text-lg font-medium text-slate-900">
+        <h2 class="mt-4 text-xl font-semibold text-slate-950">
           Nenhuma movimentação encontrada
         </h2>
 
-        <p class="mt-2 text-sm text-slate-500">
-          Comece registrando sua primeira compra, venda ou transferência.
+        <p class="mt-2 text-sm text-slate-600">
+          Ajuste os filtros ou cadastre uma nova movimentação.
         </p>
 
-        <%= render ButtonComponent.new(
-              label: "Nova movimentação",
-              href: new_investments_transaction_path,
-              variant: :primary,
-              icon: "fa-solid fa-circle-plus"
-            ) %>
+        <div class="mt-6 flex justify-center">
+          <%= render ButtonComponent.new(
+                label: "Nova movimentação",
+                href: new_investments_transaction_path,
+                variant: :primary,
+                icon: "fa-solid fa-circle-plus"
+              ) %>
+        </div>
       </div>
     <% end %>
   </section>

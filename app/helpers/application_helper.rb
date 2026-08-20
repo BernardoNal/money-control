@@ -12,6 +12,7 @@ module ApplicationHelper
     [
       { label: "Portfolios", path: investments_portfolios_path, icon: "fa-solid fa-chart-pie", active: -> { controller_path.start_with?("investments/portfolios") } },
       { label: "Ativos", path: investments_assets_path, icon: "fa-solid fa-coins", active: -> { controller_path.start_with?("investments/assets") } },
+      { label: "Movimentacoes", path: investments_transactions_path, icon: "fa-solid fa-exchange-alt", active: -> { controller_path.start_with?("investments/transactions") } },
       { label: "Recebiveis", path: investments_incomes_path, icon: "fa-solid fa-hand-holding-dollar", active: -> { controller_path.start_with?("investments/incomes") } }
     ]
   end

@@ -8,9 +8,26 @@ module Investments
     ]
 
     def index
+      @total_transactions = 5
+      @offset = params[:set].to_i % @total_transactions == 0 ? params[:set].to_i : 0
+
+      @selected_transaction_type = permitted_transaction_type(params[:transaction_type])
+      @selected_asset = permitted_asset(params[:asset])
+      @selected_portfolio = permitted_portifolio(params[:portfolio])
+
       @transactions = user_transactions
-        .includes(:asset, :portfolio)
+      .includes(:asset, :portfolio)
+
+      load_filter_collections
+
+      @transactions = @transactions.where(transaction_type: @selected_transaction_type) if @selected_transaction_type.present?
+      @transactions = @transactions.where(asset: @selected_asset) if @selected_asset.present?
+      @transactions = @transactions.where(portfolio: @selected_portfolio) if @selected_portfolio.present?
+
+      @visible_transactions = @transactions
         .order(date: :desc)
+        .limit(@total_transactions)
+        .offset(@offset)
     end
 
     def show
@@ -90,6 +107,26 @@ module Investments
         )
     end
 
+    def permitted_transaction_type(value)
+      return if value.blank?
+      return value if Investments::Transaction.transaction_types.key?(value)
+
+      nil
+    end
+
+    def permitted_asset(value)
+      return if value.blank?
+      return value if Investments::Asset.where(active: true).exists?(id: value)
+
+      nil
+    end
+
+    def permitted_portifolio(value)
+      return if value.blank?
+      return value if Investments::Portfolio.where(user: current_user).exists?(id: value)
+      nil
+    end
+
     def load_form_collections
       @portfolios = current_user
         .investment_portfolios
@@ -100,6 +137,30 @@ module Investments
         .order(:symbol)
 
       @transaction_types =
+        Investments::Transaction.transaction_types.keys.map do |key|
+          [
+            I18n.t(
+              "activerecord.attributes.investments/transaction.transaction_types.#{key}"
+            ),
+            key
+          ]
+        end
+    end
+
+    def load_filter_collections
+      @filter_assets = @transactions
+        .joins(:asset)
+        .distinct
+        .order("investments_assets.symbol")
+        .pluck("investments_assets.symbol", "investments_assets.id")
+
+      @filter_portfolios = @transactions
+        .joins(:portfolio)
+        .distinct
+        .order("investments_portfolios.name")
+        .pluck("investments_portfolios.name", "investments_portfolios.id")
+
+       @transaction_types =
         Investments::Transaction.transaction_types.keys.map do |key|
           [
             I18n.t(

@@ -17,6 +17,10 @@
           <%= @transaction.asset.symbol %>
         </h1>
 
+        <h3 class="mt-2 font-semibold text-slate-400">
+          <%= @transaction.asset.name %>
+        </h3>
+
         <p class="mt-2 text-3xl font-semibold <%= @transaction.transaction_type == "sell" ? "text-rose-600" : "text-emerald-600" %>">
           <% if @transaction.price.present? %>
             <%= number_to_currency(
