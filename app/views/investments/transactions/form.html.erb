@@ -1,42 +1,50 @@
-<div class="container mt-6 max-w-4xl">
-  <%= link_to investments_transactions_path, class: "inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm text-white text-decoration-none transition hover:bg-gray-700" do %>
-    <i class="fa-solid fa-circle-left"></i>Voltar
-  <% end %>
+<div class="mx-auto w-full max-w-5xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white  shadow-sm sm:p-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <%= render ButtonComponent.new(
+              label: "Voltar para movimentações",
+              href: investments_transactions_path,
+              variant: :soft_olive,
+              icon: "fa-solid fa-arrow-left"
+            ) %>
 
-  <div class="mt-5 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-    <div class="border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Investimentos</p>
+        <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+          Investimentos
+        </p>
 
-      <h1 class="mt-2 text-3xl font-semibold text-gray-900">
-        <%= @transaction.persisted? ? "Editar Movimentação" : "Nova Movimentação" %>
-      </h1>
+        <h1 class="mt-3 text-3xl font-semibold text-slate-950">
+          <%= @transaction.persisted? ? "Editar movimentação" : "Nova movimentação" %>
+        </h1>
 
-      <p class="mt-2 max-w-xl text-sm text-gray-600">
-        Registre compras, vendas, transferências e demais eventos dos seus investimentos.
-      </p>
+        <p class="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+          Registre compras, vendas, transferências e demais eventos dos seus investimentos.
+        </p>
+      </div>
     </div>
 
-    <div class="px-6 py-6">
-      <%= form_with model: @transaction, local: true do |f| %>
+    <%= form_with model: @transaction, local: true do |f| %>
 
-        <% if @transaction.errors.any? %>
-          <div class="mb-6 rounded-2xl border border-red-300 bg-red-50 p-4 text-red-700">
-            <p class="font-semibold">Não foi possível salvar a movimentação:</p>
+      <% if @transaction.errors.any? %>
+        <div class="mt-6 rounded-2xl border border-rose-300 bg-rose-50 p-4 text-rose-700">
+          <p class="font-semibold">
+            Não foi possível salvar a movimentação:
+          </p>
 
-            <ul class="mt-2 list-disc pl-5">
-              <% @transaction.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+          <ul class="mt-2 list-disc pl-5 text-sm">
+            <% @transaction.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
+      <div class="mt-6">
         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-
           <div>
             <%= f.label :portfolio_id,
                         t("activerecord.attributes.investments/transaction.portfolio"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.select :portfolio_id,
                          options_from_collection_for_select(
@@ -46,13 +54,13 @@
                            @transaction.portfolio_id
                          ),
                          { prompt: "Selecione uma carteira" },
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                         class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
             <%= f.label :asset_id,
                         t("activerecord.attributes.investments/transaction.asset"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.select :asset_id,
                          options_from_collection_for_select(
@@ -62,13 +70,13 @@
                            @transaction.asset_id
                          ),
                          { prompt: "Selecione um ativo" },
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                         class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
             <%= f.label :transaction_type,
                         t("activerecord.attributes.investments/transaction.transaction_type"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.select :transaction_type,
                          options_for_select(
@@ -76,80 +84,92 @@
                            @transaction.transaction_type
                          ),
                          { prompt: "Selecione um tipo" },
-                         class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                         class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
             <%= f.label :date,
                         t("activerecord.attributes.investments/transaction.date"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.date_field :date,
-                             class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                             class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
+        </div>
+      </div>
 
+      <div class=" border-t border-slate-200 pt-6">
+
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
           <div>
             <%= f.label :quantity,
                         t("activerecord.attributes.investments/transaction.quantity"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.number_field :quantity,
                                step: :any,
                                min: 0,
-                               class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                               class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
             <%= f.label :price,
                         t("activerecord.attributes.investments/transaction.price"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.number_field :price,
                                step: :any,
                                min: 0,
-                               class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+                               class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
 
           <div>
             <%= f.label :fees,
                         t("activerecord.attributes.investments/transaction.fees"),
-                        class: "mb-2 block text-sm font-medium text-gray-900" %>
+                        class: "mb-2 block text-sm font-medium text-slate-900" %>
 
             <%= f.number_field :fees,
                                step: :any,
                                min: 0,
-                               class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
-          </div>
-
-        </div>
-
-        <div class="mt-5">
-          <%= f.label :notes,
-                      t("activerecord.attributes.investments/transaction.notes"),
-                      class: "mb-2 block text-sm font-medium text-gray-900" %>
-
-          <%= f.text_area :notes,
-                          rows: 4,
-                          class: "block w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-                          placeholder: "Observações opcionais..." %>
-        </div>
-
-        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p class="text-sm text-gray-500">
-            As movimentações serão utilizadas para cálculo de posição e preço médio.
-          </p>
-
-          <div class="flex items-center gap-3">
-            <%= link_to "Cancelar",
-                        investments_transactions_path,
-                        class: "rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50" %>
-
-            <%= f.button :submit,
-                         class: "rounded-full bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300" %>
+                               class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
           </div>
         </div>
+      </div>
 
-      <% end %>
-    </div>
-  </div>
+      <div class=" border-t border-slate-200 pt-4">
+        <div class="mb-5">
+          <h2 class="text-base font-semibold text-slate-950">
+            Observações
+          </h2>
+        </div>
+
+        <%= f.text_area :notes,
+                        rows: 4,
+                        class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
+                        placeholder: "Observações opcionais..." %>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-4 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm leading-6 text-slate-500">
+          As movimentações serão utilizadas para cálculo de posição e preço médio.
+        </p>
+
+        <div class="flex items-center gap-3">
+          <%= render ButtonComponent.new(
+                label: "Cancelar",
+                href: investments_transactions_path,
+                variant: :soft_olive
+              ) %>
+
+          <%= f.button :submit,
+                       class: ButtonComponent::VARIANT_STYLES[:primary] do %>
+            <i class="fa-solid fa-floppy-disk"></i>
+            <%= @transaction.persisted? ? "Salvar alterações" : "Criar movimentação" %>
+          <% end %>
+        </div>
+      </div>
+
+    <% end %>
+  </section>
 </div>

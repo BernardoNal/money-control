@@ -21,7 +21,7 @@
             </div>
           <% end %>
 
-          <%= render ButtonComponent.new(label: "Ver transacoes", href: investments_transactions_path, variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
+          <%= render ButtonComponent.new(label: "Ver transacoes", href: investments_transactions_path(portfolio: @portfolio.id), variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
         </div>
       </div>
     </div>
