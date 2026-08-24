@@ -9,8 +9,8 @@ class Investments::IncomesController < ApplicationController
     @selected_income_type = permitted_income_type(params[:income_type])
     @selected_asset = permitted_asset(params[:asset])
     @selected_portfolio = permitted_portifolio(params[:portfolio])
-    @incomes = current_user.investment_incomes
-                       .includes(:asset, :portfolio)
+    @incomes = policy_scope(Investments::Income)
+      .includes(:asset, :portfolio)
     @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
     @incomes = @incomes.where(asset: @selected_asset) if @selected_asset.present?
     @incomes = @incomes.where(portfolio: @selected_portfolio) if @selected_portfolio.present?
@@ -27,6 +27,9 @@ class Investments::IncomesController < ApplicationController
 
   def create
     @income = Investments::Income.new(income_params)
+
+  set_income_portfolio
+  return if performed?
 
     if @income.save
       redirect_to investments_income_path(@income),
@@ -60,6 +63,15 @@ class Investments::IncomesController < ApplicationController
 
   def set_income
     @income = Investments::Income.find(params[:id])
+    authorize @income
+  end
+
+  def set_income_portfolio
+    @income.portfolio = current_user.investment_portfolios.find(
+      income_params[:portfolio_id]
+    )
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_path
   end
 
   def income_params
