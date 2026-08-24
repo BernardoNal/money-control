@@ -132,4 +132,81 @@ RSpec.describe "Investments::Transactions", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe "GET /edit" do
+    it "allows editing a transaction owned by the current user" do
+      get edit_investments_transaction_path(transaction)
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "does not expose the edit form for another user's transaction" do
+      get edit_investments_transaction_path(other_transaction)
+
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe "PATCH /update" do
+    it "updates a transaction owned by the current user" do
+      expect do
+        patch investments_transaction_path(transaction), params: {
+          investments_transaction: {
+            quantity: 20,
+            price: 110,
+            notes: "Compra atualizada"
+          }
+        }
+      end.not_to change(Investments::Transaction, :count)
+
+      expect(response).to redirect_to(
+        investments_transaction_path(transaction)
+      )
+
+      transaction.reload
+
+      expect(transaction.quantity).to eq(20)
+      expect(transaction.price).to eq(110)
+      expect(transaction.notes).to eq("Compra atualizada")
+    end
+
+    it "does not allow updating another user's transaction" do
+      patch investments_transaction_path(other_transaction), params: {
+        investments_transaction: {
+          quantity: 999,
+          price: 999
+        }
+      }
+
+      expect(response).to redirect_to(root_path)
+
+      other_transaction.reload
+
+      expect(other_transaction.quantity).to eq(5)
+      expect(other_transaction.price).to eq(100)
+    end
+  end
+
+  describe "DELETE /destroy" do
+    it "destroys a transaction owned by the current user" do
+      expect do
+        delete investments_transaction_path(transaction)
+      end.to change(Investments::Transaction, :count).by(-1)
+
+      expect(response).to redirect_to(investments_transactions_path)
+    end
+
+    it "does not allow destroying another user's transaction" do
+      expect do
+        delete investments_transaction_path(other_transaction)
+      end.not_to change(Investments::Transaction, :count)
+
+      expect(response).to redirect_to(root_path)
+
+      expect(
+        Investments::Transaction.exists?(other_transaction.id)
+      ).to be(true)
+    end
+  end
+
 end
