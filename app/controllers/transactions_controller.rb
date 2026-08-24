@@ -4,7 +4,7 @@ class TransactionsController < ApplicationController
   before_action :set_accounts, only: %i[new create edit update]
 
   def index
-    @transactions = current_user_transactions.order(date: :desc)
+    @transactions = policy_scope(Transaction).order(date: :desc)
   end
 
   def show
@@ -17,6 +17,9 @@ class TransactionsController < ApplicationController
 
   def create
     @transaction = Transaction.new(transaction_params)
+
+    set_transaction_account
+    return if performed?
 
     if @transaction.save
       redirect_to transaction_path(@transaction), notice: "Transação criada com sucesso."
@@ -59,7 +62,8 @@ class TransactionsController < ApplicationController
   end
 
   def set_transaction
-    @transaction = current_user_transactions.find(params[:id])
+    @transaction = Transaction.find(params[:id])
+    authorize @transaction
   end
 
   def set_categories
@@ -68,6 +72,14 @@ class TransactionsController < ApplicationController
 
   def set_accounts
     @accounts = Account.where(user: current_user)
+  end
+
+  def set_transaction_account
+    @transaction.account = current_user.accounts.find(
+      transaction_params[:account_id]
+    )
+  rescue ActiveRecord::RecordNotFound
+    redirect_to root_path
   end
 
   def current_user_transactions
