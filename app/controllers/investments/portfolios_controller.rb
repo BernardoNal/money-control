@@ -66,7 +66,8 @@ module Investments
     end
 
     def prepare_index_view(modal: params[:modal], portfolio: nil)
-      @portfolios = current_user.investment_portfolios.order(:name)
+      @portfolios = policy_scope(Investments::Portfolio).order(:name)
+
       @portfolio_summaries = @portfolios.each_with_object({}) do |user_portfolio, summaries|
         summaries[user_portfolio.id] = Investments::PortfolioDashboardBuilder.call(portfolio: user_portfolio)
       end
@@ -78,6 +79,7 @@ module Investments
     def set_portfolio
       # User-owned portfolios must always be resolved through the authenticated user.
       @portfolio = current_user.investment_portfolios.find(params[:id])
+      authorize @portfolio
     end
 
     def permitted_portfolio_modal(value)

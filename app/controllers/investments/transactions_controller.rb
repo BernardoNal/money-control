@@ -15,7 +15,7 @@ module Investments
       @selected_asset = permitted_asset(params[:asset])
       @selected_portfolio = permitted_portifolio(params[:portfolio])
 
-      @transactions = user_transactions
+     @transactions = policy_scope(Investments::Transaction)
       .includes(:asset, :portfolio)
 
       load_filter_collections
@@ -43,6 +43,9 @@ module Investments
 
     def create
       @transaction = Investments::Transaction.new(transaction_params)
+
+        set_transaction_portfolio
+        return if performed?
 
       load_form_collections
 
@@ -94,17 +97,8 @@ module Investments
     end
 
     def set_transaction
-      @transaction = user_transactions.find(params[:id])
-    end
-
-    def user_transactions
-      Investments::Transaction
-        .joins(:portfolio)
-        .where(
-          investments_portfolios: {
-            user_id: current_user.id
-          }
-        )
+      @transaction = Investments::Transaction.find(params[:id])
+      authorize @transaction
     end
 
     def permitted_transaction_type(value)
@@ -151,14 +145,14 @@ module Investments
       @filter_assets = @transactions
         .joins(:asset)
         .distinct
-        .order("investments_assets.symbol")
         .pluck("investments_assets.symbol", "investments_assets.id")
+        .sort_by(&:first)
 
       @filter_portfolios = @transactions
         .joins(:portfolio)
         .distinct
-        .order("investments_portfolios.name")
         .pluck("investments_portfolios.name", "investments_portfolios.id")
+        .sort_by(&:first)
 
        @transaction_types =
         Investments::Transaction.transaction_types.keys.map do |key|
@@ -169,6 +163,14 @@ module Investments
             key
           ]
         end
+    end
+
+    def set_transaction_portfolio
+      @transaction.portfolio = current_user.investment_portfolios.find(
+        transaction_params[:portfolio_id]
+      )
+    rescue ActiveRecord::RecordNotFound
+      redirect_to root_path
     end
   end
 end

@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe "Accounts", type: :request do
   let(:user) do
@@ -23,6 +23,36 @@ RSpec.describe "Accounts", type: :request do
 
   before do
     sign_in user
+  end
+
+  describe "GET /new" do
+    it "renders the new account form" do
+      get new_account_path
+
+      expect(response).to have_http_status(:success)
+    end
+  end
+
+  describe "POST /create" do
+    it "creates an account for the current user" do
+      expect do
+        post accounts_path, params: {
+          account: {
+            name: "Investimentos",
+            bank: "Inter",
+            initial_balance: 1000.0,
+            limit: 500.0,
+            last_digits: "5678",
+            due_day: Date.current
+          }
+        }
+      end.to change(Account, :count).by(1)
+
+      created_account = Account.order(:created_at).last
+
+      expect(created_account.user).to eq(user)
+      expect(response).to redirect_to(account_path(created_account))
+    end
   end
 
   describe "PATCH /update" do
@@ -59,6 +89,34 @@ RSpec.describe "Accounts", type: :request do
       account.reload
       expect(account.name).to eq("Principal")
       expect(account.bank).to eq("Nubank")
+    end
+  end
+
+  describe "authorization" do
+    let(:other_user) do
+      User.create!(
+        name: "Other User",
+        email: "other@example.com",
+        password: "password123"
+      )
+    end
+
+    let!(:other_account) do
+      Account.create!(
+        user: other_user,
+        name: "Other Account",
+        bank: "Inter",
+        initial_balance: 500.0,
+        limit: 1000.0,
+        last_digits: "5678",
+        due_day: Date.current
+      )
+    end
+
+   it "does not expose another user's account" do
+      get account_path(other_account)
+
+      expect(response).to redirect_to(root_path)
     end
   end
 end
