@@ -68,7 +68,8 @@ RSpec.describe "Investments::Portfolios", type: :request do
     it "does not expose another user's portfolio" do
       get investments_portfolio_path(other_portfolio)
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(investments_portfolios_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
     end
   end
   describe "GET /new" do
@@ -233,7 +234,7 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include('option selected="selected" value="all"')
     end
 
-    it "returns not found for a portfolio from another user" do
+    it "redirects with a friendly alert for a portfolio from another user" do
       other_user = User.create!(
         name: "Another User",
         email: "another-user@example.com",
@@ -243,7 +244,15 @@ RSpec.describe "Investments::Portfolios", type: :request do
 
       get investments_portfolio_path(other_portfolio)
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(investments_portfolios_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+    end
+
+    it "redirects with a friendly alert when the portfolio does not exist" do
+      get investments_portfolio_path(id: 999_999)
+
+      expect(response).to redirect_to(investments_portfolios_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
     end
   end
 
@@ -308,7 +317,7 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include("Nao foi possivel salvar o portfolio")
     end
 
-    it "returns not found for a portfolio from another user" do
+    it "redirects with a friendly alert for a portfolio from another user" do
       other_portfolio = Investments::Portfolio.create!(user: other_user, name: "Private Portfolio")
 
       patch investments_portfolio_path(other_portfolio), params: {
@@ -317,7 +326,8 @@ RSpec.describe "Investments::Portfolios", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(investments_portfolios_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
     end
   end
 

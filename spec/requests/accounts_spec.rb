@@ -119,4 +119,13 @@ RSpec.describe "Accounts", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe "missing records" do
+    it "redirects with a friendly alert when the account does not exist" do
+      get account_path(999_999)
+
+      expect(response).to redirect_to(accounts_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+    end
+  end
 end

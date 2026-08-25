@@ -164,4 +164,13 @@ RSpec.describe "Investments::Assets", type: :request do
       expect(stock_asset.currency).to eq("BRL")
     end
   end
+
+  describe "missing records" do
+    it "redirects with a friendly alert when the asset does not exist" do
+      get edit_investments_asset_path(999_999)
+
+      expect(response).to redirect_to(investments_assets_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+    end
+  end
 end

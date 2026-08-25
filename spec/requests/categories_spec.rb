@@ -70,4 +70,13 @@ RSpec.describe "Categories", type: :request do
       expect(response).to redirect_to(categories_path)
     end
   end
+
+  describe "missing records" do
+    it "redirects with a friendly alert when the category does not exist" do
+      get category_path(999_999)
+
+      expect(response).to redirect_to(categories_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+    end
+  end
 end
