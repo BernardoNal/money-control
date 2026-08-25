@@ -86,6 +86,13 @@ RSpec.describe "Investments::Transactions", type: :request do
       get investments_transaction_path(other_transaction)
       expect(response).to redirect_to(root_path)
     end
+
+    it "redirects with a friendly alert when the transaction does not exist" do
+      get investments_transaction_path(999_999)
+
+      expect(response).to redirect_to(investments_transactions_path)
+      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+    end
   end
 
   describe "POST /create" do
