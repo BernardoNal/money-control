@@ -24,21 +24,21 @@ RSpec.describe Investments::Portfolio, type: :model do
     portfolio.name = nil
 
     expect(portfolio).not_to be_valid
-    expect(portfolio.errors[:name]).to include("can't be blank")
+    expect(portfolio.errors[:name]).to include( I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid without a user" do
     portfolio.user = nil
 
     expect(portfolio).not_to be_valid
-    expect(portfolio.errors[:user]).to include("must exist")
+    expect(portfolio.errors[:user]).to include( I18n.t("activerecord.errors.messages.required"))
   end
 
   it "does not allow duplicate names for the same user" do
     described_class.create!(user: user, name: "Main Portfolio")
 
     expect(portfolio).not_to be_valid
-    expect(portfolio.errors[:name]).to include("has already been taken")
+    expect(portfolio.errors[:name]).to include( I18n.t("activerecord.errors.messages.taken"))
   end
 
   it "allows the same name for different users" do

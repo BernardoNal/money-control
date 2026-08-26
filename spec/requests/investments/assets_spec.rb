@@ -105,7 +105,7 @@ RSpec.describe "Investments::Assets", type: :request do
       end.not_to change(Investments::Asset, :count)
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Ticker / Simbolo nao foi encontrado no provedor de mercado")
+      expect(response.body).to include("Ticker / Símbolo nao foi encontrado no provedor de mercado")
     end
 
     it "creates an asset with category support" do
@@ -142,7 +142,7 @@ RSpec.describe "Investments::Assets", type: :request do
       end.not_to change(Investments::Asset, :count)
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("SubCategoria não é compatível com a categoria selecionada")
+      expect(response.body).to include("Subcategoria não é compatível com a categoria selecionada")
     end
   end
 

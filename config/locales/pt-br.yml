@@ -11,9 +11,9 @@ pt-BR:
     attributes:
       investments/asset:
         name: "Nome"
-        symbol: "Ticker / Simbolo"
+        symbol: "Ticker / Símbolo"
         category: "Categoria"
-        subcategory: "SubCategoria"
+        subcategory: "Subcategoria"
         currency: "Moeda"
         active: "Ativo"
         categories:
@@ -68,5 +68,9 @@ pt-BR:
     errors:
       messages:
         blank: "não pode ficar em branco"
+        required: "é obrigatório"
         taken: "já está em uso"
+        not_a_number: "não é um número"
+        greater_than: "deve ser maior que %{count}"
+        greater_than_or_equal_to: "deve ser maior ou igual a %{count}"
         invalid_for_category: "não é compatível com a categoria selecionada"

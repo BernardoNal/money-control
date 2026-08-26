@@ -16,7 +16,7 @@ module Investments
 
     before_validation :calculate_net_amount
 
-    validates :income_type, :gross_amount, :net_amount, :payment_date, presence: true
+    validates :income_type, :gross_amount, :payment_date, presence: true
     validates :gross_amount, :net_amount, :tax_amount,
               numericality: { greater_than_or_equal_to: 0 }
     validate :net_amount_cannot_exceed_gross_amount
@@ -31,6 +31,8 @@ module Investments
     private
 
     def calculate_net_amount
+      return if gross_amount.blank?
+
       self.net_amount = gross_amount.to_d - tax_amount.to_d
     end
 
