@@ -46,34 +46,34 @@ RSpec.describe Transaction, type: :model do
     transaction.amount = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:amount]).to include("can't be blank")
+    expect(transaction.errors[:amount]).to include( I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid without date" do
     transaction.date = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:date]).to include("can't be blank")
+    expect(transaction.errors[:date]).to include( I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid without description" do
     transaction.description = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:description]).to include("can't be blank")
+    expect(transaction.errors[:description]).to include( I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid without account" do
     transaction.account = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:account]).to include("must exist")
+    expect(transaction.errors[:account]).to include( I18n.t("activerecord.errors.messages.required"))
   end
 
   it "is invalid without category" do
     transaction.category = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:category]).to include("must exist")
+    expect(transaction.errors[:category]).to include( I18n.t("activerecord.errors.messages.required"))
   end
 end

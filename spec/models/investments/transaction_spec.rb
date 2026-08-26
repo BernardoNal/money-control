@@ -46,42 +46,46 @@ RSpec.describe Investments::Transaction, type: :model do
     transaction.portfolio = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:portfolio]).to include("must exist")
+    expect(transaction.errors[:portfolio]).to include( I18n.t("activerecord.errors.messages.required"))
   end
 
   it "belongs to an asset" do
     transaction.asset = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:asset]).to include("must exist")
+    expect(transaction.errors[:asset]).to include( I18n.t("activerecord.errors.messages.required"))
   end
 
   it "is invalid without a transaction type" do
     transaction.transaction_type = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:transaction_type]).to include("can't be blank")
+    expect(transaction.errors[:transaction_type]).to include(I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid without a quantity" do
     transaction.quantity = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:quantity]).to include("can't be blank")
+    expect(transaction.errors[:quantity]).to include(I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "is invalid when quantity is zero" do
     transaction.quantity = 0
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:quantity]).to include("must be greater than 0")
+    expect(transaction.errors[:quantity]).to include(
+      I18n.t("activerecord.errors.messages.greater_than",
+      count: 0
+    )
+)
   end
 
   it "is invalid without a date" do
     transaction.date = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:date]).to include("can't be blank")
+    expect(transaction.errors[:date]).to include(I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "requires price for buy transactions" do
@@ -110,7 +114,10 @@ RSpec.describe Investments::Transaction, type: :model do
     transaction.fees = -1
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:fees]).to include("must be greater than or equal to 0")
+    expect(transaction.errors[:fees]).to include(
+      I18n.t("activerecord.errors.messages.greater_than_or_equal_to",
+      count: 0
+    ))
   end
 
   it "defines the expected transaction types" do
