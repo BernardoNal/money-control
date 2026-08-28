@@ -39,6 +39,9 @@ jobs:
           ruby-version: "3.2.6"
           bundler-cache: true
 
+      - name: Build Tailwind CSS
+        run: bin/rails tailwindcss:build
+
       - name: Set up database
         run: bin/rails db:schema:load
 
