@@ -21,7 +21,7 @@
           <div>
             <%= f.label :password, "Nova senha", class: "mb-1.5 block text-sm font-medium" %>
             <div class="min-h-10">
-              <p class="mb-2 text-xs text-slate-500">Deixe em branco se nao quiser alterar.</p>
+              <p class="mb-2 text-xs text-slate-500">Deixe em branco se não quiser alterar.</p>
               <% if @minimum_password_length %>
                 <p class="mb-2 text-xs text-slate-500">Minimo de <%= @minimum_password_length %> caracteres.</p>
               <% end %>
@@ -30,26 +30,26 @@
           </div>
 
           <div>
-            <%= f.label :password_confirmation, "Confirmacao da senha", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.label :password_confirmation, "Confirmação da senha", class: "mb-1.5 block text-sm font-medium" %>
             <div class="mb-2 min-h-10"></div>
             <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "w-full" %>
           </div>
 
           <div class="md:col-span-2">
             <%= f.label :current_password, "Senha atual", class: "mb-1.5 block text-sm font-medium" %>
-            <p class="mb-2 text-xs text-slate-500">Precisamos dela para confirmar as alteracoes.</p>
+            <p class="mb-2 text-xs text-slate-500">Precisamos dela para confirmar as alterações.</p>
             <%= f.password_field :current_password, autocomplete: "current-password", class: "w-full" %>
           </div>
         </div>
 
         <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
           <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Confirmacao pendente para: <%= resource.unconfirmed_email %>
+            Confirmação pendente para: <%= resource.unconfirmed_email %>
           </div>
         <% end %>
 
         <div class="mt-8 flex justify-center">
-          <%= f.submit "Salvar alteracoes", class: "inline-flex items-center justify-center rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200" %>
+          <%= f.submit "Salvar alterações", class: "inline-flex items-center justify-center rounded-full bg-[#000080] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200" %>
         </div>
       <% end %>
     </div>

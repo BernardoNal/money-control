@@ -25,17 +25,17 @@
           </div>
 
           <div>
-            <%= f.label :card_type, "Categoria do cartao", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.label :card_type, "Categoria do cartão", class: "mb-1.5 block text-sm font-medium" %>
             <%= f.text_field :card_type, class: "w-full", placeholder: "Gold..." %>
           </div>
 
           <div>
-            <%= f.label :last_digits, "Ultimos digitos", class: "mb-1.5 block text-sm font-medium" %>
+            <%= f.label :last_digits, "Últimos digitos", class: "mb-1.5 block text-sm font-medium" %>
             <%= f.text_field :last_digits, class: "w-full", placeholder: "1234" %>
           </div>
 
           <div>
-            <%= f.label :limit, "Limite no cartao", class: "mb-1.5 block text-sm font-medium " %>
+            <%= f.label :limit, "Limite no cartão", class: "mb-1.5 block text-sm font-medium " %>
             <div class="relative">
               <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-medium text-slate-500">R$</span>
               <%= f.number_field :limit, step: 0.01, min: 0, class: "w-full pl-12", placeholder: "100,00" %>

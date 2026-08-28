@@ -3,7 +3,7 @@ module Investments
     before_action :set_asset, only: %i[edit update]
 
     def index
-      @total_assets = 10
+      @total_assets = 5
       @offset = params[:set].to_i % @total_assets == 0 ? params[:set].to_i : 0
 
       @selected_category = permitted_category(params[:category])
@@ -72,7 +72,7 @@ module Investments
       asset.currency = asset_data.currency
       asset.active = asset_data.active
     rescue MarketData::NotFoundError
-      asset.errors.add(:symbol, "nao foi encontrado no provedor de mercado")
+      asset.errors.add(:symbol, "não foi encontrado no provedor de mercado")
       preserve_lookup_only_defaults(asset)
     rescue MarketData::ProviderError, MarketData::ConfigurationError => e
       asset.errors.add(:base, "Nao foi possivel buscar os dados do ativo: #{e.message}")

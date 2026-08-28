@@ -84,7 +84,7 @@ end
       get transaction_path(999_999)
 
       expect(response).to redirect_to(transactions_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 
@@ -104,7 +104,7 @@ end
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include(
-        "Nao foi possivel salvar a transacao"
+        "Nao foi possivel salvar a transação"
       ).or include(
         "Não foi possível salvar a transação"
       )

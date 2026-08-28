@@ -12,7 +12,7 @@
   <% end %>
 
   <%- if devise_mapping.confirmable? && controller_name != "confirmations" %>
-    <%= link_to "Reenviar confirmacao", new_confirmation_path(resource_name), class: "font-medium text-slate-600 no-underline transition hover:text-slate-900" %>
+    <%= link_to "Reenviar confirmação", new_confirmation_path(resource_name), class: "font-medium text-slate-600 no-underline transition hover:text-slate-900" %>
   <% end %>
 
   <%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != "unlocks" %>

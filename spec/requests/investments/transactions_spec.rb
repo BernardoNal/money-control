@@ -91,7 +91,7 @@ RSpec.describe "Investments::Transactions", type: :request do
       get investments_transaction_path(999_999)
 
       expect(response).to redirect_to(investments_transactions_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 

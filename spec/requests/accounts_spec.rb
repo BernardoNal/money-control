@@ -125,7 +125,7 @@ RSpec.describe "Accounts", type: :request do
       get account_path(999_999)
 
       expect(response).to redirect_to(accounts_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 end

@@ -105,7 +105,7 @@ RSpec.describe "Investments::Assets", type: :request do
       end.not_to change(Investments::Asset, :count)
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to include("Ticker / Símbolo nao foi encontrado no provedor de mercado")
+      expect(response.body).to include("Ticker / Símbolo não foi encontrado no provedor de mercado")
     end
 
     it "creates an asset with category support" do
@@ -170,7 +170,7 @@ RSpec.describe "Investments::Assets", type: :request do
       get edit_investments_asset_path(999_999)
 
       expect(response).to redirect_to(investments_assets_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 end
