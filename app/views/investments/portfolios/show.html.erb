@@ -7,21 +7,21 @@
           <%= render ButtonComponent.new(label: "Voltar para portfolios", href: investments_portfolios_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
           <p class="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Investimentos</p>
           <h1 class="mt-3 text-3xl font-semibold text-slate-950"><%= @portfolio.name %></h1>
-          <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe a evolucao da carteira, as posicoes atuais e a distribuicao dos ativos com mais clareza.</p>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe a evolução da carteira, as posições atuais e a distribuição dos ativos com mais clareza.</p>
         </div>
 
         <div class="flex flex-col items-start gap-3 lg:items-end lg:text-right">
           <% if @dashboard.market_value_approximation %>
             <div class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 lg:max-w-sm">
-              Valor atual com fallback por custo para ativos sem cotacao.
+              Valor atual com fallback por custo para ativos sem cotação.
             </div>
           <% else %>
             <div class="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800 lg:max-w-sm">
-              Valor atual baseado nas cotacoes mais recentes.
+              Valor atual baseado nas cotações mais recentes.
             </div>
           <% end %>
 
-          <%= render ButtonComponent.new(label: "Ver transacoes", href: investments_transactions_path(portfolio: @portfolio.id), variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
+          <%= render ButtonComponent.new(label: "Ver transações", href: investments_transactions_path(portfolio: @portfolio.id), variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
         </div>
       </div>
     </div>
@@ -31,7 +31,7 @@
         <button type="button"
                 data-tab-button="overview"
                 class="inline-flex items-center rounded-full border px-5 py-2.5 text-sm font-semibold transition <%= current_tab == "overview" ? "border-[#000080] bg-[#000080] text-white shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950" %>">
-          Visao geral
+          Visão geral
         </button>
         <button type="button"
                 data-tab-button="holdings"
@@ -47,7 +47,7 @@
           <div>
             <%= f.label :period, "Periodo", class: "mb-1.5 block text-sm font-medium" %>
             <%= f.select :period,
-                         options_for_select([["Todo o período", "all"], ["Ultimos 30 dias", "30d"], ["3 meses", "3m"], ["6 meses", "6m"], ["1 ano", "1y"]], @dashboard_filters.period),
+                         options_for_select([["Todo o período", "all"], ["Últimos 30 dias", "30d"], ["3 meses", "3m"], ["6 meses", "6m"], ["1 ano", "1y"]], @dashboard_filters.period),
                          {},
                          class: "w-full bg-white" %>
           </div>
@@ -92,7 +92,7 @@
         </div>
 
         <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
-          <p class="text-sm text-slate-500">Lucro/Prejuizo nao realizado</p>
+          <p class="text-sm text-slate-500">Lucro/Prejuizo não realizado</p>
           <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.unrealized_profit_loss, unit: "R$ ", separator: ",", delimiter: ".") %></p>
         </div>
 
@@ -106,8 +106,8 @@
         <div class="mt-6 rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
           <div class="flex items-center justify-between gap-4">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">Evolucao historica</h2>
-              <p class="mt-1 text-sm text-gray-500">Serie baseada apenas nas transacoes registradas no portfolio.</p>
+              <h2 class="text-lg font-semibold text-gray-900">Evolução historica</h2>
+              <p class="mt-1 text-sm text-gray-500">Serie baseada apenas nas transações registradas no portfolio.</p>
             </div>
             <span class="text-sm text-gray-500"><%= @dashboard.historical_evolution_points.count %> pontos</span>
           </div>
@@ -130,22 +130,22 @@
             </div>
           <% else %>
             <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-              Ainda nao ha historico suficiente para montar a evolucao deste portfolio.
+              Ainda nãoháhistorico suficiente para montar a evolução deste portfolio.
             </div>
           <% end %>
         </div>
 
         <div class="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
           <div class="rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
-            <h2 class="text-lg font-semibold text-gray-900">Resumo rapido</h2>
+            <h2 class="text-lg font-semibold text-gray-900">Resumo rápido</h2>
 
             <dl class="mt-5 space-y-4 text-sm">
               <div class="flex items-start justify-between gap-4">
-                <dt class="text-gray-500">Ativos com posicao</dt>
+                <dt class="text-gray-500">Ativos com posição</dt>
                 <dd class="font-medium text-gray-900"><%= @dashboard.asset_entries.count %></dd>
               </div>
               <div class="flex items-start justify-between gap-4">
-                <dt class="text-gray-500">Maior alocacao</dt>
+                <dt class="text-gray-500">Maior alocação</dt>
                 <dd class="font-medium text-gray-900">
                   <% top_asset = @dashboard.asset_entries.first %>
                   <%= top_asset ? "#{top_asset.asset.symbol} (#{number_with_precision(top_asset.allocation_percentage, precision: 2)}%)" : "-" %>
@@ -156,21 +156,21 @@
                 <dd class="font-medium text-gray-900"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></dd>
               </div>
               <div class="flex items-start justify-between gap-4">
-                <dt class="text-gray-500">Ativos com cotacao</dt>
+                <dt class="text-gray-500">Ativos com cotação</dt>
                 <dd class="font-medium text-gray-900"><%= @dashboard.priced_assets_count %>/<%= @dashboard.asset_entries.count %></dd>
               </div>
             </dl>
 
             <% if @dashboard.unpriced_asset_symbols.any? %>
               <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Ativos sem cotacao de mercado: <%= @dashboard.unpriced_asset_symbols.join(", ") %>.
+                Ativos sem cotação de mercado: <%= @dashboard.unpriced_asset_symbols.join(", ") %>.
               </div>
             <% end %>
           </div>
 
           <div class="rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
             <div class="flex items-center justify-between gap-4">
-              <h2 class="text-lg font-semibold text-gray-900">Ultima transacao</h2>
+              <h2 class="text-lg font-semibold text-gray-900">Última transação</h2>
               <span class="text-sm text-gray-500"><%= @dashboard.recent_transactions.count %> registros</span>
             </div>
 
@@ -199,7 +199,7 @@
               </ul>
             <% else %>
               <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-                Nenhuma transacao encontrada para o periodo selecionado.
+                Nenhuma transação encontrada para o periodo selecionado.
               </div>
             <% end %>
           </div>
@@ -210,7 +210,7 @@
         <div class="mt-6 rounded-2xl border border-slate-400 bg-white p-5 lg:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">Posicoes por ativo</h2>
+              <h2 class="text-lg font-semibold text-gray-900">Posições por ativo</h2>
               <p class="mt-1 text-sm text-gray-500">Concentramos aqui a leitura detalhada de cada ativo da carteira.</p>
             </div>
             <span class="text-sm text-gray-500"><%= @dashboard.asset_entries.count %> ativos</span>
@@ -227,7 +227,7 @@
                     <th class="py-3.5 pr-6 font-medium">Preco medio</th>
                     <th class="py-3.5 pr-6 font-medium">Investido</th>
                     <th class="py-3.5 pr-6 font-medium">Valor atual</th>
-                    <th class="py-3.5 font-medium">Alocacao</th>
+                    <th class="py-3.5 font-medium">Alocação</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -255,7 +255,7 @@
                           </div>
                         <% else %>
                           <div>-</div>
-                          <div class="mt-1 text-xs text-amber-700">Sem cotacao</div>
+                          <div class="mt-1 text-xs text-amber-700">Sem cotação</div>
                         <% end %>
                       </td>
                       <td class="py-4 pr-6 text-gray-700"><%= number_to_currency(entry.average_price, unit: "R$ ", separator: ",", delimiter: ".") %></td>
@@ -273,7 +273,7 @@
             </div>
           <% else %>
             <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-              Nenhuma posicao de investimento encontrada para este portfolio.
+              Nenhuma posição de investimento encontrada para este portfolio.
             </div>
           <% end %>
         </div>
@@ -282,7 +282,7 @@
           <div class="rounded-2xl border border-slate-400 bg-white p-4 lg:p-5">
             <details>
               <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
-                <h2 class="text-lg font-semibold text-gray-900">Alocacao por categoria</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Alocação por categoria</h2>
                 <span class="text-sm text-gray-500"><%= @dashboard.category_allocations.count %> categorias</span>
               </summary>
 
@@ -311,7 +311,7 @@
                 </div>
               <% else %>
                 <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-                  Nenhuma alocacao por categoria disponivel para este portfolio.
+                  Nenhuma alocação por categoria disponivel para este portfolio.
                 </div>
               <% end %>
             </details>
@@ -320,7 +320,7 @@
           <div class="rounded-2xl border border-slate-400 bg-white p-4 lg:p-5">
             <details>
               <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
-                <h2 class="text-lg font-semibold text-gray-900">Alocacao por subcategoria</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Alocação por subcategoria</h2>
                 <span class="text-sm text-gray-500"><%= @dashboard.subcategory_allocations.count %> grupos</span>
               </summary>
 
@@ -349,7 +349,7 @@
                 </div>
               <% else %>
                 <div class="mt-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
-                  Nenhuma alocacao por subcategoria disponivel para este portfolio.
+                  Nenhuma alocação por subcategoria disponivel para este portfolio.
                 </div>
               <% end %>
             </details>

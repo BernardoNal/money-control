@@ -4,23 +4,23 @@
   <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Transacoes</p>
-        <h1 class="mt-3 text-3xl font-semibold text-slate-950">Movimentacoes recentes</h1>
-        <p class="mt-2 text-sm leading-6 text-slate-600">Consulte as ultimas transacoes registradas e navegue entre as paginas com mais clareza.</p>
+        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Transações</p>
+        <h1 class="mt-3 text-3xl font-semibold text-slate-950">Movimentações recentes</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Consulte as últimas transações registradas e navegue entre as paginas com mais clareza.</p>
       </div>
 
-      <%= render ButtonComponent.new(label: "Nova transacao", href: new_transaction_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+      <%= render ButtonComponent.new(label: "Nova transação", href: new_transaction_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
     <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-200">
       <table class="min-w-full text-left text-sm">
         <thead class="bg-slate-100 text-slate-600">
           <tr>
-            <th class="px-5 py-4 font-semibold">Descricao</th>
+            <th class="px-5 py-4 font-semibold">Descrição</th>
             <th class="px-5 py-4 font-semibold">Valor</th>
             <th class="px-5 py-4 font-semibold">Data</th>
             <th class="px-5 py-4 font-semibold">Conta</th>
-            <th class="px-5 py-4 font-semibold text-right">Acoes</th>
+            <th class="px-5 py-4 font-semibold text-right">Ações</th>
           </tr>
         </thead>
         <tbody class="bg-white">

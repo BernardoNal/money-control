@@ -4,7 +4,7 @@
       <div>
         <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Contas</p>
         <h1 class="mt-3 text-3xl font-semibold text-slate-950">Minhas contas</h1>
-        <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe saldos e as movimentacoes mais recentes de cada conta.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe saldos e as movimentações mais recentes de cada conta.</p>
       </div>
 
       <%= render ButtonComponent.new(label: "Nova conta", href: new_account_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
@@ -28,7 +28,7 @@
             </div>
 
             <div class="mt-5">
-              <p class="text-sm font-medium text-slate-700">Ultimas transacoes</p>
+              <p class="text-sm font-medium text-slate-700">Últimas transações</p>
               <% recent_transactions = account.transactions.order(created_at: :desc).limit(5) %>
               <% if recent_transactions.any? %>
                 <ul class="mt-3 space-y-2">
@@ -43,7 +43,7 @@
                 </ul>
               <% else %>
                 <div class="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">
-                  Nenhuma transacao registrada para esta conta.
+                  Nenhuma transação registrada para esta conta.
                 </div>
               <% end %>
             </div>
@@ -57,7 +57,7 @@
     <% else %>
       <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
         <h2 class="text-xl font-semibold text-slate-950">Nenhuma conta cadastrada</h2>
-        <p class="mt-2 text-sm text-slate-600">Crie sua primeira conta para acompanhar saldos e movimentacoes.</p>
+        <p class="mt-2 text-sm text-slate-600">Crie sua primeira conta para acompanhar saldos e movimentações.</p>
       </div>
     <% end %>
   </div>

@@ -1,5 +1,5 @@
 <% modal_title = portfolio.persisted? ? "Editar portfolio" : "Novo portfolio" %>
-<% modal_submit = portfolio.persisted? ? "Salvar alteracoes" : "Criar portfolio" %>
+<% modal_submit = portfolio.persisted? ? "Salvar alterações" : "Criar portfolio" %>
 <% modal_path = portfolio.persisted? ? investments_portfolio_path(portfolio) : investments_portfolios_path %>
 <% modal_method = portfolio.persisted? ? :patch : :post %>
 
@@ -68,7 +68,7 @@
                 <div>
                   <p class="text-sm font-semibold text-rose-700">Excluir portfolio</p>
                   <p class="mt-1 text-sm text-rose-600">
-                    Use essa acao apenas se quiser remover esta carteira do sistema.
+                    Use essa ação apenas se quiser remover esta carteira do sistema.
                   </p>
                 </div>
 

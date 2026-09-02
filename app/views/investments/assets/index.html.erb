@@ -41,9 +41,9 @@
           <thead class="bg-slate-100 text-slate-600">
             <tr>
               <th class="px-5 py-4 font-semibold">Ativo</th>
-              <th class="px-5 py-4 font-semibold">Cotacao</th>
-              <th class="px-5 py-4 font-semibold">Classificacao</th>
-              <th class="px-5 py-4 font-semibold text-right">Acoes</th>
+              <th class="px-5 py-4 font-semibold">Cotação</th>
+              <th class="px-5 py-4 font-semibold">Classificação</th>
+              <th class="px-5 py-4 font-semibold text-right">Ações</th>
             </tr>
           </thead>
           <tbody class="bg-white">
@@ -61,7 +61,7 @@
                       <span class="ml-1 text-sm font-medium text-slate-500"><%= price_data.currency.presence || asset.currency %></span>
                     </div>
                   <% else %>
-                    <div class="text-slate-600">Sem cotacao</div>
+                    <div class="text-slate-600">Sem cotação</div>
                     <div class="mt-1 text-xs text-slate-500"><%= asset.currency %></div>
                   <% end %>
                 </td>

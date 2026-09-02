@@ -51,7 +51,7 @@ module Investments
 
       if @transaction.save
         redirect_to investments_transaction_path(@transaction),
-                    notice: "Movimentação criada com sucesso."
+                    notice: t(".created")
       else
         render :form, status: :unprocessable_entity
       end
@@ -68,7 +68,7 @@ module Investments
 
       if @transaction.update(transaction_params)
         redirect_to investments_transaction_path(@transaction),
-                    notice: "Movimentação alterada com sucesso."
+                    notice: t(".updated")
       else
         render :form, status: :unprocessable_entity
       end
@@ -78,7 +78,7 @@ module Investments
       @transaction.destroy
 
       redirect_to investments_transactions_path,
-                  notice: "Movimentação removida com sucesso."
+                  notice: t(".destroyed")
     end
 
     private

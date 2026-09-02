@@ -92,7 +92,7 @@ RSpec.describe Investments::Transaction, type: :model do
     transaction.price = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:price]).to include("can't be blank")
+    expect(transaction.errors[:price]).to include(I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "requires price for sell transactions" do
@@ -100,7 +100,7 @@ RSpec.describe Investments::Transaction, type: :model do
     transaction.price = nil
 
     expect(transaction).not_to be_valid
-    expect(transaction.errors[:price]).to include("can't be blank")
+    expect(transaction.errors[:price]).to include(I18n.t("activerecord.errors.messages.blank"))
   end
 
   it "allows missing price for split transactions" do

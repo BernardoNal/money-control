@@ -40,7 +40,7 @@ module Investments
       return if gross_amount.blank? || net_amount.blank?
       return if net_amount <= gross_amount
 
-      errors.add(:net_amount, "cannot be greater than gross amount")
+      errors.add(:net_amount, :greater_than_gross_amount)
     end
 
   end

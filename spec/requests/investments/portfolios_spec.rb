@@ -69,7 +69,7 @@ RSpec.describe "Investments::Portfolios", type: :request do
       get investments_portfolio_path(other_portfolio)
 
       expect(response).to redirect_to(investments_portfolios_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
   describe "GET /new" do
@@ -148,13 +148,13 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Investimentos")
       expect(response.body).to include("Main Portfolio")
-      expect(response.body).to include("Visao geral")
+      expect(response.body).to include("Visão geral")
       expect(response.body).to include("Carteira")
       expect(response.body).to include("Total investido")
-      expect(response.body).to include("Evolucao historica")
+      expect(response.body).to include("Evolução historica")
       expect(response.body).to include("Renda passiva liquida")
-      expect(response.body).to include("Alocacao por categoria")
-      expect(response.body).to include("Alocacao por subcategoria")
+      expect(response.body).to include("Alocação por categoria")
+      expect(response.body).to include("Alocação por subcategoria")
       expect(response.body).to include("Preco atual")
       expect(response.body).to include("Valor atual da carteira")
       expect(response.body).to include("AAPL")
@@ -245,14 +245,14 @@ RSpec.describe "Investments::Portfolios", type: :request do
       get investments_portfolio_path(other_portfolio)
 
       expect(response).to redirect_to(investments_portfolios_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
 
     it "redirects with a friendly alert when the portfolio does not exist" do
       get investments_portfolio_path(id: 999_999)
 
       expect(response).to redirect_to(investments_portfolios_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 
@@ -327,7 +327,7 @@ RSpec.describe "Investments::Portfolios", type: :request do
       }
 
       expect(response).to redirect_to(investments_portfolios_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 

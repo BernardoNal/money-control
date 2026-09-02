@@ -54,7 +54,7 @@
             </div>
 
             <div class="mt-5 rounded-3xl bg-white px-5 py-5 shadow-lg ring-1 ring-slate-200">
-              <p class="text-sm font-semibold tracking-[0.18em] text-slate-500">Variacao</p>
+              <p class="text-sm font-semibold tracking-[0.18em] text-slate-500">Variação</p>
               <div class="mt-5 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-end">
                 <div class="<%= positive_variation ? 'text-emerald-700' : negative_variation ? 'text-rose-700' : 'text-slate-700' %>">
                   <p class="whitespace-nowrap font-semibold leading-none"><%= number_to_currency(variation_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="border-t border-slate-100 pt-4 text-xs leading-6 text-slate-500 sm:border-t-0 sm:border-l sm:pl-5 sm:pt-0">
-                  Comparacao entre valor atual e investido.
+                  Comparação entre valor atual e investido.
                 </div>
               </div>
             </div>
@@ -78,7 +78,7 @@
     <% else %>
       <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
         <h2 class="text-xl font-semibold text-slate-950">Nenhum portfolio cadastrado</h2>
-        <p class="mt-2 text-sm text-slate-600">Crie sua primeira carteira para acompanhar ativos, alocacao e evolucao patrimonial.</p>
+        <p class="mt-2 text-sm text-slate-600">Crie sua primeira carteira para acompanhar ativos, alocação e evolução patrimonial.</p>
         <div class="mt-6 flex justify-center">
           <%= render ButtonComponent.new(label: "Novo portfolio", href: investments_portfolios_path(modal: "new"), variant: :primary, icon: "fa-solid fa-circle-plus") %>
         </div>

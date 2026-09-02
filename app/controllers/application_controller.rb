@@ -18,7 +18,7 @@ class ApplicationController < ActionController::Base
   private
 
   def record_not_found
-    redirect_to(record_not_found_redirect_path, alert: "Registro nao encontrado ou indisponivel.")
+    redirect_to(record_not_found_redirect_path, alert: "Registro não encontrado ou indisponivel.")
   end
 
   def record_not_found_redirect_path

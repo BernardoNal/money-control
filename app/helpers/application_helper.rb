@@ -3,16 +3,16 @@ module ApplicationHelper
     [
       { label: "Dashboard", path: root_path, icon: "fa-solid fa-chart-line", active: -> { controller_path == "transactions" && action_name == "dashboard" } },
       { label: "Contas", path: accounts_path, icon: "fa-solid fa-wallet", active: -> { controller_path == "accounts" } },
-      { label: "Transacoes", path: transactions_path, icon: "fa-solid fa-arrow-right-arrow-left", active: -> { controller_path == "transactions" && action_name != "dashboard" } },
+      { label: "Transações", path: transactions_path, icon: "fa-solid fa-arrow-right-arrow-left", active: -> { controller_path == "transactions" && action_name != "dashboard" } },
       { label: "Categorias", path: categories_path, icon: "fa-solid fa-layer-group", active: -> { controller_path == "categories" } }
     ]
   end
 
   def investments_navigation_items
     [
-      { label: "Portfolios", path: investments_portfolios_path, icon: "fa-solid fa-chart-pie", active: -> { controller_path.start_with?("investments/portfolios") } },
+      { label: "Portfólios", path: investments_portfolios_path, icon: "fa-solid fa-chart-pie", active: -> { controller_path.start_with?("investments/portfolios") } },
       { label: "Ativos", path: investments_assets_path, icon: "fa-solid fa-coins", active: -> { controller_path.start_with?("investments/assets") } },
-      { label: "Movimentacoes", path: investments_transactions_path, icon: "fa-solid fa-exchange-alt", active: -> { controller_path.start_with?("investments/transactions") } },
+      { label: "Movimentações", path: investments_transactions_path, icon: "fa-solid fa-exchange-alt", active: -> { controller_path.start_with?("investments/transactions") } },
       { label: "Recebiveis", path: investments_incomes_path, icon: "fa-solid fa-hand-holding-dollar", active: -> { controller_path.start_with?("investments/incomes") } }
     ]
   end

@@ -3,7 +3,7 @@ module Investments
     before_action :set_asset, only: %i[edit update]
 
     def index
-      @total_assets = 10
+      @total_assets = 5
       @offset = params[:set].to_i % @total_assets == 0 ? params[:set].to_i : 0
 
       @selected_category = permitted_category(params[:category])
@@ -33,7 +33,7 @@ module Investments
       return render(:form, status: :unprocessable_entity) if @asset.errors.any?
 
       if @asset.save
-        redirect_to edit_investments_asset_path(@asset), notice: "Ativo criado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: t(".created")
       else
         render :form, status: :unprocessable_entity
       end
@@ -49,7 +49,7 @@ module Investments
       @categories = category_options
       @subcategories = form_subcategory_options(asset_params[:category].presence || @asset.category)
       if @asset.update(asset_params)
-        redirect_to edit_investments_asset_path(@asset), notice: "Ativo alterado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: t(".updated")
       else
         render :form, status: :unprocessable_entity
       end
@@ -72,10 +72,14 @@ module Investments
       asset.currency = asset_data.currency
       asset.active = asset_data.active
     rescue MarketData::NotFoundError
-      asset.errors.add(:symbol, "nao foi encontrado no provedor de mercado")
+      asset.errors.add(:symbol, :not_found_in_market_provider)
       preserve_lookup_only_defaults(asset)
     rescue MarketData::ProviderError, MarketData::ConfigurationError => e
-      asset.errors.add(:base, "Nao foi possivel buscar os dados do ativo: #{e.message}")
+      asset.errors.add(
+        :base,
+        :market_data_fetch_failed,
+        message: e.message
+      )
       preserve_lookup_only_defaults(asset)
     end
 

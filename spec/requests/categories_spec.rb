@@ -12,7 +12,7 @@ RSpec.describe "Categories", type: :request do
   let!(:category) do
     Category.create!(
       user: user,
-      name: "Alimentacao",
+      name: "Alimentação",
       is_income: false,
       icon: "🍔",
       color: "#ff6600"
@@ -56,7 +56,7 @@ RSpec.describe "Categories", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
 
       category.reload
-      expect(category.name).to eq("Alimentacao")
+      expect(category.name).to eq("Alimentação")
       expect(category.color).to eq("#ff6600")
     end
   end
@@ -76,7 +76,7 @@ RSpec.describe "Categories", type: :request do
       get category_path(999_999)
 
       expect(response).to redirect_to(categories_path)
-      expect(flash[:alert]).to eq("Registro nao encontrado ou indisponivel.")
+      expect(flash[:alert]).to eq("Registro não encontrado ou indisponivel.")
     end
   end
 end
