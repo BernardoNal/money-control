@@ -7,6 +7,55 @@ pt-BR:
     formats:
       default: "%d/%m/%Y %H:%M"
 
+  accounts:
+    create:
+      created: "Conta criada com sucesso."
+    update:
+      updated: "Conta atualizada com sucesso."
+    destroy:
+      destroyed: "Conta excluída com sucesso."
+
+  transactions:
+    create:
+      created: "Transação criada com sucesso."
+    update:
+      updated: "Transação atualizada com sucesso."
+    destroy:
+      destroyed: "Transação excluída com sucesso."
+
+  investments:
+    incomes:
+      create:
+        created: "Provento criado com sucesso."
+      update:
+        updated: "Provento atualizado com sucesso."
+      destroy:
+        destroyed: "Provento excluído com sucesso."
+
+    assets:
+      create:
+        created: "Ativo criado com sucesso."
+      update:
+        updated: "Ativo atualizado com sucesso."
+      destroy:
+        destroyed: "Ativo excluído com sucesso."
+
+    portfolios:
+      create:
+        created: "Portfólio criado com sucesso."
+      update:
+        updated: "Portfólio atualizado com sucesso."
+      destroy:
+        destroyed: "Portfólio excluído com sucesso."
+
+    transactions:
+      create:
+        created: "Movimentação criada com sucesso."
+      update:
+        updated: "Movimentação atualizada com sucesso."
+      destroy:
+        destroyed: "Movimentação excluída com sucesso."
+
   activerecord:
     attributes:
       investments/asset:

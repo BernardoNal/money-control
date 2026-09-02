@@ -33,7 +33,7 @@ module Investments
       @portfolio = current_user.investment_portfolios.new(portfolio_params)
 
       if @portfolio.save
-        redirect_to investments_portfolio_path(@portfolio), notice: "Portfolio criado com sucesso."
+        redirect_to investments_portfolio_path(@portfolio), notice: t(".created")
       else
         prepare_index_view(modal: "new", portfolio: @portfolio)
         render :index, status: :unprocessable_entity
@@ -46,7 +46,7 @@ module Investments
 
     def update
       if @portfolio.update(portfolio_params)
-        redirect_to investments_portfolio_path(@portfolio), notice: "Portfolio alterado com sucesso."
+        redirect_to investments_portfolio_path(@portfolio), notice: t(".updated")
       else
         prepare_index_view(modal: "edit", portfolio: @portfolio)
         render :index, status: :unprocessable_entity
@@ -56,7 +56,7 @@ module Investments
     def destroy
       @portfolio.destroy
 
-      redirect_to investments_portfolios_path, notice: "Portfolio excluido com sucesso."
+      redirect_to investments_portfolios_path, notice: t(".destroyed")
     end
 
     private

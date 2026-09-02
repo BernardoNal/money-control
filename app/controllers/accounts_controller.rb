@@ -20,7 +20,7 @@ class AccountsController < ApplicationController
     authorize @account
 
     if @account.save
-      redirect_to account_path(@account), notice: "Conta criada com sucesso."
+      redirect_to account_path(@account), notice: t(".created")
     else
       render :form, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class AccountsController < ApplicationController
 
   def update
     if @account.update(account_params)
-      redirect_to account_path(@account), notice: "Conta alterada com sucesso."
+      redirect_to account_path(@account), notice: t(".updated")
     else
       render :form, status: :unprocessable_entity
     end
@@ -41,7 +41,7 @@ class AccountsController < ApplicationController
   def destroy
     @account.destroy
 
-    redirect_to accounts_path, notice: "Conta excluida com sucesso."
+    redirect_to accounts_path, notice: t(".destroyed")
   end
 
   private

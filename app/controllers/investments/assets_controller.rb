@@ -33,7 +33,7 @@ module Investments
       return render(:form, status: :unprocessable_entity) if @asset.errors.any?
 
       if @asset.save
-        redirect_to edit_investments_asset_path(@asset), notice: "Ativo criado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: t(".created")
       else
         render :form, status: :unprocessable_entity
       end
@@ -49,7 +49,7 @@ module Investments
       @categories = category_options
       @subcategories = form_subcategory_options(asset_params[:category].presence || @asset.category)
       if @asset.update(asset_params)
-        redirect_to edit_investments_asset_path(@asset), notice: "Ativo alterado com sucesso."
+        redirect_to edit_investments_asset_path(@asset), notice: t(".updated")
       else
         render :form, status: :unprocessable_entity
       end

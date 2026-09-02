@@ -33,7 +33,7 @@ class Investments::IncomesController < ApplicationController
 
     if @income.save
       redirect_to investments_income_path(@income),
-                  notice: "Provento criado com sucesso."
+                 notice: t(".created")
     else
       render :form, status: :unprocessable_entity
     end
@@ -46,7 +46,7 @@ class Investments::IncomesController < ApplicationController
   def update
     if @income.update(income_params)
       redirect_to investments_income_path(@income),
-                  notice: "Provento atualizado com sucesso."
+                  notice: t(".updated")
     else
       render :form, status: :unprocessable_entity
     end
@@ -56,7 +56,7 @@ class Investments::IncomesController < ApplicationController
     @income.delete
 
     redirect_to investments_incomes_path,
-                notice: "Provento removido com sucesso."
+                notice: t(".destroyed")
   end
 
   private

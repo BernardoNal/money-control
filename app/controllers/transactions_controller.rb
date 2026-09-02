@@ -22,7 +22,7 @@ class TransactionsController < ApplicationController
     return if performed?
 
     if @transaction.save
-      redirect_to transaction_path(@transaction), notice: "Transação criada com sucesso."
+      redirect_to transaction_path(@transaction), notice: t(".created")
     else
       render :form, status: :unprocessable_entity
     end
@@ -34,7 +34,7 @@ class TransactionsController < ApplicationController
 
   def update
     if @transaction.update(transaction_params)
-      redirect_to transaction_path(@transaction), notice: "Transação atualizada com sucesso."
+      redirect_to transaction_path(@transaction), notice: t(".updated")
     else
       render :form, status: :unprocessable_entity
     end
@@ -44,7 +44,7 @@ class TransactionsController < ApplicationController
     @transaction.destroy
 
     redirect_to transactions_path,
-                notice: "Transação excluída com sucesso."
+                alert: t(".destroyed")
   end
 
   private
