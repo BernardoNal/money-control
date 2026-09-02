@@ -72,10 +72,14 @@ module Investments
       asset.currency = asset_data.currency
       asset.active = asset_data.active
     rescue MarketData::NotFoundError
-      asset.errors.add(:symbol, "não foi encontrado no provedor de mercado")
+      asset.errors.add(:symbol, :not_found_in_market_provider)
       preserve_lookup_only_defaults(asset)
     rescue MarketData::ProviderError, MarketData::ConfigurationError => e
-      asset.errors.add(:base, "Nao foi possivel buscar os dados do ativo: #{e.message}")
+      asset.errors.add(
+        :base,
+        :market_data_fetch_failed,
+        message: e.message
+      )
       preserve_lookup_only_defaults(asset)
     end
 

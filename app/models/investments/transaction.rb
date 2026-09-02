@@ -25,7 +25,7 @@ module Investments
       return unless transaction_type_buy? || transaction_type_sell?
       return if price.present?
 
-      errors.add(:price, "can't be blank")
+      errors.add(:price, :blank)
     end
   end
 end
