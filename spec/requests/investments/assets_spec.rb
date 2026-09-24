@@ -87,6 +87,38 @@ RSpec.describe "Investments::Assets", type: :request do
       expect(lookup_service).to have_received(:call).with(symbol: "PETR4")
     end
 
+    it "persists the normalized name for a BDR returned by the market provider" do
+      asset_data = MarketData::AssetData.new(
+        symbol: "A1MD34",
+        name: "Advanced Micro Devices, Inc.",
+        currency: "BRL",
+        category: "international",
+        subcategory: nil,
+        active: true
+      )
+
+      lookup_service = instance_double(MarketData::AssetLookupService, call: asset_data)
+      allow(MarketData::AssetLookupService).to receive(:new).and_return(lookup_service)
+
+      expect do
+        post investments_assets_path, params: {
+          investments_asset: {
+            name: "",
+            symbol: "A1MD34",
+            category: "",
+            subcategory: "",
+            currency: ""
+          }
+        }
+      end.to change(Investments::Asset, :count).by(1)
+
+      asset = Investments::Asset.order(:created_at).last
+      expect(response).to redirect_to(edit_investments_asset_path(asset))
+      expect(asset.name).to eq("Advanced Micro Devices, Inc.")
+      expect(asset.category).to eq("international")
+      expect(asset.currency).to eq("BRL")
+    end
+
     it "renders the form with an error when the ticker is not found" do
       lookup_service = instance_double(MarketData::AssetLookupService)
       allow(MarketData::AssetLookupService).to receive(:new).and_return(lookup_service)
