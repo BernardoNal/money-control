@@ -44,26 +44,39 @@ module MarketData
         asset_payload
       end
 
-      # Retrieves the latest available quote for a symbol and normalizes it into PriceData.
-      def fetch_price(symbol:)
+      # Retrieves the latest available quotes and skips symbols without a usable price.
+      def fetch_prices(symbols:)
+        normalized_symbols = symbols.map { |symbol| symbol.to_s.strip.upcase }.reject(&:blank?).uniq
+        return [] if normalized_symbols.empty?
+
         payload = get_json(
           path: "/stocks/quote",
-          query_params: { symbols: symbol }
+          query_params: { symbols: normalized_symbols.join(",") }
         )
-        quote = payload.fetch("results", []).find do |item|
-          item["symbol"].to_s.casecmp?(symbol)
+
+        payload.fetch("results", []).filter_map do |quote|
+          price_payload = quote.fetch("data", {})
+          next if quote["symbol"].blank? || price_payload["regularMarketPrice"].blank?
+
+          PriceData.new(
+            symbol: quote.fetch("symbol"),
+            price: BigDecimal(price_payload.fetch("regularMarketPrice").to_s),
+            currency: price_payload["currency"],
+            as_of: parse_time(price_payload["regularMarketTime"])
+          )
         end
-        price_payload = quote&.fetch("data", {}) || {}
+      end
 
-        raise NotFoundError, "Price not found for symbol #{symbol}" if quote.blank?
-        raise NotFoundError, "Price not found for symbol #{symbol}" if price_payload["regularMarketPrice"].blank?
+      # Keeps the single-symbol contract available to existing callers.
+      def fetch_price(symbol:)
+        normalized_symbol = symbol.to_s.strip.upcase
+        price_data = fetch_prices(symbols: [normalized_symbol]).find do |data|
+          data.symbol.casecmp?(normalized_symbol)
+        end
 
-        PriceData.new(
-          symbol: quote.fetch("symbol", symbol),
-          price: BigDecimal(price_payload.fetch("regularMarketPrice").to_s),
-          currency: price_payload["currency"],
-          as_of: parse_time(price_payload["regularMarketTime"])
-        )
+        raise NotFoundError, "Price not found for symbol #{normalized_symbol}" if price_data.blank?
+
+        price_data
       end
 
       private

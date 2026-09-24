@@ -13,5 +13,10 @@ module MarketData
     def fetch_price(symbol:)
       raise NotImplementedError, "#{self.class.name} must implement #fetch_price"
     end
+
+    # Defines the batch price lookup contract for provider implementations.
+    def fetch_prices(symbols:)
+      raise NotImplementedError, "#{self.class.name} must implement #fetch_prices"
+    end
   end
 end
