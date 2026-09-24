@@ -15,5 +15,10 @@ module MarketData
     def fetch_price(symbol:)
       raise ConfigurationError, MESSAGE
     end
+
+    # Keeps the unconfigured-provider failure explicit for batch lookups.
+    def fetch_prices(symbols:)
+      raise ConfigurationError, MESSAGE
+    end
   end
 end

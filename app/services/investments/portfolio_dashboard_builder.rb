@@ -185,8 +185,10 @@ module Investments
 
     # Enriches position entries with the latest available market quote, falling back to cost basis when unavailable.
     def attach_market_prices(entries)
+      prices_by_symbol = fetch_prices_for(entries.map { |entry| entry.asset.symbol })
+
       entries.map do |entry|
-        price_data = fetch_price_for(entry.asset.symbol)
+        price_data = prices_by_symbol[entry.asset.symbol.to_s.strip.upcase]
 
         if price_data.present?
           entry.market_price = price_data.price
@@ -298,11 +300,11 @@ module Investments
       total_cost / quantity
     end
 
-    # Returns nil instead of raising so the dashboard can degrade gracefully when market data is missing.
-    def fetch_price_for(symbol)
-      price_lookup_service.call(symbol: symbol)
+    # Returns an empty result instead of raising so the dashboard can degrade gracefully when market data is missing.
+    def fetch_prices_for(symbols)
+      price_lookup_service.call_many(symbols: symbols)
     rescue MarketData::ConfigurationError, MarketData::NotFoundError, MarketData::ProviderError
-      nil
+      {}
     end
   end
 end

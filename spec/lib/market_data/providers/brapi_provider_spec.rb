@@ -135,6 +135,70 @@ RSpec.describe MarketData::Providers::BrapiProvider do
     end
   end
 
+  describe "#fetch_prices" do
+    it "returns available prices for a normalized batch" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "PETR4",
+              "data" => {
+                "currency" => "BRL",
+                "regularMarketPrice" => 32.15,
+                "regularMarketTime" => "2026-07-13T10:00:00.000Z"
+              }
+            },
+            {
+              "symbol" => "VALE3",
+              "data" => {
+                "currency" => "BRL",
+                "regularMarketPrice" => 61.2,
+                "regularMarketTime" => "2026-07-13T10:00:00.000Z"
+              }
+            }
+          ]
+        }.to_json
+      )
+
+      expect_batch_quote_request(response, ["PETR4", "VALE3"])
+
+      result = provider.fetch_prices(symbols: [" petr4 ", "VALE3", "PETR4"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
+      expect(result.map(&:price)).to eq([BigDecimal("32.15"), BigDecimal("61.2")])
+    end
+
+    it "skips quotes without a current price" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "PETR4",
+              "data" => { "currency" => "BRL", "regularMarketPrice" => 32.15 }
+            },
+            { "symbol" => "VALE3", "data" => { "currency" => "BRL" } }
+          ]
+        }.to_json
+      )
+
+      expect_batch_quote_request(response, ["PETR4", "VALE3"])
+
+      result = provider.fetch_prices(symbols: ["PETR4", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4"])
+    end
+
+    it "does not request the provider for an empty batch" do
+      expect(Net::HTTP).not_to receive(:start)
+
+      expect(provider.fetch_prices(symbols: [" ", nil])).to eq([])
+    end
+  end
+
   describe "#fetch_price" do
     it "returns normalized market price data for a quoted asset" do
       response = instance_double(
@@ -191,6 +255,23 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(http).to receive(:request) do |request|
         expect(request.path).to include("/api/v2/tickers")
         expect(request.path).to include("search=#{symbol}")
+        expect(request["Authorization"]).to eq("Bearer test-token")
+        response
+      end
+
+      block.call(http)
+    end
+  end
+
+  def expect_batch_quote_request(response, symbols)
+    allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
+      expect(hostname).to eq("brapi.dev")
+      expect(port).to eq(443)
+      expect(use_ssl).to be(true)
+
+      http = instance_double("Net::HTTP")
+      expect(http).to receive(:request) do |request|
+        expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{symbols.join("%2C")}")
         expect(request["Authorization"]).to eq("Bearer test-token")
         response
       end

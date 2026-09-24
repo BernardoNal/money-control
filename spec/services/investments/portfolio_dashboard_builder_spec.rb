@@ -41,24 +41,24 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
   subject(:dashboard) { described_class.call(portfolio: portfolio, price_lookup_service: price_lookup_service) }
 
   before do
-    allow(price_lookup_service).to receive(:call) do |symbol:|
-      case symbol
-      when "AAPL"
-        MarketData::PriceData.new(
-          symbol: "AAPL",
-          price: BigDecimal("35"),
-          currency: "USD",
-          as_of: Time.zone.parse("2026-07-13 10:00:00")
-        )
-      when "XPML11"
-        MarketData::PriceData.new(
-          symbol: "XPML11",
-          price: BigDecimal("11"),
-          currency: "BRL",
-          as_of: Time.zone.parse("2026-07-13 10:00:00")
-        )
-      else
-        raise MarketData::NotFoundError, "missing"
+    allow(price_lookup_service).to receive(:call_many) do |symbols:|
+      symbols.each_with_object({}) do |symbol, prices|
+        prices[symbol] = case symbol
+        when "AAPL"
+          MarketData::PriceData.new(
+            symbol: "AAPL",
+            price: BigDecimal("35"),
+            currency: "USD",
+            as_of: Time.zone.parse("2026-07-13 10:00:00")
+          )
+        when "XPML11"
+          MarketData::PriceData.new(
+            symbol: "XPML11",
+            price: BigDecimal("11"),
+            currency: "BRL",
+            as_of: Time.zone.parse("2026-07-13 10:00:00")
+          )
+        end
       end
     end
   end
@@ -88,6 +88,7 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
     expect(dashboard.current_portfolio_value).to eq(expected_current_value)
     expect(dashboard.unrealized_profit_loss).to eq(expected_current_value - expected_total)
     expect(dashboard.asset_entries.map { |entry| entry.asset.symbol }).to eq(%w[AAPL XPML11])
+    expect(price_lookup_service).to have_received(:call_many).with(symbols: %w[AAPL XPML11]).once
 
     apple_entry = dashboard.asset_entries.find { |entry| entry.asset == stock_asset }
     fii_entry = dashboard.asset_entries.find { |entry| entry.asset == fii_asset }
@@ -198,7 +199,6 @@ RSpec.describe Investments::PortfolioDashboardBuilder do
   end
 
   it "falls back to invested amount when no market price is available" do
-    allow(price_lookup_service).to receive(:call).with(symbol: "SELIC2029").and_raise(MarketData::NotFoundError, "missing")
 
     fixed_income_asset = Investments::Asset.create!(
       name: "Tesouro Selic",
