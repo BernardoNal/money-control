@@ -17,6 +17,21 @@ module Investments
       @asset_prices = build_asset_prices(@visible_assets)
     end
 
+    def search
+      assets = Investments::Asset.order(:symbol)
+      assets = assets.where(active: true) if ActiveModel::Type::Boolean.new.cast(params[:active_only])
+
+      query = params[:q].to_s.strip
+      if query.present?
+        pattern = "#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+        assets = assets.where("symbol ILIKE :pattern OR name ILIKE :pattern", pattern: pattern)
+      else
+        assets = assets.none
+      end
+
+      render json: assets.limit(20).map { |asset| asset_search_payload(asset) }
+    end
+
     def new
       @asset = Investments::Asset.new
       @subcategories = form_subcategory_options(@asset.category)
@@ -152,6 +167,15 @@ module Investments
       price_lookup_service.call(symbol: symbol)
     rescue MarketData::ConfigurationError, MarketData::NotFoundError, MarketData::ProviderError
       nil
+    end
+
+    def asset_search_payload(asset)
+      {
+        id: asset.id,
+        symbol: asset.symbol,
+        name: asset.name,
+        label: "#{asset.symbol} - #{asset.name}"
+      }
     end
   end
 end

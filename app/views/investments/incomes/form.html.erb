@@ -44,12 +44,14 @@
           </div>
 
           <div>
-            <%= f.label :asset_id, "Ativo", class: "mb-1.5 block text-sm font-medium" %>
-
-            <%= f.select :asset_id,
-                        options_for_select(@assets, @income.asset_id),
-                        {include_blank: @income.persisted? ? false : "Selecione um ativo"},
-                        class: "w-full " %>
+            <%= render Investments::SearchableSelectComponent.new(
+                        form: f,
+                        attribute: :asset_id,
+                        selected: @income.asset,
+                        selected_label: @income.asset && "#{@income.asset.symbol} - #{@income.asset.name}",
+                        search_url: search_investments_assets_path,
+                        label: "Ativo"
+                      ) %>
           </div>
 
           <div>

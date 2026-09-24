@@ -58,19 +58,15 @@
           </div>
 
           <div>
-            <%= f.label :asset_id,
-                        t("activerecord.attributes.investments/transaction.asset"),
-                        class: "mb-2 block text-sm font-medium text-slate-900" %>
-
-            <%= f.select :asset_id,
-                         options_from_collection_for_select(
-                           @assets,
-                           :id,
-                           :symbol,
-                           @transaction.asset_id
-                         ),
-                         { prompt: "Selecione um ativo" },
-                         class: "block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" %>
+            <%= render Investments::SearchableSelectComponent.new(
+                       form: f,
+                       attribute: :asset_id,
+                       selected: @transaction.asset,
+                       selected_label: @transaction.asset && "#{@transaction.asset.symbol} - #{@transaction.asset.name}",
+                       search_url: search_investments_assets_path,
+                       search_params: { active_only: true },
+                       label: t("activerecord.attributes.investments/transaction.asset")
+                     ) %>
           </div>
 
           <div>
