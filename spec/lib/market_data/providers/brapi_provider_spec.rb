@@ -68,6 +68,41 @@ RSpec.describe MarketData::Providers::BrapiProvider do
 
       expect(result.category).to eq("etf")
     end
+
+    it "uses the issuer name for BDRs instead of the provider technical description" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "A1MD34",
+              "shortName" => "A1MD34",
+              "name" => "Advanced Micro Devices, Inc.",
+              "longName" => "Advanced Micro Devices, Inc. Shs Unsponsored Brazilian Depositary Receipt Repr 0.05 Sh",
+              "assetType" => "bdr",
+              "currency" => "BRL",
+              "isActive" => true
+            }
+          ]
+        }.to_json
+      )
+
+      expect_request(response, "A1MD34")
+
+      result = provider.lookup_asset(symbol: "A1MD34")
+
+      expect(result).to eq(
+        MarketData::AssetData.new(
+          symbol: "A1MD34",
+          name: "Advanced Micro Devices, Inc.",
+          currency: "BRL",
+          category: "international",
+          subcategory: nil,
+          active: true
+        )
+      )
+    end
   end
 
   describe "#fetch_asset_metadata" do

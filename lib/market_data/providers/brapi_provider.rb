@@ -18,7 +18,7 @@ module MarketData
 
         AssetData.new(
           symbol: payload.fetch("symbol", symbol),
-          name: metadata["longName"].presence || metadata["name"].presence || payload.fetch("symbol", symbol),
+          name: asset_name(metadata, fallback: payload.fetch("symbol", symbol)),
           currency: metadata["currency"],
           category: map_category(metadata),
           subcategory: nil,
@@ -39,7 +39,7 @@ module MarketData
         end
 
         raise NotFoundError, "Asset not found for symbol #{symbol}" if asset_payload.blank?
-        raise NotFoundError, "Asset not found for symbol #{symbol}" if asset_payload["longName"].blank? && asset_payload["name"].blank?
+        raise NotFoundError, "Asset not found for symbol #{symbol}" if asset_payload.values_at("longName", "name", "shortName").all?(&:blank?)
 
         asset_payload
       end
@@ -103,16 +103,38 @@ module MarketData
         return "fii" if sub_type == "fii"
         return "crypto" if asset_type.include?("crypto")
         return "fixed_income" if sub_type.include?("fi-infra") || sub_type.include?("fi-agro")
+        return "international" if bdr?(metadata)
         return "stock" if asset_type == "stock" && currency == "BRL"
         return "international" if asset_type == "stock"
-        return "international" if asset_type == "bdr"
+
         return "etf" if asset_type == "fund" && sub_type == "etf"
 
         nil
       end
 
+      # Extracts the issuer prefix when BRAPI exposes only the ticker as the short name.
+      def asset_name(metadata, fallback:)
+        return bdr_name(metadata, fallback:) if bdr?(metadata)
+
+        metadata["longName"].presence || metadata["name"].presence || metadata["shortName"].presence || fallback
+      end
+
+      def bdr_name(metadata, fallback:)
+        long_name = metadata["longName"].to_s
+        issuer_name = long_name.split(/\s+Shs\b/i, 2).first.strip
+        return issuer_name if issuer_name.present? && !issuer_name.casecmp?(fallback.to_s)
+
+        [metadata["name"], metadata["shortName"], fallback].find do |name|
+          name.present? && !name.casecmp?(fallback.to_s)
+        end || fallback
+      end
+
+      def bdr?(metadata)
+        [metadata["assetType"], metadata["subType"]].any? { |value| value.to_s.casecmp?("bdr") }
+      end
+
       def active_from(metadata)
-        metadata["isActive"].nil? ? (metadata["longName"].present? || metadata["name"].present?) : metadata["isActive"]
+        metadata["isActive"].nil? ? metadata.values_at("longName", "name", "shortName").any?(&:present?) : metadata["isActive"]
       end
 
       # Parses provider timestamps leniently so quote failures do not cascade from malformed dates alone.
