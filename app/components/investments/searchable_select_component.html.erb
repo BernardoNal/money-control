@@ -1,0 +1,23 @@
+<div data-searchable-select
+     data-search-url="<%= search_url %>"
+     data-search-params="<%= json_escape(search_params.to_json) %>">
+  <%= form.label attribute, label, class: "mb-2 block text-sm font-medium text-slate-900" %>
+  <input id="<%= input_id %>"
+         type="search"
+         value="<%= selected_text %>"
+         placeholder="<%= placeholder %>"
+         autocomplete="off"
+         role="combobox"
+         aria-autocomplete="list"
+         aria-expanded="false"
+         aria-controls="<%= input_id %>_results"
+         data-searchable-select-input
+         class="block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+  <%= form.hidden_field attribute, value: selected_id, data: { searchable_select_value: true } %>
+  <div id="<%= input_id %>_results"
+       role="listbox"
+       data-searchable-select-results
+       class="relative z-10 mt-1 hidden max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+  </div>
+  <p class="mt-1 hidden text-sm text-rose-600" data-searchable-select-error></p>
+</div>

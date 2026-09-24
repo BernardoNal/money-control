@@ -1,6 +1,7 @@
 class Investments::IncomesController < ApplicationController
   before_action :set_income, only: %i[show edit update destroy]
-  before_action :load_form_collections, only: %i[index new create edit update destroy]
+  before_action :load_index_collections, only: :index
+  before_action :load_form_collections, only: %i[new create edit update]
 
   def index
     @total_incomes = 10
@@ -86,14 +87,17 @@ class Investments::IncomesController < ApplicationController
       :notes
     )
   end
+  def load_index_collections
+    @portfolios = Investments::Portfolio.where(user: current_user).order(:name).map { |portfolio| [portfolio.name, portfolio.id] }
+    @assets = Investments::Asset.order(:symbol).map { |a| ["#{a.symbol} - #{a.name.first(20)}", a.id] }
+    @income_types = income_options
+  end
+
 
   def load_form_collections
     @portfolios = Investments::Portfolio.where(user: current_user)
                                     .order(:name)
                                     .map { |portfolio| [portfolio.name, portfolio.id] }
-
-    @assets = Investments::Asset.order(:symbol)
-                                .map { |a| ["#{a.symbol} - #{a.name.first(20)}", a.id] }
 
     @income_types = income_options
   end

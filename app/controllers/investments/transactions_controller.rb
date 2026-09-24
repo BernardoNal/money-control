@@ -126,10 +126,6 @@ module Investments
         .investment_portfolios
         .order(:name)
 
-      @assets = Investments::Asset
-        .where(active: true)
-        .order(:symbol)
-
       @transaction_types =
         Investments::Transaction.transaction_types.keys.map do |key|
           [
