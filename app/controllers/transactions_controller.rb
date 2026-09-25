@@ -33,7 +33,10 @@ class TransactionsController < ApplicationController
   end
 
   def update
-    if @transaction.update(transaction_params)
+    set_transaction_account
+    return if performed?
+
+    if @transaction.update(transaction_params.except(:account_id))
       redirect_to transaction_path(@transaction), notice: t(".updated")
     else
       render :form, status: :unprocessable_entity
@@ -75,9 +78,11 @@ class TransactionsController < ApplicationController
   end
 
   def set_transaction_account
-    @transaction.account = current_user.accounts.find(
-      transaction_params[:account_id]
-    )
+    account_id = transaction_params[:account_id]
+    return if @transaction.persisted? && account_id.blank?
+
+    # Scope destination accounts to the current user before changing ownership.
+    @transaction.account = current_user.accounts.find(account_id)
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path
   end

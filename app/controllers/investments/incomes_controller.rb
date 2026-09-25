@@ -45,7 +45,10 @@ class Investments::IncomesController < ApplicationController
   end
 
   def update
-    if @income.update(income_params)
+    set_income_portfolio
+    return if performed?
+
+    if @income.update(income_params.except(:portfolio_id))
       redirect_to investments_income_path(@income),
                   notice: t(".updated")
     else
@@ -68,9 +71,11 @@ class Investments::IncomesController < ApplicationController
   end
 
   def set_income_portfolio
-    @income.portfolio = current_user.investment_portfolios.find(
-      income_params[:portfolio_id]
-    )
+    portfolio_id = income_params[:portfolio_id]
+    return if @income.persisted? && portfolio_id.blank?
+
+    # Scope destination portfolios to the current user before changing ownership.
+    @income.portfolio = current_user.investment_portfolios.find(portfolio_id)
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path
   end

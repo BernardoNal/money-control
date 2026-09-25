@@ -64,9 +64,12 @@ module Investments
     end
 
     def update
+      set_transaction_portfolio
+      return if performed?
+
       load_form_collections
 
-      if @transaction.update(transaction_params)
+      if @transaction.update(transaction_params.except(:portfolio_id))
         redirect_to investments_transaction_path(@transaction),
                     notice: t(".updated")
       else
@@ -162,9 +165,11 @@ module Investments
     end
 
     def set_transaction_portfolio
-      @transaction.portfolio = current_user.investment_portfolios.find(
-        transaction_params[:portfolio_id]
-      )
+      portfolio_id = transaction_params[:portfolio_id]
+      return if @transaction.persisted? && portfolio_id.blank?
+
+      # Scope destination portfolios to the current user before changing ownership.
+      @transaction.portfolio = current_user.investment_portfolios.find(portfolio_id)
     rescue ActiveRecord::RecordNotFound
       redirect_to root_path
     end

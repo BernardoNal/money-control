@@ -166,6 +166,46 @@ end
       expect(transaction.reload.amount).to eq(150)
     end
 
+    it "allows reassigning a transaction to another account owned by the current user" do
+      destination_account = Account.create!(
+        user: user,
+        name: "Reserva",
+        bank: "Inter",
+        initial_balance: 0
+      )
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Minha transacao",
+        date: Date.current
+      )
+
+      patch transaction_path(transaction), params: {
+        transaction: { account_id: destination_account.id }
+      }
+
+      expect(response).to redirect_to(transaction_path(transaction))
+      expect(transaction.reload.account).to eq(destination_account)
+    end
+
+    it "does not allow reassigning a transaction to another users account" do
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Minha transacao",
+        date: Date.current
+      )
+
+      patch transaction_path(transaction), params: {
+        transaction: { account_id: other_account.id }
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(transaction.reload.account).to eq(account)
+    end
+
     it "does not allow updating another user's transaction" do
       patch transaction_path(other_transaction), params: {
         transaction: {

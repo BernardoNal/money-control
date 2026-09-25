@@ -177,6 +177,29 @@ RSpec.describe "Investments::Transactions", type: :request do
       expect(transaction.notes).to eq("Compra atualizada")
     end
 
+    it "allows reassigning an investment transaction to another portfolio owned by the current user" do
+      destination_portfolio = Investments::Portfolio.create!(
+        user: user,
+        name: "Reserve Portfolio"
+      )
+
+      patch investments_transaction_path(transaction), params: {
+        investments_transaction: { portfolio_id: destination_portfolio.id }
+      }
+
+      expect(response).to redirect_to(investments_transaction_path(transaction))
+      expect(transaction.reload.portfolio).to eq(destination_portfolio)
+    end
+
+    it "does not allow reassigning an investment transaction to another users portfolio" do
+      patch investments_transaction_path(transaction), params: {
+        investments_transaction: { portfolio_id: other_portfolio.id }
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(transaction.reload.portfolio).to eq(portfolio)
+    end
+
     it "does not allow updating another user's transaction" do
       patch investments_transaction_path(other_transaction), params: {
         investments_transaction: {
