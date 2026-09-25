@@ -155,6 +155,48 @@ RSpec.describe "Investments::Incomes", type: :request do
       expect(income.reload.gross_amount).to eq(25)
     end
 
+    it "allows reassigning an income to another portfolio owned by the current user" do
+      destination_portfolio = Investments::Portfolio.create!(
+        user: user,
+        name: "Reserve Portfolio"
+      )
+      income = Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 10,
+        net_amount: 10,
+        tax_amount: 0,
+        payment_date: Date.current
+      )
+
+      patch investments_income_path(income), params: {
+        investments_income: { portfolio_id: destination_portfolio.id }
+      }
+
+      expect(response).to redirect_to(investments_income_path(income))
+      expect(income.reload.portfolio).to eq(destination_portfolio)
+    end
+
+    it "does not allow reassigning an income to another users portfolio" do
+      income = Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 10,
+        net_amount: 10,
+        tax_amount: 0,
+        payment_date: Date.current
+      )
+
+      patch investments_income_path(income), params: {
+        investments_income: { portfolio_id: other_portfolio.id }
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(income.reload.portfolio).to eq(portfolio)
+    end
+
     it "does not allow updating another user's income" do
       patch investments_income_path(other_income), params: {
         investments_income: {
