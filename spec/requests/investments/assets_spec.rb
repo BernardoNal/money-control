@@ -53,6 +53,8 @@ RSpec.describe "Investments::Assets", type: :request do
   end
 
   describe "POST /create" do
+    before { user.update!(admin: true) }
+
     it "creates an asset by auto-filling fields from the market data provider" do
       asset_data = MarketData::AssetData.new(
         symbol: "PETR4",
@@ -179,6 +181,8 @@ RSpec.describe "Investments::Assets", type: :request do
   end
 
   describe "PATCH /update" do
+    before { user.update!(admin: true) }
+
     it "updates the asset category without creating a new record" do
       expect do
         patch investments_asset_path(stock_asset), params: {
@@ -194,6 +198,52 @@ RSpec.describe "Investments::Assets", type: :request do
       stock_asset.reload
       expect(stock_asset.category).to eq("stock")
       expect(stock_asset.currency).to eq("BRL")
+    end
+  end
+
+  describe "authorization" do
+    it "allows regular users to view the catalog" do
+      get investments_assets_path
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "denies regular users from opening the asset form" do
+      get new_investments_asset_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "denies regular users from creating an asset" do
+      expect do
+        post investments_assets_path, params: {
+          investments_asset: {
+            name: "Unauthorized Asset",
+            symbol: "UNAUTHORIZED",
+            category: "stock",
+            currency: "BRL"
+          }
+        }
+      end.not_to change(Investments::Asset, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "denies regular users from updating an asset" do
+      patch investments_asset_path(stock_asset), params: {
+        investments_asset: { category: "stock" }
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(stock_asset.reload.category).to eq("international")
+    end
+
+    it "allows administrators to open the asset form" do
+      user.update!(admin: true)
+
+      get new_investments_asset_path
+
+      expect(response).to have_http_status(:ok)
     end
   end
 
