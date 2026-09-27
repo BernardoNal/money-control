@@ -34,6 +34,7 @@ module Investments
 
     def new
       @asset = Investments::Asset.new
+      authorize @asset
       @subcategories = form_subcategory_options(@asset.category)
       @categories = category_options
       render :form
@@ -41,6 +42,7 @@ module Investments
 
     def create
       @asset = Investments::Asset.new(asset_params)
+      authorize @asset
       @categories = category_options
       @subcategories = form_subcategory_options(@asset.category)
       apply_lookup_metadata(@asset)
@@ -100,6 +102,7 @@ module Investments
 
     def set_asset
       @asset = Investments::Asset.find(params[:id])
+      authorize @asset
     end
 
     def lookup_only_submission?(asset)
