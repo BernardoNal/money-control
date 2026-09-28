@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe MarketData::Providers::BrapiProvider do
-  subject(:provider) { described_class.new(api_token: "test-token") }
+  subject(:provider) { described_class.new(api_token: "test-token", max_symbols_per_request: 2) }
 
   describe "#lookup_asset" do
     it "returns normalized asset metadata for a Brazilian stock" do
@@ -199,6 +199,41 @@ RSpec.describe MarketData::Providers::BrapiProvider do
     end
   end
 
+  describe "configuration" do
+    it "uses one symbol per request by default" do
+      single_symbol_provider = described_class.new(api_token: "test-token")
+      responses = [
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "PETR4", "data" => { "regularMarketPrice" => 32.15 } }] }.to_json),
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "VALE3", "data" => { "regularMarketPrice" => 61.2 } }] }.to_json)
+      ]
+      expect_batch_quote_requests(responses, [["PETR4"], ["VALE3"]])
+
+      result = single_symbol_provider.fetch_prices(symbols: ["PETR4", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
+    end
+
+    it "splits symbols according to a configured request limit" do
+      configured_provider = described_class.new(api_token: "test-token", max_symbols_per_request: 2)
+      responses = [
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "PETR4", "data" => { "regularMarketPrice" => 32.15 } }, { "symbol" => "XPML11", "data" => { "regularMarketPrice" => 11.0 } }] }.to_json),
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "VALE3", "data" => { "regularMarketPrice" => 61.2 } }] }.to_json)
+      ]
+      expect_batch_quote_requests(responses, [["PETR4", "XPML11"], ["VALE3"]])
+
+      result = configured_provider.fetch_prices(symbols: ["PETR4", "XPML11", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "XPML11", "VALE3"])
+    end
+
+    it "rejects a non-positive or invalid request limit" do
+      expect { described_class.new(max_symbols_per_request: 0) }
+        .to raise_error(ArgumentError, /BRAPI_MAX_SYMBOLS_PER_REQUEST/)
+      expect { described_class.new(max_symbols_per_request: "invalid") }
+        .to raise_error(ArgumentError, /BRAPI_MAX_SYMBOLS_PER_REQUEST/)
+    end
+  end
+
   describe "#fetch_price" do
     it "returns normalized market price data for a quoted asset" do
       response = instance_double(
@@ -274,6 +309,24 @@ RSpec.describe MarketData::Providers::BrapiProvider do
         expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{symbols.join("%2C")}")
         expect(request["Authorization"]).to eq("Bearer test-token")
         response
+      end
+
+      block.call(http)
+    end
+  end
+
+  def expect_batch_quote_requests(responses, batches)
+    allow(Net::HTTP).to receive(:start).exactly(batches.size).times do |hostname, port, use_ssl:, &block|
+      expect(hostname).to eq("brapi.dev")
+      expect(port).to eq(443)
+      expect(use_ssl).to be(true)
+
+      http = instance_double("Net::HTTP")
+      expected_symbols = batches.shift
+      expect(http).to receive(:request) do |request|
+        expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{expected_symbols.join("%2C")}")
+        expect(request["Authorization"]).to eq("Bearer test-token")
+        responses.shift
       end
 
       block.call(http)
