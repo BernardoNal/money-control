@@ -239,6 +239,34 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
     end
 
+    it "keeps valid prices when another batch fails at the provider" do
+      configured_provider = described_class.new(api_token: "test-token", max_symbols_per_request: 1)
+      responses = [
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "PETR4", "data" => { "regularMarketPrice" => 32.15 } }] }.to_json),
+        MarketData::ProviderError.new("BRAPI request failed with status 429"),
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "VALE3", "data" => { "regularMarketPrice" => 61.2 } }] }.to_json)
+      ]
+      expect_batch_quote_requests(responses, [["PETR4"], ["XPML11"], ["VALE3"]])
+
+      result = configured_provider.fetch_prices(symbols: ["PETR4", "XPML11", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
+    end
+
+    it "keeps valid prices when another batch times out" do
+      configured_provider = described_class.new(api_token: "test-token", max_symbols_per_request: 1)
+      responses = [
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "PETR4", "data" => { "regularMarketPrice" => 32.15 } }] }.to_json),
+        Net::ReadTimeout.new("request timed out"),
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "VALE3", "data" => { "regularMarketPrice" => 61.2 } }] }.to_json)
+      ]
+      expect_batch_quote_requests(responses, [["PETR4"], ["XPML11"], ["VALE3"]])
+
+      result = configured_provider.fetch_prices(symbols: ["PETR4", "XPML11", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
+    end
+
     it "rejects a non-positive or invalid request limit" do
       expect { described_class.new(max_symbols_per_request: 0) }
         .to raise_error(ArgumentError, /BRAPI_MAX_SYMBOLS_PER_REQUEST/)
@@ -339,7 +367,10 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(http).to receive(:request) do |request|
         expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{expected_symbols.join("%2C")}")
         expect(request["Authorization"]).to eq("Bearer test-token")
-        responses.shift
+        response = responses.shift
+        raise response if response.is_a?(Exception)
+
+        response
       end
 
       block.call(http)

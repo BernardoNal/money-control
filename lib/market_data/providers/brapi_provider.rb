@@ -57,6 +57,9 @@ module MarketData
 
         normalized_symbols.each_slice(max_symbols_per_request).flat_map do |batch|
           fetch_price_batch(batch)
+        rescue ProviderError
+          # A failed batch must not discard prices already returned by other batches.
+          []
         end
       end
 
@@ -128,6 +131,8 @@ module MarketData
         payload
       rescue JSON::ParserError => e
         raise ProviderError, "BRAPI returned invalid JSON: #{e.message}"
+      rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, EOFError, SystemCallError => e
+        raise ProviderError, "BRAPI request failed due to #{e.class}"
       end
 
       def map_category(metadata)
