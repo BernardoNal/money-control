@@ -6,9 +6,15 @@ module MarketData
     class BrapiProvider < Provider
       BASE_URL = "https://brapi.dev/api/v2".freeze
       API_TOKEN_ENV = "BRAPI_API_TOKEN".freeze
+      MAX_SYMBOLS_ENV = "BRAPI_MAX_SYMBOLS_PER_REQUEST".freeze
+      DEFAULT_MAX_SYMBOLS_PER_REQUEST = 1
 
-      def initialize(api_token: ENV[API_TOKEN_ENV])
+      def initialize(
+        api_token: ENV[API_TOKEN_ENV],
+        max_symbols_per_request: ENV.fetch(MAX_SYMBOLS_ENV, DEFAULT_MAX_SYMBOLS_PER_REQUEST.to_s)
+      )
         @api_token = api_token
+        @max_symbols_per_request = positive_integer(max_symbols_per_request)
       end
 
       # Looks up normalized asset metadata from BRAPI's ticker search endpoint.
@@ -44,26 +50,16 @@ module MarketData
         asset_payload
       end
 
-      # Retrieves the latest available quotes and skips symbols without a usable price.
+      # Retrieves the latest available quotes in provider-compatible batches.
       def fetch_prices(symbols:)
         normalized_symbols = symbols.map { |symbol| symbol.to_s.strip.upcase }.reject(&:blank?).uniq
         return [] if normalized_symbols.empty?
 
-        payload = get_json(
-          path: "/stocks/quote",
-          query_params: { symbols: normalized_symbols.join(",") }
-        )
-
-        payload.fetch("results", []).filter_map do |quote|
-          price_payload = quote.fetch("data", {})
-          next if quote["symbol"].blank? || price_payload["regularMarketPrice"].blank?
-
-          PriceData.new(
-            symbol: quote.fetch("symbol"),
-            price: BigDecimal(price_payload.fetch("regularMarketPrice").to_s),
-            currency: price_payload["currency"],
-            as_of: parse_time(price_payload["regularMarketTime"])
-          )
+        normalized_symbols.each_slice(max_symbols_per_request).flat_map do |batch|
+          fetch_price_batch(batch)
+        rescue ProviderError
+          # A failed batch must not discard prices already returned by other batches.
+          []
         end
       end
 
@@ -81,7 +77,37 @@ module MarketData
 
       private
 
-      attr_reader :api_token
+      attr_reader :api_token, :max_symbols_per_request
+
+      # Converts the provider limit to a positive integer before requests are made.
+      def positive_integer(value)
+        parsed_value = Integer(value)
+        return parsed_value if parsed_value.positive?
+
+        raise ArgumentError, "#{MAX_SYMBOLS_ENV} must be a positive integer"
+      rescue ArgumentError, TypeError
+        raise ArgumentError, "#{MAX_SYMBOLS_ENV} must be a positive integer"
+      end
+
+      # Fetches one bounded batch and normalizes quotes into application data.
+      def fetch_price_batch(symbols)
+        payload = get_json(
+          path: "/stocks/quote",
+          query_params: { symbols: symbols.join(",") }
+        )
+
+        payload.fetch("results", []).filter_map do |quote|
+          price_payload = quote.fetch("data", {})
+          next if quote["symbol"].blank? || price_payload["regularMarketPrice"].blank?
+
+          PriceData.new(
+            symbol: quote.fetch("symbol"),
+            price: BigDecimal(price_payload.fetch("regularMarketPrice").to_s),
+            currency: price_payload["currency"],
+            as_of: parse_time(price_payload["regularMarketTime"])
+          )
+        end
+      end
 
       # Executes a BRAPI request and translates transport or payload errors into provider-level failures.
       def get_json(path:, query_params:)
@@ -105,6 +131,8 @@ module MarketData
         payload
       rescue JSON::ParserError => e
         raise ProviderError, "BRAPI returned invalid JSON: #{e.message}"
+      rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, EOFError, SystemCallError => e
+        raise ProviderError, "BRAPI request failed due to #{e.class}"
       end
 
       def map_category(metadata)
