@@ -226,6 +226,19 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(result.map(&:symbol)).to eq(["PETR4", "XPML11", "VALE3"])
     end
 
+    it "keeps valid prices from other batches when one quote is unavailable" do
+      configured_provider = described_class.new(api_token: "test-token", max_symbols_per_request: 2)
+      responses = [
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "PETR4", "data" => { "regularMarketPrice" => 32.15 } }, { "symbol" => "XPML11", "data" => {} }] }.to_json),
+        instance_double(Net::HTTPOK, code: "200", body: { "results" => [{ "symbol" => "VALE3", "data" => { "regularMarketPrice" => 61.2 } }] }.to_json)
+      ]
+      expect_batch_quote_requests(responses, [["PETR4", "XPML11"], ["VALE3"]])
+
+      result = configured_provider.fetch_prices(symbols: ["PETR4", "XPML11", "VALE3"])
+
+      expect(result.map(&:symbol)).to eq(["PETR4", "VALE3"])
+    end
+
     it "rejects a non-positive or invalid request limit" do
       expect { described_class.new(max_symbols_per_request: 0) }
         .to raise_error(ArgumentError, /BRAPI_MAX_SYMBOLS_PER_REQUEST/)
