@@ -8,11 +8,16 @@ module Investments
 
       @selected_category = permitted_category(params[:category])
       @selected_subcategory = permitted_subcategory(params[:subcategory])
+      @query = params[:q].to_s.strip
       @categories = category_options
       @subcategories = subcategory_options
       @assets = Investments::Asset.order(:symbol)
       @assets = @assets.where(category: @selected_category) if @selected_category.present?
       @assets = @assets.where(subcategory: @selected_subcategory) if @selected_subcategory.present?
+      if @query.present?
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%"
+        @assets = @assets.where("symbol ILIKE :pattern OR name ILIKE :pattern", pattern: pattern)
+      end
       @visible_assets = @assets.limit(@total_assets).offset(@offset)
       @asset_prices = build_asset_prices(@visible_assets)
     end

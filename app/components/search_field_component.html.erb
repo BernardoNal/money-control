@@ -1,0 +1,14 @@
+<div>
+  <div class="mb-1.5 flex items-center gap-2 text-sm font-medium text-[#000080]">
+    <i class="fa-solid fa-magnifying-glass text-xs" aria-hidden="true"></i>
+    <%= form.label attribute, label %>
+  </div>
+
+  <div class="relative">
+    <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+    <%= form.search_field attribute,
+                          value: value,
+                          placeholder: placeholder,
+                          class: "w-full  pl-10 focus:border-blue-300 focus:ring-2 focus:ring-blue-100" %>
+  </div>
+</div>
