@@ -50,6 +50,56 @@ RSpec.describe "Investments::Assets", type: :request do
       expect(response.body).to include("BTC")
       expect(response.body).not_to include("AAPL")
     end
+
+    it "filters assets by name and ticker case-insensitively" do
+      get investments_assets_path, params: { q: "APPLE" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("AAPL")
+      expect(response.body).not_to include("BTC")
+
+      get investments_assets_path, params: { q: "btc" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("BTC")
+      expect(response.body).not_to include("AAPL")
+    end
+
+    it "combines search with category filters" do
+      get investments_assets_path, params: { q: "coin", category: "crypto" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("BTC")
+      expect(response.body).not_to include("AAPL")
+      expect(response.body).to include('name="q"')
+      expect(response.body).to include('value="coin"')
+    end
+
+    it "handles searches with no matching results" do
+      get investments_assets_path, params: { q: "does-not-exist" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Nenhum ativo encontrado")
+      expect(response.body).not_to include("AAPL")
+      expect(response.body).not_to include("BTC")
+    end
+
+    it "retains the search query in pagination links" do
+      5.times do |index|
+        Investments::Asset.create!(
+          name: "Apple Fund #{index}",
+          symbol: "APF#{index}",
+          category: :international,
+          currency: "USD",
+          active: true
+        )
+      end
+
+      get investments_assets_path, params: { q: "Apple" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to match(/href="[^"]*q=Apple[^" ]*set=5/)
+    end
   end
 
   describe "POST /create" do

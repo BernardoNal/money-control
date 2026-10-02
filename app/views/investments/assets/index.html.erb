@@ -11,7 +11,15 @@
     </div>
 
     <div class="rounded-3xl bg-slate-50 p-6">
-      <%= form_with url: investments_assets_path, method: :get, local: true, class: "grid gap-5 lg:grid-cols-[1fr_1fr_auto]" do |f| %>
+      <%= form_with url: investments_assets_path, method: :get, local: true, class: "grid gap-5 lg:grid-cols-[1.2fr_1fr_1fr_auto]" do |f| %>
+        <%= render SearchFieldComponent.new(
+          form: f,
+          attribute: :q,
+          value: @query,
+          label: "Buscar ativo",
+          placeholder: "Nome ou ticker"
+        ) %>
+
         <div>
           <%= f.label :category, "Categoria", class: "mb-1.5 block text-sm font-medium" %>
           <%= f.select :category,
