@@ -1,3 +1,6 @@
+<% current_tab = %w[overview list].include?(params[:tab]) ? params[:tab] : "overview" %>
+<% tab_params = request.query_parameters.except("set") %>
+<% income_period_label = { "year" => "Este ano", "30d" => "Últimos 30 dias", "all" => "Todo o período" }.fetch(@income_period) %>
 <div class="mx-auto w-full max-w-7xl">
   <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -10,8 +13,24 @@
       <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
+    <nav class="mt-8 flex flex-wrap gap-3" aria-label="Seções de proventos">
+      <%= link_to investments_incomes_path(tab_params.merge(tab: "overview")),
+                  class: "inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition #{current_tab == "overview" ? "border-[#000080] bg-[#000080] text-white shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950"}" do %>
+        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+        Visão geral
+      <% end %>
+
+      <%= link_to investments_incomes_path(tab_params.merge(tab: "list")),
+                  class: "inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition #{current_tab == "list" ? "border-[#000080] bg-[#000080] text-white shadow-sm" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:text-slate-950"}" do %>
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+        Lista
+      <% end %>
+    </nav>
+
     <div class="rounded-3xl bg-slate-50 p-6">
       <%= form_with url: investments_incomes_path, method: :get, local: true, class: "grid gap-5 lg:grid-cols-[1fr_1fr_1fr_auto]" do |f| %>
+        <%= hidden_field_tag :tab, current_tab %>
+
         <div>
           <%= f.label :income_type, "Tipo", class: "mb-1.5 block text-sm font-medium" %>
           <%= f.select :income_type,
@@ -41,11 +60,147 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             Aplicar filtro
           <% end %>
-          <%= render ButtonComponent.new(label: "Limpar", href: investments_incomes_path, variant: :soft_olive, icon:"fa-solid fa-eraser") %>
+          <%= render ButtonComponent.new(label: "Limpar", href: investments_incomes_path(tab: current_tab), variant: :soft_olive, icon:"fa-solid fa-eraser") %>
         </div>
       <% end %>
     </div>
- <p class="mt-2 text-sm leading-6 text-slate-500"><%= @incomes.count%> proventos encontrados</p>
+
+    <% if current_tab == "overview" %>
+      <section class="mt-8" aria-labelledby="income-overview-title">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 id="income-overview-title" class="text-xl font-semibold text-slate-950">Resumo dos proventos</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Acompanhe o valor líquido recebido e sua distribuição por tipo.</p>
+          </div>
+
+          <div class="flex items-center gap-2" aria-label="Período do resumo">
+            <%= link_to "Este ano",
+                        investments_incomes_path(tab_params.merge(tab: "overview", income_period: "year")),
+                        class: "inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition #{@income_period == "year" ? "border-[#000080] bg-[#000080] text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"}" %>
+            <%= link_to "Últimos 30 dias",
+                        investments_incomes_path(tab_params.merge(tab: "overview", income_period: "30d")),
+                        class: "inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition #{@income_period == "30d" ? "border-[#000080] bg-[#000080] text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"}" %>
+            <%= link_to "Todo o período",
+                        investments_incomes_path(tab_params.merge(tab: "overview", income_period: "all")),
+                        class: "inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition #{@income_period == "all" ? "border-[#000080] bg-[#000080] text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"}" %>
+          </div>
+        </div>
+
+        <div class="mt-5 grid gap-5 md:grid-cols-3">
+          <div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+            <p class="text-sm font-medium text-emerald-700">Total recebido no período</p>
+            <p class="mt-3 text-2xl font-semibold text-emerald-800"><%= number_to_currency(@income_analytics.total_net_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            <p class="mt-2 text-xs font-medium text-emerald-700">
+              Valor líquido · <%= income_period_label %>
+            </p>
+          </div>
+
+          <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
+            <p class="text-sm font-medium text-slate-500">Média por provento</p>
+            <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@income_analytics.average_net_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            <p class="mt-2 text-xs font-medium text-slate-500">
+              Baseada em <%= @income_analytics.income_count %> provento(s)
+            </p>
+          </div>
+
+          <div class="rounded-3xl border border-blue-200 bg-blue-50 p-5">
+            <p class="text-sm font-medium text-blue-700">Maior provento</p>
+            <p class="mt-3 text-2xl font-semibold text-blue-900"><%= number_to_currency(@income_analytics.largest_net_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            <% if @income_analytics.largest_income.present? %>
+              <p class="mt-2 text-xs font-medium text-blue-700">
+                <%= @income_analytics.largest_income.asset.symbol %> ·
+                <%= @income_analytics.largest_income.human_income_type %> ·
+                <%= l(@income_analytics.largest_income.payment_date) %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+
+        <% chart_primary_color = "#2563eb" %>
+        <% chart_secondary_colors = %w[#60a5fa #2dd4bf #5eead4 #86efac #cbd5e1] %>
+        <% chart_total = @income_analytics.income_totals_by_type.values.sum(&:to_d) %>
+        <% chart_entries = @income_types.each_with_index.filter_map do |(label, income_type), index| %>
+          <% amount = @income_analytics.income_totals_by_type[income_type].to_d %>
+          <% next if amount.zero? %>
+          <% percentage = chart_total.zero? ? 0 : (amount / chart_total * 100) %>
+          <% { label: label, amount: amount, percentage: percentage } %>
+        <% end %>
+        <% largest_chart_entry_index = chart_entries.each_index.max_by { |index| chart_entries[index][:amount] } %>
+        <% secondary_color_index = 0 %>
+        <% chart_entries.each_with_index do |entry, index| %>
+          <% if index == largest_chart_entry_index %>
+            <% entry[:color] = chart_primary_color %>
+          <% else %>
+            <% entry[:color] = chart_secondary_colors[secondary_color_index] || chart_secondary_colors.last %>
+            <% secondary_color_index += 1 %>
+          <% end %>
+        <% end %>
+        <% chart_cursor = 0.to_d %>
+        <% chart_segments = chart_entries.map do |entry| %>
+          <% start_percentage = chart_cursor %>
+          <% chart_cursor += entry[:percentage] %>
+          <% "#{entry[:color]} #{start_percentage.round(2)}% #{chart_cursor.round(2)}%" %>
+        <% end %>
+
+        <div class="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div class="rounded-3xl border border-slate-300 bg-white p-5 lg:p-6">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-950">Distribuição por tipo</h2>
+              <p class="mt-1 text-sm text-slate-500">Participação no total recebido no período.</p>
+            </div>
+
+            <% if chart_entries.any? %>
+              <div class="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+                <div class="h-44 w-44 shrink-0 rounded-full" style="background: conic-gradient(<%= chart_segments.join(", ") %>);" role="img" aria-label="Distribuição dos proventos por tipo"></div>
+                <ul class="w-full space-y-3 text-sm">
+                  <% chart_entries.each do |entry| %>
+                    <li class="flex items-center justify-between gap-3">
+                      <span class="flex items-center gap-2 text-slate-700">
+                        <span class="h-3 w-3 rounded-full" style="background-color: <%= entry[:color] %>" aria-hidden="true"></span>
+                        <%= entry[:label] %>
+                      </span>
+                      <span class="text-right font-semibold text-slate-950">
+                        <%= number_to_currency(entry[:amount], unit: "R$ ", separator: ",", delimiter: ".") %>
+                        <span class="ml-1 text-xs font-medium text-slate-500">(<%= number_with_precision(entry[:percentage], precision: 1) %>%)</span>
+                      </span>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% else %>
+              <p class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">Nenhum recebimento no período selecionado.</p>
+            <% end %>
+          </div>
+
+          <div class="rounded-3xl border border-slate-300 bg-white p-5 lg:p-6">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-950">Últimos 3 proventos</h2>
+                <p class="mt-1 text-sm text-slate-500">Recebimentos mais recentes no período.</p>
+              </div>
+              <i class="fa-solid fa-clock-rotate-left text-slate-400" aria-hidden="true"></i>
+            </div>
+
+            <% if @income_analytics.latest_incomes.any? %>
+              <div class="mt-5 divide-y divide-slate-200">
+                <% @income_analytics.latest_incomes.each do |income| %>
+                  <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                    <div>
+                      <p class="font-semibold text-slate-950"><%= income.asset.symbol %></p>
+                      <p class="mt-1 text-sm text-slate-500"><%= income.human_income_type %> · <%= l(income.payment_date) %></p>
+                    </div>
+                    <p class="whitespace-nowrap font-semibold text-emerald-700"><%= number_to_currency(income.net_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">Nenhum provento no período selecionado.</p>
+            <% end %>
+          </div>
+        </div>
+      </section>
+    <% else %>
+      <p class="mt-2 text-sm leading-6 text-slate-500"><%= @incomes.count %> proventos encontrados</p>
     <% if @incomes.any? %>
       <div class="mt-4 overflow-x-auto rounded-3xl border border-slate-700">
         <table class="min-w-full text-left text-base">
@@ -117,6 +272,7 @@
           <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
         </div>
       </div>
+      <% end %>
     <% end %>
   </section>
 </div>
