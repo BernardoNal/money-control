@@ -62,6 +62,105 @@ RSpec.describe "Investments::Incomes", type: :request do
 
       expect(response).to have_http_status(:ok)
     end
+
+    it "renders overview analytics for the current user's incomes" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 120,
+        tax_amount: 20,
+        payment_date: Date.current
+      )
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :jcp,
+        gross_amount: 50,
+        tax_amount: 5,
+        payment_date: Date.current
+      )
+
+      get investments_incomes_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Visão geral")
+      expect(response.body).to include("Total recebido no período")
+      expect(response.body).to include("R$ 145,00")
+      expect(response.body).to include("Média por provento")
+      expect(response.body).to include("R$ 72,50")
+      expect(response.body).to include("Maior provento")
+      expect(response.body).to include("R$ 100,00")
+      expect(response.body).to include("MXRF11")
+      expect(response.body).to include("Dividendos")
+      expect(response.body).to include("Últimos 30 dias")
+      expect(response.body).to include("Últimos 3 proventos")
+      expect(response.body).to include("Distribuição por tipo")
+    end
+
+    it "switches the overview metrics to the last 30 days" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 120,
+        tax_amount: 20,
+        payment_date: 10.days.ago.to_date
+      )
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :jcp,
+        gross_amount: 50,
+        tax_amount: 5,
+        payment_date: 60.days.ago.to_date
+      )
+
+      get investments_incomes_path, params: { income_period: "30d" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("R$ 100,00")
+      expect(response.body).not_to include("R$ 145,00")
+      expect(response.body).to include("income_period=30d")
+    end
+
+    it "supports an all-time overview period" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 75,
+        tax_amount: 0,
+        payment_date: 2.years.ago.to_date
+      )
+
+      get investments_incomes_path, params: { income_period: "all" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Todo o período")
+      expect(response.body).to include("R$ 75,00")
+      expect(response.body).to include("income_period=all")
+    end
+
+    it "keeps the existing income list under the list tab" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 25,
+        tax_amount: 0,
+        payment_date: Date.current
+      )
+
+      get investments_incomes_path, params: { tab: "list", income_type: "dividends" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Valor Líquido")
+      expect(response.body).to include("MXRF11")
+      expect(response.body).to include("Lista")
+      expect(response.body).to include('name="tab"')
+      expect(response.body).to include('value="list"')
+    end
   end
 
   describe "GET /show" do

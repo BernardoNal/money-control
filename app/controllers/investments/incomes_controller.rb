@@ -10,11 +10,16 @@ class Investments::IncomesController < ApplicationController
     @selected_income_type = permitted_income_type(params[:income_type])
     @selected_asset = permitted_asset(params[:asset])
     @selected_portfolio = permitted_portifolio(params[:portfolio])
+    @income_period = permitted_income_period(params[:income_period])
     @incomes = policy_scope(Investments::Income)
       .includes(:asset, :portfolio)
     @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
     @incomes = @incomes.where(asset: @selected_asset) if @selected_asset.present?
     @incomes = @incomes.where(portfolio: @selected_portfolio) if @selected_portfolio.present?
+    @income_analytics = Investments::IncomeAnalyticsBuilder.call(
+      incomes: @incomes,
+      from_date: income_period_start(@income_period)
+    )
     @visible_incomes = @incomes.order(payment_date: :desc).limit(@total_incomes).offset(@offset)
   end
 
@@ -136,6 +141,17 @@ class Investments::IncomesController < ApplicationController
   def permitted_portifolio(value)
     return if value.blank?
     return value if Investments::Portfolio.where(user: current_user).exists?(id: value)
+    nil
+  end
+
+  def permitted_income_period(value)
+    %w[year 30d all].include?(value) ? value : "year"
+  end
+
+  def income_period_start(period)
+    return 29.days.ago.to_date if period == "30d"
+    return Date.current.beginning_of_year if period == "year"
+
     nil
   end
 end
