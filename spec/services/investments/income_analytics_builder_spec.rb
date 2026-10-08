@@ -48,6 +48,11 @@ RSpec.describe Investments::IncomeAnalyticsBuilder do
     expect(analytics.largest_income.asset).to eq(asset)
     expect(analytics.largest_income.income_type).to eq("dividends")
     expect(analytics.latest_incomes.map(&:income_type)).to eq(%w[jcp dividends dividends])
+
+    history = analytics.monthly_income_history
+    expect(history.first.month).to eq(Date.current.beginning_of_year)
+    expect(history.last.month).to eq(Date.current.beginning_of_month)
+    expect(history.find { |entry| entry.month == Date.current.beginning_of_month }.amount).to eq(BigDecimal("225"))
   end
 
   it "returns zero totals for an empty relation" do
@@ -56,6 +61,7 @@ RSpec.describe Investments::IncomeAnalyticsBuilder do
     expect(analytics.income_count).to eq(0)
     expect(analytics.average_net_amount).to eq(BigDecimal("0"))
     expect(analytics.largest_net_amount).to eq(BigDecimal("0"))
+    expect(analytics.monthly_income_history).to eq([])
   end
 
   it "calculates the total received in the last 30 days independently of the selected period" do
@@ -63,6 +69,26 @@ RSpec.describe Investments::IncomeAnalyticsBuilder do
     create_income(:jcp, gross_amount: 15, tax_amount: 0, payment_date: 31.days.ago.to_date)
 
     expect(analytics.last_30_days_total).to eq(BigDecimal("40"))
+  end
+
+  it "fills months without receipts with zero" do
+    first_month = Date.current.beginning_of_year
+    third_month = first_month.next_month.next_month
+    create_income(:dividends, gross_amount: 20, tax_amount: 0, payment_date: first_month + 5.days)
+    create_income(:jcp, gross_amount: 30, tax_amount: 0, payment_date: third_month + 5.days)
+
+    result = described_class.call(
+      incomes: Investments::Income.where(portfolio: portfolio),
+      from_date: first_month,
+      to_date: third_month.end_of_month
+    )
+
+    expect(result.monthly_income_history.map(&:month)).to eq([first_month, first_month.next_month, third_month])
+    expect(result.monthly_income_history.map(&:amount)).to eq([
+      BigDecimal("20"),
+      BigDecimal("0"),
+      BigDecimal("30")
+    ])
   end
 
   private
