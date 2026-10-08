@@ -7,6 +7,7 @@ Add a historical monthly income chart to the Proventos Overview using the existi
 ## Affected Files
 
 - `app/services/investments/income_analytics_builder.rb`
+- `app/controllers/investments/incomes_controller.rb`
 - `app/views/investments/incomes/index.html.erb`
 - `spec/services/investments/income_analytics_builder_spec.rb`
 - `spec/requests/investments/incomes_spec.rb`
@@ -25,7 +26,7 @@ Extend `Investments::IncomeAnalyticsBuilder` with a monthly series of net income
 
 Aggregate daily database totals into month buckets, fill gaps with zero values, and use the selected Overview period as the chart range. The existing `Todo o período` option provides the complete historical view.
 
-Render the series with the existing server-rendered CSS bar-chart pattern used by the portfolio dashboard, avoiding a new chart dependency.
+Render the series with server-rendered bar and line modes, using the existing visual language and avoiding a new chart dependency. Keep the historical chart before the type distribution and latest-income panels.
 
 ## Database Impact
 

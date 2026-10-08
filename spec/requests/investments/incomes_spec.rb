@@ -96,6 +96,34 @@ RSpec.describe "Investments::Incomes", type: :request do
       expect(response.body).to include("Últimos 30 dias")
       expect(response.body).to include("Últimos 3 proventos")
       expect(response.body).to include("Distribuição por tipo")
+      expect(response.body).to include("Histórico mensal")
+      expect(response.body).to include("01/#{Date.current.year}")
+      expect(response.body).to include("income_chart=bar")
+    end
+
+    it "renders an empty state when there is no monthly income history" do
+      get investments_incomes_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Nenhum histórico mensal disponível no período selecionado.")
+    end
+
+    it "switches the monthly history chart to line mode" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 25,
+        tax_amount: 0,
+        payment_date: Date.current
+      )
+
+      get investments_incomes_path, params: { income_chart: "line" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("income_chart=line")
+      expect(response.body).to include("Histórico mensal de renda em linha")
+      expect(response.body).to include("<polyline")
     end
 
     it "switches the overview metrics to the last 30 days" do
