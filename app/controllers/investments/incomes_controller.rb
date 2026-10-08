@@ -11,6 +11,7 @@ class Investments::IncomesController < ApplicationController
     @selected_asset = permitted_asset(params[:asset])
     @selected_portfolio = permitted_portifolio(params[:portfolio])
     @income_period = permitted_income_period(params[:income_period])
+    @income_chart = permitted_income_chart(params[:income_chart])
     @incomes = policy_scope(Investments::Income)
       .includes(:asset, :portfolio)
     @incomes = @incomes.where(income_type: @selected_income_type) if @selected_income_type.present?
@@ -153,5 +154,9 @@ class Investments::IncomesController < ApplicationController
     return Date.current.beginning_of_year if period == "year"
 
     nil
+  end
+
+  def permitted_income_chart(value)
+    %w[bar line].include?(value) ? value : "bar"
   end
 end
