@@ -260,6 +260,32 @@ RSpec.describe "Investments::Incomes", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Nenhum provento encontrado")
     end
+
+    it "downloads the selected year as a PDF" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 100,
+        tax_amount: 10,
+        payment_date: Date.new(2026, 2, 10)
+      )
+
+      get investments_income_tax_report_path, params: { year: 2026, format: :pdf }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.headers["Content-Disposition"]).to include("relatorio-proventos-2026.pdf")
+      expect(response.body).to start_with("%PDF")
+    end
+
+    it "generates an empty PDF for a year without incomes" do
+      get investments_income_tax_report_path, params: { year: 2020, format: :pdf }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.body).to start_with("%PDF")
+    end
   end
 
   describe "POST /create" do

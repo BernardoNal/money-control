@@ -9,7 +9,10 @@
         </p>
       </div>
 
-      <%= render ButtonComponent.new(label: "Voltar para proventos", href: investments_incomes_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      <div class="flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(label: "Baixar PDF", href: investments_income_tax_report_path(year: @report_year, format: :pdf), variant: :primary, icon: "fa-solid fa-file-pdf") %>
+        <%= render ButtonComponent.new(label: "Voltar para proventos", href: investments_incomes_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      </div>
     </div>
 
     <div class="mt-8 rounded-3xl bg-slate-50 p-6">

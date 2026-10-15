@@ -52,6 +52,8 @@ gem 'view_component'
 gem "font-awesome-sass"
 
 gem "pundit"
+gem "prawn"
+gem "prawn-table"
 
 
 

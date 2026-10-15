@@ -6,6 +6,17 @@ class Investments::IncomeTaxReportsController < ApplicationController
       incomes: policy_scope(Investments::Income),
       year: @report_year
     )
+
+    respond_to do |format|
+      format.html
+      format.pdf do
+        pdf = Investments::IncomeTaxReportPdf.call(report: @report, user: current_user)
+        send_data pdf,
+                  filename: "relatorio-proventos-#{@report_year}.pdf",
+                  type: "application/pdf",
+                  disposition: "attachment"
+      end
+    end
   end
 
   private
