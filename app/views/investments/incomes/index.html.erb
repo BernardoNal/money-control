@@ -10,7 +10,10 @@
         <p class="mt-2 text-sm leading-6 text-slate-600">Histórico de rendimentos recebidos.</p>
       </div>
 
-      <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+      <div class="flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(label: "Relatório fiscal", href: investments_income_tax_report_path, variant: :soft_olive, icon: "fa-solid fa-file-invoice-dollar") %>
+        <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+      </div>
     </div>
 
     <nav class="mt-8 flex flex-wrap gap-3" aria-label="Seções de proventos">

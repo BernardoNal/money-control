@@ -222,6 +222,72 @@ RSpec.describe "Investments::Incomes", type: :request do
     end
   end
 
+  describe "GET /income-tax-report" do
+    it "renders the selected year grouped by asset and income type" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 100,
+        tax_amount: 10,
+        payment_date: Date.new(2026, 2, 10),
+        reference_date: Date.new(2026, 1, 31)
+      )
+
+      get investments_income_tax_report_path, params: { year: 2026 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Rendimentos de 2026")
+      expect(response.body).to include("MXRF11")
+      expect(response.body).to include("Dividendos")
+      expect(response.body).to include("R$ 100,00")
+      expect(response.body).to include("R$ 90,00")
+    end
+
+    it "does not include another user's incomes" do
+      other_income
+
+      get investments_income_tax_report_path, params: { year: Date.current.year }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("R$ 10,00")
+      expect(response.body).to include("Nenhum provento encontrado")
+    end
+
+    it "renders an empty state for a year without incomes" do
+      get investments_income_tax_report_path, params: { year: 2020 }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Nenhum provento encontrado")
+    end
+
+    it "downloads the selected year as a PDF" do
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: 100,
+        tax_amount: 10,
+        payment_date: Date.new(2026, 2, 10)
+      )
+
+      get investments_income_tax_report_path, params: { year: 2026, format: :pdf }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.headers["Content-Disposition"]).to include("relatorio-proventos-2026.pdf")
+      expect(response.body).to start_with("%PDF")
+    end
+
+    it "generates an empty PDF for a year without incomes" do
+      get investments_income_tax_report_path, params: { year: 2020, format: :pdf }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.body).to start_with("%PDF")
+    end
+  end
+
   describe "POST /create" do
     it "creates an income" do
       expect do

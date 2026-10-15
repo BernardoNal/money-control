@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     end
     resources :portfolios
     resources :incomes
+    get "income-tax-report", to: "income_tax_reports#show", as: :income_tax_report
     resources :transactions
   end
 

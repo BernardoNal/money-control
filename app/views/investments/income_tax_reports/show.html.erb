@@ -1,0 +1,117 @@
+<div class="mx-auto w-full max-w-7xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Investimentos</p>
+        <h1 class="mt-3 text-3xl font-semibold text-slate-950">Relatório anual de proventos</h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          Consulte os rendimentos recebidos no ano selecionado, organizados por ativo e tipo de provento.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(label: "Baixar PDF", href: investments_income_tax_report_path(year: @report_year, format: :pdf), variant: :primary, icon: "fa-solid fa-file-pdf") %>
+        <%= render ButtonComponent.new(label: "Voltar para proventos", href: investments_incomes_path, variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+      </div>
+    </div>
+
+    <div class="mt-8 rounded-3xl bg-slate-50 p-6">
+      <%= form_with url: investments_income_tax_report_path, method: :get, local: true, class: "flex flex-col gap-4 sm:flex-row sm:items-end" do |f| %>
+        <div class="w-full sm:max-w-xs">
+          <%= f.label :year, "Ano do relatório", class: "mb-1.5 block text-sm font-medium text-slate-800" %>
+          <%= f.select :year,
+                       options_for_select(@available_years, @report_year),
+                       {},
+                       class: "w-full bg-white" %>
+        </div>
+        <%= f.button class: ButtonComponent::VARIANT_STYLES[:primary] do %>
+          <i class="fa-solid fa-filter" aria-hidden="true"></i>
+          Atualizar relatório
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 class="text-2xl font-semibold text-slate-950">Rendimentos de <%= @report.year %></h2>
+        <p class="mt-1 text-sm text-slate-500">Registros pertencentes ao usuário autenticado.</p>
+      </div>
+      <p class="text-sm font-medium text-slate-600"><%= @report.asset_groups.sum { |group| group.income_type_groups.sum { |type_group| type_group.incomes.size } } %> provento(s)</p>
+    </div>
+
+    <div class="mt-5 grid gap-5 md:grid-cols-3">
+      <% [
+        ["Total bruto", @report.totals[:gross_amount], "border-slate-300", "bg-slate-50", "text-slate-500", "text-slate-950"],
+        ["Total de impostos", @report.totals[:tax_amount], "border-amber-200", "bg-amber-50", "text-amber-700", "text-amber-900"],
+        ["Total líquido", @report.totals[:net_amount], "border-emerald-200", "bg-emerald-50", "text-emerald-700", "text-emerald-900"]
+      ].each do |label, amount, border_class, background_class, label_class, amount_class| %>
+        <div class="rounded-3xl border <%= border_class %> <%= background_class %> p-5">
+          <p class="text-sm font-medium <%= label_class %>"><%= label %></p>
+          <p class="mt-3 text-2xl font-semibold <%= amount_class %>"><%= number_to_currency(amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @report.asset_groups.any? %>
+      <div class="mt-8 space-y-6">
+        <% @report.asset_groups.each do |asset_group| %>
+          <section class="overflow-hidden rounded-3xl border border-slate-300" aria-labelledby="asset-<%= asset_group.asset.id %>">
+            <div class="flex flex-col gap-2 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 id="asset-<%= asset_group.asset.id %>" class="text-lg font-semibold text-slate-950"><%= asset_group.asset.symbol %></h3>
+                <p class="text-sm text-slate-500"><%= asset_group.asset.name %></p>
+              </div>
+              <p class="text-sm font-semibold text-slate-700">Líquido: <%= number_to_currency(asset_group.totals[:net_amount], unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            </div>
+
+            <div class="divide-y divide-slate-200">
+              <% asset_group.income_type_groups.each do |type_group| %>
+                <section class="p-5" aria-labelledby="income-type-<%= asset_group.asset.id %>-<%= type_group.income_type %>">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <h4 id="income-type-<%= asset_group.asset.id %>-<%= type_group.income_type %>" class="font-semibold text-slate-900"><%= type_group.label %></h4>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-slate-600">
+                      <span>Bruto: <%= number_to_currency(type_group.totals[:gross_amount], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                      <span>Impostos: <%= number_to_currency(type_group.totals[:tax_amount], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                      <span>Líquido: <%= number_to_currency(type_group.totals[:net_amount], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                      <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                          <th class="px-3 py-2 font-semibold">Pagamento</th>
+                          <th class="px-3 py-2 font-semibold">Referência</th>
+                          <th class="px-3 py-2 text-right font-semibold">Bruto</th>
+                          <th class="px-3 py-2 text-right font-semibold">Impostos</th>
+                          <th class="px-3 py-2 text-right font-semibold">Líquido</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        <% type_group.incomes.each do |income| %>
+                          <tr>
+                            <td class="whitespace-nowrap px-3 py-3 text-slate-700"><%= l(income.payment_date) %></td>
+                            <td class="whitespace-nowrap px-3 py-3 text-slate-500"><%= income.reference_date.present? ? l(income.reference_date) : "-" %></td>
+                            <td class="whitespace-nowrap px-3 py-3 text-right text-slate-700"><%= number_to_currency(income.gross_amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                            <td class="whitespace-nowrap px-3 py-3 text-right text-slate-700"><%= number_to_currency(income.tax_amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                            <td class="whitespace-nowrap px-3 py-3 text-right font-semibold text-emerald-700"><%= number_to_currency(income.net_amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-8 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+        <i class="fa-solid fa-file-invoice-dollar text-3xl text-slate-300" aria-hidden="true"></i>
+        <h3 class="mt-4 text-lg font-semibold text-slate-900">Nenhum provento encontrado</h3>
+        <p class="mt-2 text-sm text-slate-600">Não há recebimentos registrados para <%= @report.year %>.</p>
+      </div>
+    <% end %>
+  </section>
+</div>
