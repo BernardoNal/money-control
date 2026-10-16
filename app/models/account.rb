@@ -1,6 +1,7 @@
 class Account < ApplicationRecord
   belongs_to :user
   has_many :transactions, dependent: :destroy
+  has_many :transaction_imports, dependent: :destroy
 
   validates :name,:bank,:initial_balance, presence: true
 

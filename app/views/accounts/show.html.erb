@@ -9,6 +9,7 @@
       </div>
 
       <div class="flex flex-wrap gap-3">
+        <%= render ButtonComponent.new(label: "Importar CSV", href: account_transaction_import_path(@account), variant: :soft_olive, icon: "fa-solid fa-file-import") %>
         <%= render ButtonComponent.new(label: "Editar", href: edit_account_path(@account), variant: :primary, icon: "fa-solid fa-pen-to-square") %>
         <%= render ButtonComponent.new(label: "Apagar", href: account_path(@account), variant: :danger, icon: "fa-solid fa-trash", data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta conta?" }) %>
       </div>

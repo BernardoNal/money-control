@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
-  resources :accounts
+  resources :accounts do
+    get "transactions/import", to: "transactions/imports#new", as: :transaction_import
+    post "transactions/import", to: "transactions/imports#create", as: :transaction_import_create
+    get "transactions/import/:id", to: "transactions/imports#show", as: :transaction_import_preview
+    patch "transactions/import/:id", to: "transactions/imports#update", as: :transaction_import_update
+  end
   resources :categories
   resources :transactions
   namespace :investments do

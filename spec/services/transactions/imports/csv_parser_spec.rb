@@ -102,4 +102,17 @@ RSpec.describe Transactions::Imports::CsvParser do
     expect(result).to be_valid
     expect(result.valid_rows.size).to eq(1)
   end
+
+  it "accepts Windows-1252 bank exports with accented characters" do
+    csv = <<~CSV.encode("Windows-1252")
+      Data;Lançamento;Detalhes;Valor;Tipo Lançamento
+      09/09/2026;Pagamento de Boleto;BANCO S.A.;-45,00;Saída
+    CSV
+
+    result = parse(csv)
+
+    expect(result).to be_valid
+    expect(result.valid_rows.first.description).to eq("Pagamento de Boleto")
+    expect(result.valid_rows.first.transaction_type).to eq("Saída")
+  end
 end

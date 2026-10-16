@@ -103,10 +103,17 @@ module Transactions
         raw_content = file.read
         return { error: "O arquivo CSV não pode exceder 5 MB." } if raw_content.bytesize > MAX_FILE_SIZE
 
-        content = raw_content.dup.force_encoding("UTF-8")
-        return { error: "O arquivo CSV deve usar codificação UTF-8." } unless content.valid_encoding?
+        bytes = raw_content.dup.force_encoding(Encoding::BINARY)
+        utf8_content = bytes.dup.force_encoding(Encoding::UTF_8)
+        content = if utf8_content.valid_encoding?
+                    utf8_content
+                  else
+                    bytes.encode(Encoding::UTF_8, Encoding::WINDOWS_1252)
+                  end
 
         { value: content.delete_prefix("\uFEFF") }
+      rescue EncodingError
+        { error: "O arquivo CSV deve usar codificação UTF-8 ou Windows-1252." }
       end
 
       # Normalize headers without changing the values that will be persisted.
