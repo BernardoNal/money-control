@@ -16,6 +16,15 @@ RSpec.describe "Transactions::Imports", type: :request do
       icon: "💳"
     )
   end
+  let!(:income_category) do
+    Category.create!(
+      user: user,
+      name: "Receitas",
+      is_income: true,
+      icon: "💰",
+      color: "#16a34a"
+    )
+  end
   let(:csv) do
     <<~CSV
       Data,"Lançamento","Detalhes","N° documento","Valor","Tipo Lançamento"
@@ -61,11 +70,11 @@ RSpec.describe "Transactions::Imports", type: :request do
     )
 
     patch account_transaction_import_update_path(account, import), params: {
-      row_categories: { "2" => category.id.to_s }
+      row_categories: { "2" => income_category.id.to_s }
     }
 
     expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
-    expect(import.reload.rows.first["category_id"]).to eq(category.id)
+    expect(import.reload.rows.first["category_id"]).to eq(income_category.id)
     expect(Transaction.count).to eq(0)
   end
 
@@ -94,7 +103,7 @@ RSpec.describe "Transactions::Imports", type: :request do
         "date" => "2026-09-09",
         "amount" => "110.0",
         "description" => "Pix recebido",
-        "category_id" => category.id,
+        "category_id" => income_category.id,
         "status" => "valid"
       }
     )
@@ -105,7 +114,7 @@ RSpec.describe "Transactions::Imports", type: :request do
 
     expect(response).to redirect_to(account_path(account))
     expect(import.reload.status).to eq("completed")
-    expect(Transaction.last.category).to eq(category)
+    expect(Transaction.last.category).to eq(income_category)
   end
 
   it "uses the global uncategorized category when no category is selected" do
@@ -136,7 +145,7 @@ RSpec.describe "Transactions::Imports", type: :request do
         "date" => "2026-09-09",
         "amount" => "110.0",
         "description" => "Pix recebido",
-        "category_id" => category.id,
+        "category_id" => income_category.id,
         "status" => "valid"
       }
     )
@@ -157,7 +166,7 @@ RSpec.describe "Transactions::Imports", type: :request do
         "date" => "2026-09-09",
         "amount" => "110.0",
         "description" => "Primeira linha",
-        "category_id" => category.id,
+        "category_id" => income_category.id,
         "status" => "valid"
       },
       {
@@ -165,7 +174,7 @@ RSpec.describe "Transactions::Imports", type: :request do
         "date" => "2026-09-09",
         "amount" => nil,
         "description" => "Linha inválida",
-        "category_id" => category.id,
+        "category_id" => income_category.id,
         "status" => "valid"
       }
     )
@@ -213,7 +222,7 @@ RSpec.describe "Transactions::Imports", type: :request do
         "date" => "2026-09-09",
         "amount" => "110.0",
         "description" => "Pix recebido",
-        "category_id" => category.id,
+        "category_id" => income_category.id,
         "status" => "valid"
       }
     )
@@ -255,7 +264,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     post_csv_import
     first_import = TransactionImport.last
     patch account_transaction_import_update_path(account, first_import), params: {
-      row_categories: { "2" => category.id.to_s },
+      row_categories: { "2" => income_category.id.to_s },
       selected_lines: ["2"]
     }
     post account_transaction_import_confirm_path(account, first_import)
@@ -272,7 +281,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     post_csv_import
     first_import = TransactionImport.last
     patch account_transaction_import_update_path(account, first_import), params: {
-      row_categories: { "2" => category.id.to_s },
+      row_categories: { "2" => income_category.id.to_s },
       selected_lines: ["2"]
     }
     post account_transaction_import_confirm_path(account, first_import)
@@ -280,7 +289,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     post_csv_import
     second_import = TransactionImport.last
     patch account_transaction_import_update_path(account, second_import), params: {
-      row_categories: { "2" => category.id.to_s },
+      row_categories: { "2" => income_category.id.to_s },
       selected_lines: ["2"]
     }
 
@@ -294,7 +303,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     import = TransactionImport.last
 
     patch account_transaction_import_update_path(account, import), params: {
-      row_categories: { "2" => category.id.to_s },
+      row_categories: { "2" => income_category.id.to_s },
       selected_lines: ["2"],
       row_descriptions: { "2" => "Recebimento do Adrian" }
     }
@@ -309,7 +318,7 @@ RSpec.describe "Transactions::Imports", type: :request do
 
     expect do
       post account_transaction_import_confirm_path(account, import), params: {
-        row_categories: { "2" => category.id.to_s },
+        row_categories: { "2" => income_category.id.to_s },
         selected_lines: ["2"],
         row_descriptions: { "2" => "Recebimento confirmado" }
       }
