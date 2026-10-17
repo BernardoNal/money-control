@@ -2,7 +2,7 @@ module Transactions
   class ImportsController < ApplicationController
     before_action :set_account
     before_action :set_categories
-    before_action :set_transaction_import, only: %i[show update]
+    before_action :set_transaction_import, only: %i[show update confirm]
 
     def new
       @transaction_import = @account.transaction_imports.new
@@ -57,6 +57,16 @@ module Transactions
       @transaction_import.update!(rows: rows)
       redirect_to account_transaction_import_preview_path(@account, @transaction_import),
                   notice: "Categorias da revisão atualizadas."
+    end
+
+    def confirm
+      result = Imports::Confirmer.call(transaction_import: @transaction_import, user: current_user)
+
+      if result.success?
+        redirect_to account_path(@account), notice: result.message
+      else
+        redirect_to account_transaction_import_preview_path(@account, @transaction_import), alert: result.message
+      end
     end
 
     private

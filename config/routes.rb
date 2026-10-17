@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     post "transactions/import", to: "transactions/imports#create", as: :transaction_import_create
     get "transactions/import/:id", to: "transactions/imports#show", as: :transaction_import_preview
     patch "transactions/import/:id", to: "transactions/imports#update", as: :transaction_import_update
+    post "transactions/import/:id/confirm", to: "transactions/imports#confirm", as: :transaction_import_confirm
   end
   resources :categories
   resources :transactions

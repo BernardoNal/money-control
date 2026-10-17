@@ -86,4 +86,157 @@ RSpec.describe "Transactions::Imports", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include("Selecione um arquivo CSV")
   end
+
+  it "confirms categorized rows atomically and marks the draft completed" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Pix recebido",
+        "category_id" => category.id,
+        "status" => "valid"
+      }
+    )
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.to change(Transaction, :count).by(1)
+
+    expect(response).to redirect_to(account_path(account))
+    expect(import.reload.status).to eq("completed")
+    expect(Transaction.last.category).to eq(category)
+  end
+
+  it "does not confirm rows without categories" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Pix recebido",
+        "category_id" => nil,
+        "status" => "valid"
+      }
+    )
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.not_to change(Transaction, :count)
+
+    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
+    expect(flash[:alert]).to include("Selecione uma categoria")
+    expect(import.reload.status).to eq("pending")
+  end
+
+  it "does not replay a completed import" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Pix recebido",
+        "category_id" => category.id,
+        "status" => "valid"
+      }
+    )
+    post account_transaction_import_confirm_path(account, import)
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.not_to change(Transaction, :count)
+
+    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
+    expect(flash[:alert]).to include("já foi confirmada")
+  end
+
+  it "rolls back every transaction when one row fails" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Primeira linha",
+        "category_id" => category.id,
+        "status" => "valid"
+      },
+      {
+        "line_number" => 3,
+        "date" => "2026-09-09",
+        "amount" => nil,
+        "description" => "Linha inválida",
+        "category_id" => category.id,
+        "status" => "valid"
+      }
+    )
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.not_to change(Transaction, :count)
+
+    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
+    expect(import.reload.status).to eq("pending")
+  end
+
+  it "rejects a category owned by another user" do
+    other_user = User.create!(name: "Other", email: "category-owner@example.com", password: "password123")
+    other_category = Category.create!(
+      user: other_user,
+      name: "Privada",
+      is_income: false,
+      color: "#dc2626",
+      icon: "💳"
+    )
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Pix recebido",
+        "category_id" => other_category.id,
+        "status" => "valid"
+      }
+    )
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.not_to change(Transaction, :count)
+
+    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
+    expect(flash[:alert]).to include("não pertencem")
+  end
+
+  it "expires a draft before creating transactions" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "date" => "2026-09-09",
+        "amount" => "110.0",
+        "description" => "Pix recebido",
+        "category_id" => category.id,
+        "status" => "valid"
+      }
+    )
+    import.update!(expires_at: 1.minute.ago)
+
+    expect do
+      post account_transaction_import_confirm_path(account, import)
+    end.not_to change(Transaction, :count)
+
+    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
+    expect(flash[:alert]).to include("expirou")
+    expect(import.reload.status).to eq("expired")
+  end
+
+  private
+
+  def draft_with_rows(*rows)
+    TransactionImport.create!(
+      account: account,
+      original_filename: "statement.csv",
+      rows: rows,
+      summary: { "valid" => rows.size },
+      expires_at: 1.hour.from_now
+    )
+  end
 end
