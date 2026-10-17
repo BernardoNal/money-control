@@ -17,6 +17,7 @@ class TransactionsController < ApplicationController
 
   def create
     @transaction = Transaction.new(transaction_params)
+    apply_other_payment_method
 
     set_transaction_account
     return if performed?
@@ -35,6 +36,7 @@ class TransactionsController < ApplicationController
   def update
     set_transaction_account
     return if performed?
+    apply_other_payment_method
 
     if @transaction.update(transaction_params.except(:account_id))
       redirect_to transaction_path(@transaction), notice: t(".updated")
@@ -70,7 +72,7 @@ class TransactionsController < ApplicationController
   end
 
   def set_categories
-    @categories = Category.all
+    @categories = Category.for_user(current_user.id).order(:name)
   end
 
   def set_accounts
@@ -89,5 +91,12 @@ class TransactionsController < ApplicationController
 
   def current_user_transactions
     Transaction.joins(:account).where(accounts: { user_id: current_user.id })
+  end
+
+  def apply_other_payment_method
+    return unless @transaction.payment_method == "Outro"
+
+    other_payment_method = params.dig(:transaction, :payment_method_other).to_s.strip
+    @transaction.payment_method = other_payment_method.presence || "Outro"
   end
 end

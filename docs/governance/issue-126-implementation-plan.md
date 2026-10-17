@@ -76,7 +76,8 @@ No columns will be added or changed in the existing `transactions`, `accounts` o
 2. User-scoped import draft persistence, upload/preview routes and preview UI.
 3. Atomic confirmation, result handling, user-isolation and workflow request specs.
 4. Duplicate detection, pending-import recovery and cancellation.
-5. Final review, full validation, commit and pull request preparation.
+5. Transaction usability improvements and account transaction overview.
+6. Final review, full validation, commit and pull request preparation.
 
 Implementation will stop after each significant checkpoint for explicit review and approval. A stable commit will be created after each approved checkpoint.
 
@@ -127,6 +128,30 @@ Allow users to recover pending imports from the account page, cancel abandoned d
 - False positives can be reselected and imported once.
 - Duplicate detection does not affect manual transactions without source metadata.
 - Full request/service suite and migration/schema validation.
+
+## Checkpoint 5 Proposal: Transaction Usability
+
+This checkpoint is a follow-up to the completed import workflow and should not change the import confirmation contract.
+
+### Scope
+
+- Define payment method options for transaction creation and editing, while preserving an `Outro` path for unsupported methods and existing values.
+- Improve category selection in transaction create/edit by filtering categories according to entry/exit direction and making the field easier to scan and select.
+- Improve the account show page with a scoped transaction section, including recent transactions, direction-aware amounts and useful empty/loading states.
+
+### Technical Strategy
+
+- Keep payment method normalization in the transaction boundary, with a controlled option list and backward-compatible storage in the existing field.
+- Reuse the account ownership scope for transaction listing and avoid loading transactions from other accounts or users.
+- Reuse the category direction rule already introduced by the import flow instead of duplicating incompatible filtering logic in the UI.
+- Add focused request/model/view coverage for payment method persistence, category filtering, account transaction scope and empty accounts.
+
+### Risks and Impact
+
+- Existing free-text payment methods must continue rendering and editing correctly.
+- Account pages must remain performant with bounded recent transaction queries.
+- Category filtering must not prevent valid legacy records from being edited.
+- No new persistence migration is expected unless the controlled payment method model requires one; the existing field remains the compatibility boundary.
 
 ## Required Tests
 

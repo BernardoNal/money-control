@@ -62,5 +62,31 @@
       </div>
     <% end %>
 
+    <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-950">Transações recentes</h2>
+          <p class="mt-1 text-sm text-slate-600">Últimas movimentações registradas nesta conta.</p>
+        </div>
+        <%= render ButtonComponent.new(label: "Nova transação", href: new_transaction_path, variant: :soft_olive, icon: "fa-solid fa-plus") %>
+      </div>
+
+      <% if @transactions.any? %>
+        <div class="mt-4 divide-y divide-slate-200">
+          <% @transactions.each do |transaction| %>
+            <%= link_to transaction_path(transaction), class: "flex flex-col gap-2 py-4 no-underline sm:flex-row sm:items-center sm:justify-between" do %>
+              <div>
+                <p class="font-semibold text-slate-900"><%= transaction.description %></p>
+                <p class="mt-1 text-sm text-slate-500"><%= transaction.category&.name || "Sem categoria" %> · <%= transaction.date.strftime("%d/%m/%Y") %></p>
+              </div>
+              <p class="font-semibold <%= transaction.amount.negative? ? "text-rose-600" : "text-emerald-700" %>"><%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Nenhuma transação registrada nesta conta.</p>
+      <% end %>
+    </div>
+
   </section>
 </div>
