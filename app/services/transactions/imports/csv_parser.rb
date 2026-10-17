@@ -103,8 +103,8 @@ module Transactions
         raw_content = file.read
         return { error: "O arquivo CSV não pode exceder 5 MB." } if raw_content.bytesize > MAX_FILE_SIZE
 
-        # Bancos costumam exportar arquivos em UTF-8 com BOM ou Windows-1252;
-        # aceitar os dois formatos evita rejeitar um extrato válido por detalhes de codificação.
+        # Banks commonly export files as UTF-8 with a BOM or Windows-1252;
+        # accepting both prevents rejecting a valid statement because of encoding details.
         bytes = raw_content.dup.force_encoding(Encoding::BINARY)
         utf8_content = bytes.dup.force_encoding(Encoding::UTF_8)
         content = if utf8_content.valid_encoding?
@@ -176,8 +176,8 @@ module Transactions
       end
 
       def normalize_counterparty(value)
-        # O início dos detalhes do Pix contém data, horário e documento técnico;
-        # esses dados já têm campos próprios ou não ajudam a identificar a pessoa.
+        # Pix details can start with a date, time and technical document number;
+        # those values have dedicated fields or do not help identify the counterparty.
         value.to_s.strip
           .sub(/\A\d{2}\/\d{2}\s+\d{2}:\d{2}\s+/, "")
           .sub(/\A\d{11,14}\s+/, "")

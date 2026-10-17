@@ -80,8 +80,8 @@ module Transactions
     private
 
     def set_account
-      # A conta vem sempre da associação do usuário atual; nunca confiamos
-      # somente no account_id enviado pelo formulário.
+      # Always resolve the account through the current user's association;
+      # never trust only the account_id sent by the form.
       @account = current_user.accounts.find(params[:account_id])
     end
 

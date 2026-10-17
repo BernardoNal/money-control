@@ -20,8 +20,8 @@ module Transactions
         categories_by_id = categories.index_by { |category| category.id.to_s }
         invalid_category_ids = []
 
-        # O rascunho preserva o arquivo original, mas aplica somente escolhas
-        # explicitamente válidas para a direção de cada lançamento.
+        # The draft preserves the original file while applying only choices
+        # explicitly valid for each transaction direction.
         rows = transaction_import.rows.map do |row|
           next row unless row["status"] == "valid"
 

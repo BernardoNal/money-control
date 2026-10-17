@@ -27,8 +27,8 @@ module Transactions
         rows = rows.map do |row|
           next row if row["category_id"].present?
 
-          # A categoria padrão é escolhida pela direção do lançamento para que
-          # entradas e saídas nunca recebam uma categoria incompatível.
+          # Choose the default category from the transaction direction so
+          # income and expenses cannot receive incompatible categories.
           default_category = Category.uncategorized(income: RowDirection.income?(row))
           row.merge("category_id" => default_category.id)
         end
@@ -38,8 +38,8 @@ module Transactions
         return failure("Uma ou mais categorias não correspondem ao tipo do lançamento.") unless categories_match_rows?(rows, categories)
 
         created_count = 0
-        # A criação das transações e a conclusão do rascunho precisam ser uma
-        # única operação: uma falha não pode deixar uma importação pela metade.
+        # Creating transactions and completing the draft must be one operation:
+        # a failure must not leave an import partially applied.
         ActiveRecord::Base.transaction do
           rows.each do |row|
             Transaction.create!(
