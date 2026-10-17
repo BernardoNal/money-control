@@ -37,5 +37,30 @@
       </div>
     </div>
 
+    <% if @pending_transaction_imports.present? %>
+      <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-950">Importações pendentes</h2>
+            <p class="mt-1 text-sm text-slate-600">Retome uma revisão ou cancele um arquivo que não deseja importar.</p>
+          </div>
+        </div>
+        <div class="mt-4 divide-y divide-amber-200">
+          <% @pending_transaction_imports.each do |transaction_import| %>
+            <div class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-semibold text-slate-900"><%= transaction_import.original_filename %></p>
+                <p class="mt-1 text-sm text-slate-600"><%= transaction_import.rows.size %> linhas · criado em <%= transaction_import.created_at.strftime("%d/%m/%Y %H:%M") %></p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <%= render ButtonComponent.new(label: "Retomar", href: account_transaction_import_preview_path(@account, transaction_import), variant: :primary, icon: "fa-solid fa-arrow-right") %>
+                <%= render ButtonComponent.new(label: "Cancelar", href: account_transaction_import_cancel_path(@account, transaction_import), variant: :soft_olive, icon: "fa-solid fa-xmark", data: { turbo_method: :delete, turbo_confirm: "Cancelar esta importação?" }) %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
   </section>
 </div>

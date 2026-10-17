@@ -156,7 +156,7 @@ module Transactions
           amount: amount,
           description: description,
           category_name: category_name,
-          to_whom: values[:to_whom].presence,
+          to_whom: normalize_counterparty(values[:to_whom]),
           document_number: values[:document_number].presence,
           transaction_type: values[:transaction_type].presence,
           payment_method: values[:payment_method].presence,
@@ -171,6 +171,13 @@ module Transactions
 
         errors << "#{label} é obrigatório."
         nil
+      end
+
+      def normalize_counterparty(value)
+        value.to_s.strip
+          .sub(/\A\d{2}\/\d{2}\s+\d{2}:\d{2}\s+/, "")
+          .sub(/\A\d{11,14}\s+/, "")
+          .presence
       end
 
       def parse_date(value, errors)

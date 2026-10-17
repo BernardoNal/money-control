@@ -2,7 +2,7 @@ module Transactions
   class ImportsController < ApplicationController
     before_action :set_account
     before_action :set_categories
-    before_action :set_transaction_import, only: %i[show update confirm]
+    before_action :set_transaction_import, only: %i[show update confirm cancel]
 
     def new
       @transaction_import = @account.transaction_imports.new
@@ -26,7 +26,8 @@ module Transactions
       @transaction_import = Imports::DraftBuilder.build(
         account: @account,
         filename: File.basename(file.original_filename.to_s),
-        result: result
+        result: result,
+        default_categories: @uncategorized_categories
       )
 
       if @transaction_import.save
@@ -42,30 +43,37 @@ module Transactions
     end
 
     def update
-      selections = permitted_category_selections
-      rows, invalid_category_ids = Imports::DraftBuilder.apply_categories!(
-        transaction_import: @transaction_import,
-        selections: selections,
-        categories: @categories
-      )
-
-      if invalid_category_ids.any?
+      if apply_review_changes.any?
         flash.now[:alert] = "Uma ou mais categorias não pertencem ao usuário atual."
         return render :show, status: :unprocessable_entity
       end
 
-      @transaction_import.update!(rows: rows)
       redirect_to account_transaction_import_preview_path(@account, @transaction_import),
                   notice: "Categorias da revisão atualizadas."
     end
 
     def confirm
+      if review_changes_submitted? && apply_review_changes.any?
+        return redirect_to account_transaction_import_preview_path(@account, @transaction_import),
+                           alert: "Uma ou mais categorias não pertencem ao usuário atual."
+      end
+
       result = Imports::Confirmer.call(transaction_import: @transaction_import, user: current_user)
 
       if result.success?
         redirect_to account_path(@account), notice: result.message
       else
         redirect_to account_transaction_import_preview_path(@account, @transaction_import), alert: result.message
+      end
+    end
+
+    def cancel
+      if @transaction_import.cancelable?
+        @transaction_import.update!(status: "cancelled")
+        redirect_to account_path(@account), notice: "Importação cancelada."
+      else
+        redirect_to account_transaction_import_preview_path(@account, @transaction_import),
+                    alert: "Esta importação não pode mais ser cancelada."
       end
     end
 
@@ -76,7 +84,12 @@ module Transactions
     end
 
     def set_categories
+      @uncategorized_categories = {
+        true => Category.uncategorized(income: true),
+        false => Category.uncategorized(income: false)
+      }
       @categories = Category.for_user(current_user.id).order(:name)
+      @categories_by_direction = @categories.group_by(&:is_income)
     end
 
     def set_transaction_import
@@ -86,6 +99,36 @@ module Transactions
     def permitted_category_selections
       selections = params[:row_categories]
       selections.respond_to?(:permit) ? selections.permit!.to_h : {}
+    end
+
+    def permitted_selected_lines
+      selected_lines = params[:selected_lines]
+      selected_lines = selected_lines.to_unsafe_h.values if selected_lines.respond_to?(:to_unsafe_h)
+      Array(selected_lines).map(&:to_s)
+    end
+
+    def permitted_descriptions
+      descriptions = params[:row_descriptions]
+      descriptions.respond_to?(:permit) ? descriptions.permit!.to_h : {}
+    end
+
+    def apply_review_changes
+      rows, invalid_category_ids = Imports::DraftBuilder.apply_categories!(
+        transaction_import: @transaction_import,
+        selections: permitted_category_selections,
+        selected_lines: permitted_selected_lines,
+        descriptions: permitted_descriptions,
+        categories: @categories,
+        default_categories: @uncategorized_categories
+      )
+      return invalid_category_ids if invalid_category_ids.any?
+
+      @transaction_import.update!(rows: rows)
+      []
+    end
+
+    def review_changes_submitted?
+      params[:row_categories].present? || params[:selected_lines].present? || params[:row_descriptions].present?
     end
   end
 end

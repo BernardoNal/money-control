@@ -6,6 +6,7 @@ class AccountsController < ApplicationController
   end
 
   def show
+    @pending_transaction_imports = @account.transaction_imports.pending.order(created_at: :desc)
   end
 
   def new

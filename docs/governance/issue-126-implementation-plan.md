@@ -29,7 +29,7 @@ Add a reusable CSV import workflow for financial transactions. Users should uplo
 1. Make the workflow account-scoped: the user selects an account before uploading, and every imported transaction is assigned to that fixed account. The CSV does not need an account column.
 2. Define a normalized row contract with required `date`, `amount` and `description` fields, plus optional `category_name`, `to_whom`, `document_number`, `transaction_type` and `payment_method` fields.
 3. Add a parser boundary with an institution-independent CSV parser first, plus a Banco do Brasil-compatible header profile for the supplied statement format. Support explicit Portuguese and English header aliases, UTF-8/BOM input, Brazilian monetary formats, and clear unsupported-header errors. Keep future institution-specific parsers behind the same interface.
-4. Resolve categories through `Category.for_user(current_user.id)` during preview. Do not create categories automatically; the user assigns a category per row, and rows without a category remain pending validation. The selected account is resolved once through `current_user.accounts` and stored on the draft.
+4. Resolve categories through `Category.for_user(current_user.id)` during preview. Use global `Sem categoria (Entrada)` or `Sem categoria (Saída)` according to the normalized transaction direction when the user does not choose a more specific category; do not create user-specific categories automatically. The selected account is resolved once through `current_user.accounts` and stored on the draft.
 5. Validate every normalized row before persistence, including required fields, date, amount and row-level format errors. Keep valid, invalid and intentionally ignored rows visible in the preview.
 6. Persist the preview as an account-scoped `TransactionImport` draft with normalized row data, per-row category selections and validation status in JSONB, plus original filename and summary metadata. Apply upload size and row-count limits before persistence.
 7. Confirm only valid rows inside one `ActiveRecord::Base.transaction`, re-checking the selected account, category ownership and draft status. Mark the draft completed only after all transactions save; any failure rolls back every transaction.
@@ -75,9 +75,58 @@ No columns will be added or changed in the existing `transactions`, `accounts` o
 1. Parser boundary, normalized row contract, format validation and parser/service specs.
 2. User-scoped import draft persistence, upload/preview routes and preview UI.
 3. Atomic confirmation, result handling, user-isolation and workflow request specs.
-4. Final review, full validation, commit and pull request preparation.
+4. Duplicate detection, pending-import recovery and cancellation.
+5. Final review, full validation, commit and pull request preparation.
 
 Implementation will stop after each significant checkpoint for explicit review and approval. A stable commit will be created after each approved checkpoint.
+
+## Checkpoint 4 Addendum: Recovery and Duplicate Detection
+
+### Objective
+
+Allow users to recover pending imports from the account page, cancel abandoned drafts without losing audit history, and review possible duplicate transactions before confirmation.
+
+### Affected Areas
+
+- `app/models/transaction_import.rb` and `app/models/transaction.rb` for lifecycle and source metadata.
+- A new incremental migration for `cancelled` import status, import origin and duplicate fingerprints.
+- `app/services/transactions/imports/duplicate_detector.rb` and draft/confirmation services.
+- `app/controllers/transactions/imports_controller.rb` and `accounts_controller.rb` for listing, resuming and cancelling drafts.
+- Account and preview views for pending imports, duplicate warnings and per-row import selection.
+- Request and service specs for ownership, lifecycle, duplicate matching and false-positive overrides.
+
+### Technical Strategy
+
+1. Add `cancelled` as a terminal import status. Cancellation updates the draft rather than deleting it, preserving filename, account, rows and timestamps.
+2. List pending imports scoped through `current_user.accounts` on the account page, with actions to resume the preview or cancel the draft. Expired drafts remain non-confirmable and are shown with their status when relevant.
+3. Persist source metadata on imported transactions: `transaction_import_id`, `source_document_number` and an account-scoped `import_fingerprint`. Existing manual transactions remain compatible through nullable fields.
+4. Generate a deterministic fingerprint from the account, date, normalized amount, description, details, payment method and document number. Compare against existing transactions from the same account and against earlier rows in the current file.
+5. Mark matches as `possible_duplicate` with a reason and default `selected: false`. Keep the user able to reselect a false positive during preview; confirmation imports only valid rows with `selected != false` and a category.
+6. Treat duplicate detection as an advisory warning, not an automatic deletion or irreversible block. Never compare records across accounts or users.
+
+### Data and Security Impact
+
+- A new migration changes only the import/transaction source metadata and adds an account-scoped lookup index.
+- Nullable source fields preserve existing transactions and manual entry behavior.
+- Account ownership remains the authorization boundary for import listing, resuming, cancellation and duplicate matching.
+- Fingerprints contain no secrets and are derived from already stored transaction fields.
+
+### Risks and Mitigations
+
+- False positives: show the matching reason and allow explicit re-selection.
+- Duplicate rows inside one CSV: identify their source line and leave only the first occurrence selected by default.
+- Large account histories: use the account/fingerprint index and bounded import rows.
+- Abandoned drafts: cancellation is explicit and expiration remains a server-side confirmation guard.
+
+### Required Tests
+
+- Pending imports are listed only for the authenticated account owner.
+- Resume and cancel preserve account isolation and terminal status behavior.
+- Exact matches are warned and unselected by default.
+- Different accounts with otherwise equal transactions do not match.
+- False positives can be reselected and imported once.
+- Duplicate detection does not affect manual transactions without source metadata.
+- Full request/service suite and migration/schema validation.
 
 ## Required Tests
 

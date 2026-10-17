@@ -19,13 +19,21 @@ module Transactions
         account = user.accounts.find_by(id: transaction_import.account_id)
         return failure("A conta desta importação não está disponível.") unless account
 
-        rows = transaction_import.rows.select { |row| row["status"] == "valid" }
+        rows = transaction_import.rows.select do |row|
+          row["status"] == "valid" && row.fetch("selected", true) != false
+        end
         return failure("Não há lançamentos válidos para importar.") if rows.empty?
 
+        rows = rows.map do |row|
+          next row if row["category_id"].present?
+
+          default_category = Category.uncategorized(income: RowDirection.income?(row))
+          row.merge("category_id" => default_category.id)
+        end
         categories = categories_for(rows)
-        return failure("Selecione uma categoria para cada lançamento válido.") if rows.any? { |row| row["category_id"].blank? }
         category_ids = rows.map { |row| row["category_id"].to_i }.uniq
         return failure("Uma ou mais categorias não pertencem ao usuário atual.") if categories.size != category_ids.size
+        return failure("Uma ou mais categorias não correspondem ao tipo do lançamento.") unless categories_match_rows?(rows, categories)
 
         created_count = 0
         ActiveRecord::Base.transaction do
@@ -33,6 +41,9 @@ module Transactions
             Transaction.create!(
               account: account,
               category: categories.fetch(row["category_id"].to_i),
+              transaction_import: transaction_import,
+              source_document_number: row["document_number"],
+              import_fingerprint: row["import_fingerprint"],
               amount: row["amount"],
               date: row["date"],
               description: row["description"],
@@ -57,6 +68,13 @@ module Transactions
       def categories_for(rows)
         ids = rows.filter_map { |row| row["category_id"].presence }.map(&:to_i).uniq
         Category.for_user(user.id).where(id: ids).index_by(&:id)
+      end
+
+      def categories_match_rows?(rows, categories)
+        rows.all? do |row|
+          category = categories[row["category_id"].to_i]
+          category && category.is_income == RowDirection.income?(row)
+        end
       end
 
       def expired?

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     get "transactions/import/:id", to: "transactions/imports#show", as: :transaction_import_preview
     patch "transactions/import/:id", to: "transactions/imports#update", as: :transaction_import_update
     post "transactions/import/:id/confirm", to: "transactions/imports#confirm", as: :transaction_import_confirm
+    delete "transactions/import/:id", to: "transactions/imports#cancel", as: :transaction_import_cancel
   end
   resources :categories
   resources :transactions

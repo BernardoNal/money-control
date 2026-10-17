@@ -39,7 +39,7 @@ RSpec.describe Transactions::Imports::CsvParser do
     expect(result).to be_valid
     expect(row.category_name).to be_nil
     expect(row.description).to eq("Pix - Recebido")
-    expect(row.to_whom).to eq("09/09 17:53 ADRIAN RANIER")
+    expect(row.to_whom).to eq("ADRIAN RANIER")
     expect(row.document_number).to eq("9175")
     expect(row.transaction_type).to eq("Entrada")
   end

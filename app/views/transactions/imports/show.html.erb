@@ -7,11 +7,21 @@
         <h1 class="mt-3 text-3xl font-semibold text-slate-950"><%= @transaction_import.original_filename %></h1>
         <p class="mt-2 text-slate-600">Conta: <%= @account.name %></p>
       </div>
-      <div class="text-sm text-slate-500"><%= @transaction_import.pending? ? "Nenhuma transação foi criada ainda." : "Importação concluída." %></div>
+      <div class="text-sm text-slate-500">
+        <%= if @transaction_import.pending?
+              "Nenhuma transação foi criada ainda."
+            elsif @transaction_import.status == "completed"
+              "Importação concluída."
+            elsif @transaction_import.status == "expired"
+              "Importação expirada."
+            else
+              "Importação cancelada."
+            end %>
+      </div>
     </div>
 
-    <div class="mt-8 grid gap-4 sm:grid-cols-3">
-      <% { "valid" => ["Válidas", "text-emerald-700"], "invalid" => ["Com erro", "text-red-700"], "ignored" => ["Ignoradas", "text-slate-600"] }.each do |status, (label, color)| %>
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <% { "valid" => ["Válidas", "text-emerald-700"], "invalid" => ["Com erro", "text-red-700"], "ignored" => ["Ignoradas", "text-slate-600"], "possible_duplicate" => ["Possíveis duplicadas", "text-amber-700"] }.each do |status, (label, color)| %>
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <p class="text-sm text-slate-500"><%= label %></p>
           <p class="mt-1 text-2xl font-semibold <%= color %>"><%= @transaction_import.summary[status].to_i %></p>
@@ -24,39 +34,54 @@
     <% end %>
 
     <% if @transaction_import.pending? %>
-      <%= form_with url: account_transaction_import_update_path(@account, @transaction_import), method: :patch, class: "mt-8" do |form| %>
+      <%= form_with url: account_transaction_import_update_path(@account, @transaction_import), method: :patch, class: "mt-8", data: { import_review_form: true } do |form| %>
       <div class="overflow-x-auto rounded-2xl border border-slate-200">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <table class="min-w-[1100px] divide-y divide-slate-200 text-left text-sm">
           <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              <th class="px-4 py-3">Linha</th>
               <th class="px-4 py-3">Data</th>
               <th class="px-4 py-3">Lançamento</th>
               <th class="px-4 py-3">Detalhes</th>
               <th class="px-4 py-3">Documento</th>
               <th class="px-4 py-3">Valor</th>
-              <th class="px-4 py-3">Tipo</th>
               <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Importar</th>
               <th class="px-4 py-3">Categoria</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <% @transaction_import.rows.each do |row| %>
               <tr>
-                <td class="px-4 py-4 text-slate-500"><%= row["line_number"] %></td>
                 <td class="px-4 py-4 text-slate-700"><%= row["date"].present? ? Date.parse(row["date"]).strftime("%d/%m/%Y") : "-" %></td>
-                <td class="px-4 py-4 font-medium text-slate-900"><%= row["description"].presence || row["ignored_reason"] || "-" %></td>
+                <td class="px-4 py-4 font-medium text-slate-900">
+                  <% if row["status"] == "valid" %>
+                    <%= text_field_tag "row_descriptions[#{row["line_number"]}]", row["description"], class: "min-w-64 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900" %>
+                  <% else %>
+                    <%= row["description"].presence || row["ignored_reason"] || "-" %>
+                  <% end %>
+                </td>
                 <td class="max-w-xs px-4 py-4 text-slate-600"><%= row["to_whom"].presence || "-" %></td>
                 <td class="px-4 py-4 text-slate-600"><%= row["document_number"].presence || "-" %></td>
-                <td class="px-4 py-4 text-slate-700"><%= row["amount"].present? ? number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".") : "-" %></td>
-                <td class="px-4 py-4 text-slate-600"><%= row["transaction_type"].presence || "-" %></td>
+                <% value_color = row["amount"].to_s.to_f.negative? ? "text-rose-600" : "text-emerald-700" %>
+                <td class="px-4 py-4 font-semibold <%= value_color %>"><%= row["amount"].present? ? number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".") : "-" %></td>
                 <td class="px-4 py-4">
-                  <span class="font-semibold <%= { "valid" => "text-emerald-700", "invalid" => "text-red-700", "ignored" => "text-slate-500" }.fetch(row["status"], "text-slate-700") %>"><%= { "valid" => "Válida", "invalid" => "Com erro", "ignored" => "Ignorada" }.fetch(row["status"], row["status"]) %></span>
+                  <% status_label = row["possible_duplicate"] ? "Possível duplicada" : { "valid" => "Válida", "invalid" => "Com erro", "ignored" => "Ignorada" }.fetch(row["status"], row["status"]) %>
+                  <% status_color = row["possible_duplicate"] ? "text-amber-700" : { "valid" => "text-emerald-700", "invalid" => "text-red-700", "ignored" => "text-slate-500" }.fetch(row["status"], "text-slate-700") %>
+                  <span class="font-semibold <%= status_color %>"><%= status_label %></span>
                   <% if row["errors"].present? %><p class="mt-1 text-xs text-red-700"><%= row["errors"].to_sentence %></p><% end %>
+                  <% if row["duplicate_reason"].present? %><p class="mt-1 max-w-xs text-xs text-amber-700"><%= row["duplicate_reason"] %></p><% end %>
                 </td>
                 <td class="px-4 py-4">
                   <% if row["status"] == "valid" %>
-                    <%= select_tag "row_categories[#{row["line_number"]}]", options_from_collection_for_select(@categories, :id, :name, row["category_id"]), include_blank: "Selecione", class: "w-52 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" %>
+                    <%= check_box_tag "selected_lines[]", row["line_number"], row.fetch("selected", true), class: "h-4 w-4 rounded border-slate-300 text-slate-950" %>
+                  <% else %>
+                    <span class="text-slate-400">-</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-4">
+                  <% if row["status"] == "valid" %>
+                    <% row_categories = @categories_by_direction.fetch(Transactions::Imports::RowDirection.income?(row), []) %>
+                    <%= select_tag "row_categories[#{row["line_number"]}]", options_from_collection_for_select(row_categories, :id, :name, row["category_id"]), class: "min-w-64 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm whitespace-nowrap" %>
                   <% else %>
                     <span class="text-slate-400">-</span>
                   <% end %>
@@ -68,16 +93,18 @@
       </div>
         <div class="mt-6 flex flex-wrap items-center gap-3">
           <%= form.submit "Salvar categorias da revisão", class: "inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800" %>
+          <%= button_tag "Limpar alterações", type: :button, data: { import_review_reset: true }, class: "inline-flex items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" %>
           <%= render ButtonComponent.new(label: "Cancelar", href: account_path(@account), variant: :soft_olive, icon: "fa-solid fa-xmark") %>
+          <%= button_tag "Confirmar importação", type: :submit, formaction: account_transaction_import_confirm_path(@account, @transaction_import), formmethod: :post, data: { import_review_confirm: true }, disabled: false, class: "inline-flex items-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50" %>
         </div>
+        <p data-import-review-state class="mt-3 text-sm text-slate-500">Alterações salvas.</p>
       <% end %>
-
-      <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6">
-        <%= button_to "Confirmar importação", account_transaction_import_confirm_path(@account, @transaction_import), method: :post, class: "inline-flex items-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800" %>
-        <span class="text-sm text-slate-500">A confirmação criará somente as linhas válidas com categoria.</span>
-      </div>
-    <% else %>
+    <% elsif @transaction_import.status == "completed" %>
       <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Esta importação já foi concluída.</div>
+    <% elsif @transaction_import.status == "expired" %>
+      <div class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Esta importação expirou e não pode mais ser confirmada.</div>
+    <% else %>
+      <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Esta importação foi cancelada.</div>
     <% end %>
   </section>
 </div>

@@ -108,7 +108,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     expect(Transaction.last.category).to eq(category)
   end
 
-  it "does not confirm rows without categories" do
+  it "uses the global uncategorized category when no category is selected" do
     import = draft_with_rows(
       {
         "line_number" => 2,
@@ -122,11 +122,11 @@ RSpec.describe "Transactions::Imports", type: :request do
 
     expect do
       post account_transaction_import_confirm_path(account, import)
-    end.not_to change(Transaction, :count)
+    end.to change(Transaction, :count).by(1)
 
-    expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
-    expect(flash[:alert]).to include("Selecione uma categoria")
-    expect(import.reload.status).to eq("pending")
+    expect(response).to redirect_to(account_path(account))
+    expect(import.reload.status).to eq("completed")
+    expect(Transaction.last.category.name).to eq("Sem categoria (Entrada)")
   end
 
   it "does not replay a completed import" do
@@ -226,6 +226,96 @@ RSpec.describe "Transactions::Imports", type: :request do
     expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
     expect(flash[:alert]).to include("expirou")
     expect(import.reload.status).to eq("expired")
+
+    get account_transaction_import_preview_path(account, import)
+    expect(response.body).to include("Esta importação expirou e não pode mais ser confirmada.")
+    expect(response.body).not_to include("Esta importação já foi concluída.")
+  end
+
+  it "lists pending imports on the account and cancels without deleting them" do
+    import = draft_with_rows(
+      {
+        "line_number" => 2,
+        "status" => "ignored",
+        "ignored_reason" => "Saldo bancário."
+      }
+    )
+
+    get account_path(account)
+    expect(response.body).to include("statement.csv", "Retomar", "Cancelar")
+
+    delete account_transaction_import_cancel_path(account, import)
+
+    expect(response).to redirect_to(account_path(account))
+    expect(import.reload.status).to eq("cancelled")
+    expect(TransactionImport.exists?(import.id)).to be(true)
+  end
+
+  it "marks a repeated imported row as a possible duplicate" do
+    post_csv_import
+    first_import = TransactionImport.last
+    patch account_transaction_import_update_path(account, first_import), params: {
+      row_categories: { "2" => category.id.to_s },
+      selected_lines: ["2"]
+    }
+    post account_transaction_import_confirm_path(account, first_import)
+
+    post_csv_import
+    second_import = TransactionImport.last
+
+    expect(second_import.rows.first["possible_duplicate"]).to be(true)
+    expect(second_import.rows.first["selected"]).to be(false)
+    expect(second_import.summary["possible_duplicate"]).to eq(1)
+  end
+
+  it "allows a user to reselect a possible duplicate explicitly" do
+    post_csv_import
+    first_import = TransactionImport.last
+    patch account_transaction_import_update_path(account, first_import), params: {
+      row_categories: { "2" => category.id.to_s },
+      selected_lines: ["2"]
+    }
+    post account_transaction_import_confirm_path(account, first_import)
+
+    post_csv_import
+    second_import = TransactionImport.last
+    patch account_transaction_import_update_path(account, second_import), params: {
+      row_categories: { "2" => category.id.to_s },
+      selected_lines: ["2"]
+    }
+
+    expect do
+      post account_transaction_import_confirm_path(account, second_import)
+    end.to change(Transaction, :count).by(1)
+  end
+
+  it "keeps the original description by default and allows editing it" do
+    post_csv_import
+    import = TransactionImport.last
+
+    patch account_transaction_import_update_path(account, import), params: {
+      row_categories: { "2" => category.id.to_s },
+      selected_lines: ["2"],
+      row_descriptions: { "2" => "Recebimento do Adrian" }
+    }
+    post account_transaction_import_confirm_path(account, import)
+
+    expect(Transaction.last.description).to eq("Recebimento do Adrian")
+  end
+
+  it "applies review changes when confirming directly" do
+    post_csv_import
+    import = TransactionImport.last
+
+    expect do
+      post account_transaction_import_confirm_path(account, import), params: {
+        row_categories: { "2" => category.id.to_s },
+        selected_lines: ["2"],
+        row_descriptions: { "2" => "Recebimento confirmado" }
+      }
+    end.to change(Transaction, :count).by(1)
+
+    expect(Transaction.last.description).to eq("Recebimento confirmado")
   end
 
   private
@@ -238,5 +328,15 @@ RSpec.describe "Transactions::Imports", type: :request do
       summary: { "valid" => rows.size },
       expires_at: 1.hour.from_now
     )
+  end
+
+  def post_csv_import
+    tempfile = Tempfile.new(["statement", ".csv"])
+    tempfile.write(csv)
+    tempfile.rewind
+    upload = Rack::Test::UploadedFile.new(tempfile.path, "text/csv", false)
+    post account_transaction_import_create_path(account), params: { transaction_import: { file: upload } }, as: :multipart
+  ensure
+    tempfile&.close!
   end
 end
