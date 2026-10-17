@@ -52,6 +52,14 @@ Flow:
 3. Approval
 4. Implementation
 
+Approval boundaries are explicit and separate:
+
+- approval to implement does not authorize a commit
+- approval of a checkpoint does not authorize a commit, push, or pull request
+- creating a commit requires a new, explicit user confirmation after review
+- pushing a branch or opening a pull request also requires explicit confirmation
+- when confirmation is missing, leave the changes uncommitted and report the current state
+
 ## 5. Execution Follow-Up
 
 For longer changes, keep progress visible:
@@ -66,7 +74,7 @@ For work executed in approved stages or checkpoints:
 
 - stop after each significant approved checkpoint for review
 - do not continue to the next checkpoint without explicit approval
-- create a commit after each approved checkpoint that should be preserved as a stable recovery point
+- create a commit after an approved checkpoint only when the user explicitly authorizes that commit
 - mention in the implementation plan when the work will be split into checkpoints
 - if a checkpoint is rejected, revert only that checkpoint before continuing
 

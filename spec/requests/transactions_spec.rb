@@ -88,6 +88,15 @@ end
     end
   end
 
+  describe "GET /new" do
+    it "renders controlled payment methods and category direction metadata" do
+      get new_transaction_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Pix", "Cartão de crédito", "data-income=\"false\"")
+    end
+  end
+
   describe "POST /create" do
     it "does not persist an invalid transaction and displays validation errors" do
       expect do
@@ -127,6 +136,23 @@ end
       end.to change(Transaction, :count).by(1)
 
       expect(response).to redirect_to(transaction_path(Transaction.last))
+    end
+
+    it "persists a custom payment method through Outro" do
+      post transactions_path, params: {
+        transaction: {
+          account_id: account.id,
+          amount: 89.9,
+          description: "Mercado do mes",
+          date: Date.current,
+          category_id: category.id,
+          payment_method: "Outro",
+          payment_method_other: "Carteira digital"
+        }
+      }
+
+      expect(response).to redirect_to(transaction_path(Transaction.last))
+      expect(Transaction.last.payment_method).to eq("Carteira digital")
     end
 
     it "does not allow creating a transaction in another user's account" do

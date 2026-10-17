@@ -18,6 +18,8 @@ user = User.create!(
 
 puts "Criando categorias globais..."
 global_categories = [
+  { name: "Sem categoria (Entrada)", is_income: true, icon: "💳", color: "#64748b" },
+  { name: "Sem categoria (Saída)", is_income: false, icon: "💳", color: "#64748b" },
   { name: "Salário", is_income: true, icon: "💰", color: "#00cc66" },
   { name: "Aluguel", is_income: false, icon: "🏠", color: "#ff6666" },
   { name: "Alimentação", is_income: false, icon: "🍔", color: "#3366ff" },

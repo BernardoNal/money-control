@@ -175,10 +175,68 @@ const initializePortfolioTabs = () => {
   setTab(root.dataset.initialTab || "overview")
 }
 
+const initializeImportReview = () => {
+  const form = document.querySelector("[data-import-review-form]")
+  if (!form || form.dataset.initialized === "true") return
+
+  form.dataset.initialized = "true"
+  const confirmButton = form.querySelector("[data-import-review-confirm]")
+  const resetButton = form.querySelector("[data-import-review-reset]")
+  const stateLabel = form.querySelector("[data-import-review-state]")
+
+  const setDirty = (dirty) => {
+    if (confirmButton) confirmButton.disabled = dirty
+    if (stateLabel) stateLabel.textContent = dirty ? "Salve as alterações para confirmar." : "Alterações salvas."
+  }
+
+  form.addEventListener("input", () => setDirty(true))
+  form.addEventListener("change", () => setDirty(true))
+  resetButton?.addEventListener("click", () => {
+    form.reset()
+    setDirty(false)
+  })
+}
+
+const initializeTransactionForm = () => {
+  const amountField = document.querySelector("#transaction_amount")
+  const categorySelect = document.querySelector("[data-transaction-category-select]")
+  const paymentMethodSelect = document.querySelector("[data-payment-method-select]")
+  const paymentMethodOther = document.querySelector("[data-payment-method-other]")
+  if (!amountField || !categorySelect) return
+
+  const syncCategories = () => {
+    const amount = Number.parseFloat(amountField.value.replace(",", "."))
+    if (Number.isNaN(amount)) return
+
+    const income = amount >= 0
+    Array.from(categorySelect.options).forEach((option) => {
+      const matches = option.value === "" || option.dataset.income === String(income)
+      option.hidden = !matches
+    })
+
+    const selected = categorySelect.selectedOptions[0]
+    if (selected && selected.value !== "" && selected.dataset.income !== String(income)) categorySelect.value = ""
+  }
+
+  const syncOtherPaymentMethod = () => {
+    if (!paymentMethodSelect || !paymentMethodOther) return
+    const isOther = paymentMethodSelect.value === "Outro"
+    paymentMethodOther.classList.toggle("hidden", !isOther)
+    paymentMethodOther.disabled = !isOther
+  }
+
+  amountField.addEventListener("input", syncCategories)
+  paymentMethodSelect?.addEventListener("change", syncOtherPaymentMethod)
+  syncCategories()
+  syncOtherPaymentMethod()
+}
+
 document.addEventListener("turbo:load", initializeAssetSubcategoryFilter)
 document.addEventListener("turbo:load", initializeNavbarDropdowns)
 document.addEventListener("turbo:load", initializeMobileNavbar)
 document.addEventListener("turbo:load", initializePortfolioTabs)
+document.addEventListener("turbo:load", initializeImportReview)
+document.addEventListener("turbo:load", initializeTransactionForm)
 
 const initializeSearchableSelect = () => {
   document.querySelectorAll("[data-searchable-select]").forEach((root) => {

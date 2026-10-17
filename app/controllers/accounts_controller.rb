@@ -6,6 +6,8 @@ class AccountsController < ApplicationController
   end
 
   def show
+    @pending_transaction_imports = @account.transaction_imports.pending.order(created_at: :desc)
+    @transactions = @account.transactions.includes(:category).order(date: :desc, created_at: :desc).limit(10)
   end
 
   def new

@@ -38,7 +38,12 @@
 
           <div>
             <%= f.label :payment_method, "Metodo de pagamento", class: "mb-1.5 block text-sm font-medium" %>
-            <%= f.text_field :payment_method, placeholder: "Debito, PIX...", class: "w-full" %>
+            <% payment_methods = Transaction::PAYMENT_METHODS.dup %>
+            <% if @transaction.payment_method.present? && !payment_methods.include?(@transaction.payment_method) %>
+              <% payment_methods.unshift(@transaction.payment_method) %>
+            <% end %>
+            <%= f.select :payment_method, options_for_select(payment_methods, @transaction.payment_method), { include_blank: "Selecione o método" }, class: "w-full", data: { payment_method_select: true } %>
+            <%= f.text_field :payment_method_other, value: (@transaction.payment_method unless Transaction::PAYMENT_METHODS.include?(@transaction.payment_method)), placeholder: "Informe o método", class: "mt-2 hidden w-full", data: { payment_method_other: true } %>
           </div>
 
           <div>
@@ -58,12 +63,14 @@
 
           <div>
             <%= f.label :category_id, "Categoria", class: "mb-1.5 block text-sm font-medium" %>
-            <%= f.collection_select :category_id,
-                                    @categories,
-                                    :id,
-                                    :name,
-                                    { prompt: "Selecione a categoria" },
-                                    class: "w-full" %>
+            <%= f.select :category_id,
+                         options_for_select(
+                           @categories.map { |category| [category.name, category.id, { data: { income: category.is_income } }] },
+                           @transaction.category_id
+                         ),
+                         { prompt: "Selecione a categoria" },
+                         class: "w-full",
+                         data: { transaction_category_select: true } %>
           </div>
         </div>
 

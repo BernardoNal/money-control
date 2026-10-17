@@ -33,6 +33,18 @@ RSpec.describe "Accounts", type: :request do
     end
   end
 
+  describe "GET /show" do
+    it "shows recent transactions scoped to the account" do
+      category = Category.create!(user: user, name: "Mercado", is_income: false, icon: "🛒", color: "#ff6600")
+      Transaction.create!(account: account, category: category, amount: -25, description: "Café", date: Date.current)
+
+      get account_path(account)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Transações recentes", "Café", "-R$ 25,00")
+    end
+  end
+
   describe "POST /create" do
     it "creates an account for the current user" do
       expect do
