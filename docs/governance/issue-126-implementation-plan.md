@@ -79,7 +79,7 @@ No columns will be added or changed in the existing `transactions`, `accounts` o
 5. Transaction usability improvements and account transaction overview.
 6. Final review, full validation, commit and pull request preparation.
 
-Implementation will stop after each significant checkpoint for explicit review and approval. A stable commit will be created after each approved checkpoint.
+Implementation will stop after each significant checkpoint for explicit review and approval. A stable commit will be created only after a separate explicit authorization to commit; checkpoint approval alone does not authorize commit, push or pull request operations.
 
 ## Checkpoint 4 Addendum: Recovery and Duplicate Detection
 
