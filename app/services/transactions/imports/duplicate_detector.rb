@@ -42,6 +42,8 @@ module Transactions
       attr_reader :account, :rows
 
       def fingerprint_for(row)
+        # A impressão digital inclui a conta para impedir que uma transação de outra
+        # conta seja tratada como duplicada, mesmo que os demais dados coincidam.
         Digest::SHA256.hexdigest(
           [
             account.id,

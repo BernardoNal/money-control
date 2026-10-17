@@ -13,6 +13,8 @@ scope :for_user, ->(user_id) { where(user_id: user_id).or(global) }
 ICONS = %w[💰 🛒 🍔 🚗 📈 🏠 🎓 💳]
 
   def self.uncategorized(income:)
+    # Mantemos uma categoria padrão por direção para que a ausência de escolha
+    # não misture entradas e saídas nem impeça a conclusão da importação.
     name = income ? "Sem categoria (Entrada)" : "Sem categoria (Saída)"
     global.find_or_create_by!(name: name) do |category|
       category.is_income = income

@@ -83,6 +83,8 @@ class TransactionsController < ApplicationController
     account_id = transaction_params[:account_id]
     return if @transaction.persisted? && account_id.blank?
 
+    # A troca de conta também precisa respeitar a autorização do usuário,
+    # inclusive quando o formulário tenta enviar uma conta diferente.
     # Scope destination accounts to the current user before changing ownership.
     @transaction.account = current_user.accounts.find(account_id)
   rescue ActiveRecord::RecordNotFound
