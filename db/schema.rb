@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_17_100000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_19_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -120,7 +120,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_17_100000) do
     t.bigint "transaction_import_id"
     t.string "source_document_number"
     t.string "import_fingerprint"
+    t.string "source_identifier"
     t.index ["account_id", "import_fingerprint"], name: "index_transactions_on_account_id_and_import_fingerprint"
+    t.index ["account_id", "source_identifier"], name: "index_transactions_on_account_id_and_source_identifier"
     t.index ["account_id"], name: "index_transactions_on_account_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
     t.index ["transaction_import_id"], name: "index_transactions_on_transaction_import_id"

@@ -13,7 +13,7 @@
             elsif @transaction_import.status == "completed"
               "Importação concluída."
             elsif @transaction_import.status == "expired"
-              "Importação expirada."
+              "Não disponível para confirmação."
             else
               "Importação cancelada."
             end %>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <% { "valid" => ["Válidas", "text-emerald-700"], "invalid" => ["Com erro", "text-red-700"], "ignored" => ["Ignoradas", "text-slate-600"], "possible_duplicate" => ["Possíveis duplicadas", "text-amber-700"] }.each do |status, (label, color)| %>
+      <% { "valid" => ["Válidas", "text-emerald-700"], "invalid" => ["Com erro", "text-red-700"], "ignored" => ["Ignoradas", "text-slate-600"], "confirmed_duplicate" => ["Duplicadas confirmadas", "text-red-700"], "possible_duplicate" => ["Possíveis duplicadas", "text-amber-700"] }.each do |status, (label, color)| %>
         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <p class="text-sm text-slate-500"><%= label %></p>
           <p class="mt-1 text-2xl font-semibold <%= color %>"><%= @transaction_import.summary[status].to_i %></p>
@@ -29,7 +29,7 @@
       <% end %>
     </div>
 
-    <% if flash[:alert].present? %>
+    <% if flash[:alert].present? && !flash[:alert].to_s.include?("importação expirou") %>
       <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"><%= flash[:alert] %></div>
     <% end %>
 
@@ -42,6 +42,7 @@
               <th class="px-4 py-3">Data</th>
               <th class="px-4 py-3">Lançamento</th>
               <th class="px-4 py-3">Detalhes</th>
+              <th class="px-4 py-3">Identificador</th>
               <th class="px-4 py-3">Documento</th>
               <th class="px-4 py-3">Valor</th>
               <th class="px-4 py-3">Status</th>
@@ -61,12 +62,14 @@
                   <% end %>
                 </td>
                 <td class="max-w-xs px-4 py-4 text-slate-600"><%= row["to_whom"].presence || "-" %></td>
+                <td class="max-w-xs px-4 py-4 text-slate-600"><%= row["source_identifier"].presence || "-" %></td>
                 <td class="px-4 py-4 text-slate-600"><%= row["document_number"].presence || "-" %></td>
                 <% value_color = row["amount"].to_s.to_f.negative? ? "text-rose-600" : "text-emerald-700" %>
                 <td class="px-4 py-4 font-semibold <%= value_color %>"><%= row["amount"].present? ? number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".") : "-" %></td>
                 <td class="px-4 py-4">
-                  <% status_label = row["possible_duplicate"] ? "Possível duplicada" : { "valid" => "Válida", "invalid" => "Com erro", "ignored" => "Ignorada" }.fetch(row["status"], row["status"]) %>
-                  <% status_color = row["possible_duplicate"] ? "text-amber-700" : { "valid" => "text-emerald-700", "invalid" => "text-red-700", "ignored" => "text-slate-500" }.fetch(row["status"], "text-slate-700") %>
+                  <% status_key = row["duplicate_type"].presence || row["status"] %>
+                  <% status_label = { "confirmed" => "Duplicada confirmada", "possible" => "Possível duplicada", "valid" => "Válida", "invalid" => "Com erro", "ignored" => "Ignorada" }.fetch(status_key, row["status"]) %>
+                  <% status_color = { "confirmed" => "text-red-700", "possible" => "text-amber-700", "valid" => "text-emerald-700", "invalid" => "text-red-700", "ignored" => "text-slate-500" }.fetch(status_key, "text-slate-700") %>
                   <span class="font-semibold <%= status_color %>"><%= status_label %></span>
                   <% if row["errors"].present? %><p class="mt-1 text-xs text-red-700"><%= row["errors"].to_sentence %></p><% end %>
                   <% if row["duplicate_reason"].present? %><p class="mt-1 max-w-xs text-xs text-amber-700"><%= row["duplicate_reason"] %></p><% end %>
@@ -102,7 +105,7 @@
     <% elsif @transaction_import.status == "completed" %>
       <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Esta importação já foi concluída.</div>
     <% elsif @transaction_import.status == "expired" %>
-      <div class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">Esta importação expirou e não pode mais ser confirmada.</div>
+      <div class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">Esta importação expirou. Envie o arquivo novamente para iniciar uma nova revisão.</div>
     <% else %>
       <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">Esta importação foi cancelada.</div>
     <% end %>

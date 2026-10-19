@@ -32,6 +32,12 @@ RSpec.describe "Transactions::Imports", type: :request do
       09/09/2026,"BB Rende Fácil","Rende Facil","9903","-110,00","Saída"
     CSV
   end
+  let(:identified_csv) do
+    <<~CSV
+      Data,Valor,Descrição,Identificador
+      09/09/2026,110.00,Pix recebido,abc-123
+    CSV
+  end
 
   before { sign_in user }
 
@@ -57,6 +63,8 @@ RSpec.describe "Transactions::Imports", type: :request do
     expect(import.account).to eq(account)
     expect(import.rows.first["description"]).to eq("Pix - Recebido")
     expect(import.rows.second["status"]).to eq("ignored")
+    get account_transaction_import_preview_path(account, import)
+    expect(response.body).to include("Válida")
   ensure
     tempfile&.close!
   end
@@ -233,11 +241,12 @@ RSpec.describe "Transactions::Imports", type: :request do
     end.not_to change(Transaction, :count)
 
     expect(response).to redirect_to(account_transaction_import_preview_path(account, import))
-    expect(flash[:alert]).to include("expirou")
+    expect(flash[:alert]).to be_blank
     expect(import.reload.status).to eq("expired")
 
     get account_transaction_import_preview_path(account, import)
-    expect(response.body).to include("Esta importação expirou e não pode mais ser confirmada.")
+    expect(response.body).to include("Esta importação expirou. Envie o arquivo novamente para iniciar uma nova revisão.")
+    expect(response.body).not_to include("Esta importação expirou. Envie o arquivo novamente.")
     expect(response.body).not_to include("Esta importação já foi concluída.")
   end
 
@@ -273,8 +282,94 @@ RSpec.describe "Transactions::Imports", type: :request do
     second_import = TransactionImport.last
 
     expect(second_import.rows.first["possible_duplicate"]).to be(true)
+    expect(second_import.rows.first["duplicate_type"]).to eq("possible")
     expect(second_import.rows.first["selected"]).to be(false)
     expect(second_import.summary["possible_duplicate"]).to eq(1)
+  end
+
+  it "matches a previous transaction without import metadata" do
+    Transaction.create!(
+      account: account,
+      category: income_category,
+      amount: 110,
+      date: Date.new(2026, 9, 9),
+      description: "Pix - Recebido",
+      to_whom: "Adrian",
+      source_document_number: "9175"
+    )
+
+    post_csv_import
+
+    row = TransactionImport.last.rows.first
+    expect(row["possible_duplicate"]).to be(true)
+    expect(row["duplicate_type"]).to eq("possible")
+    expect(row["selected"]).to be(false)
+  end
+
+  it "falls back to transaction attributes when an older import has no source identifier" do
+    Transaction.create!(
+      account: account,
+      category: income_category,
+      amount: 110,
+      date: Date.new(2026, 9, 9),
+      description: "Pix recebido"
+    )
+
+    post_csv_import(identified_csv)
+
+    row = TransactionImport.last.rows.first
+    expect(row["duplicate_type"]).to eq("possible")
+    expect(row["selected"]).to be(false)
+  end
+
+  it "marks a repeated stable source identifier as a confirmed duplicate" do
+    post_csv_import(identified_csv)
+    first_import = TransactionImport.last
+    patch account_transaction_import_update_path(account, first_import), params: {
+      row_categories: { "2" => income_category.id.to_s },
+      selected_lines: ["2"]
+    }
+    post account_transaction_import_confirm_path(account, first_import)
+
+    post_csv_import(identified_csv)
+    second_import = TransactionImport.last
+
+    expect(second_import.rows.first["confirmed_duplicate"]).to be(true)
+    expect(second_import.rows.first["possible_duplicate"]).to be(false)
+    expect(second_import.rows.first["duplicate_type"]).to eq("confirmed")
+    expect(second_import.rows.first["selected"]).to be(false)
+    expect(second_import.summary["confirmed_duplicate"]).to eq(1)
+  end
+
+  it "marks repeated stable identifiers within one import as confirmed duplicates" do
+    post_csv_import(<<~CSV)
+      Data,Valor,Descrição,Identificador
+      09/09/2026,110.00,Pix recebido,abc-123
+      09/09/2026,110.00,Pix recebido,abc-123
+    CSV
+
+    import = TransactionImport.last
+
+    expect(import.rows.map { |row| row["duplicate_type"] }).to eq([nil, "confirmed"])
+    expect(import.rows.second["duplicate_reason"]).to include("linha 2")
+  end
+
+  it "does not match a stable identifier from another account" do
+    other_account = Account.create!(user: user, name: "Outra conta", bank: "Outro banco", initial_balance: 0)
+    Transaction.create!(
+      account: other_account,
+      category: income_category,
+      amount: 110,
+      date: Date.new(2026, 9, 9),
+      description: "Pix recebido",
+      source_identifier: "abc-123"
+    )
+
+    post_csv_import(identified_csv)
+
+    row = TransactionImport.last.rows.first
+    expect(row["duplicate_type"]).to be_nil
+    expect(row["selected"]).to be(true)
   end
 
   it "allows a user to reselect a possible duplicate explicitly" do
@@ -339,9 +434,9 @@ RSpec.describe "Transactions::Imports", type: :request do
     )
   end
 
-  def post_csv_import
+  def post_csv_import(csv_content = csv)
     tempfile = Tempfile.new(["statement", ".csv"])
-    tempfile.write(csv)
+    tempfile.write(csv_content)
     tempfile.rewind
     upload = Rack::Test::UploadedFile.new(tempfile.path, "text/csv", false)
     post account_transaction_import_create_path(account), params: { transaction_import: { file: upload } }, as: :multipart
