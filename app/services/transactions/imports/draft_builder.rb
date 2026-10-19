@@ -58,6 +58,7 @@ module Transactions
           "category_id" => row.status == :valid ? default_category.id : nil,
           "to_whom" => row.to_whom,
           "document_number" => row.document_number,
+          "source_identifier" => row.source_identifier,
           "transaction_type" => row.transaction_type,
           "payment_method" => row.payment_method,
           "status" => row.status.to_s,
@@ -70,7 +71,8 @@ module Transactions
 
       def self.summary_for(rows)
         rows.group_by { |row| row["status"] }.transform_values(&:size).merge(
-          "possible_duplicate" => rows.count { |row| row["possible_duplicate"] }
+          "possible_duplicate" => rows.count { |row| row["possible_duplicate"] },
+          "confirmed_duplicate" => rows.count { |row| row["confirmed_duplicate"] }
         )
       end
       private_class_method :summary_for

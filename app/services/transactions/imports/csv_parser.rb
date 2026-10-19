@@ -15,6 +15,7 @@ module Transactions
         :category_name,
         :to_whom,
         :document_number,
+        :source_identifier,
         :transaction_type,
         :payment_method,
         :status,
@@ -48,6 +49,7 @@ module Transactions
         category: %w[categoria category],
         to_whom: %w[recebedor pagador to_whom recipient payer detalhes detail details],
         document_number: %w[n_documento documento document document_number],
+        source_identifier: %w[identificador identificador_da_transacao transaction_identifier transaction_id source_identifier],
         transaction_type: %w[tipo_lancamento tipo_de_lancamento transaction_type type],
         payment_method: %w[forma_pagamento forma_de_pagamento método pagamento payment_method method]
       }.freeze
@@ -160,6 +162,7 @@ module Transactions
           category_name: category_name,
           to_whom: normalize_counterparty(values[:to_whom]),
           document_number: values[:document_number].presence,
+          source_identifier: values[:source_identifier].presence,
           transaction_type: values[:transaction_type].presence,
           payment_method: values[:payment_method].presence,
           status: errors.empty? ? :valid : :invalid,

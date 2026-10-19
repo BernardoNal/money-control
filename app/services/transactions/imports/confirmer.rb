@@ -47,6 +47,7 @@ module Transactions
               category: categories.fetch(row["category_id"].to_i),
               transaction_import: transaction_import,
               source_document_number: row["document_number"],
+              source_identifier: row["source_identifier"],
               import_fingerprint: row["import_fingerprint"],
               amount: row["amount"],
               date: row["date"],

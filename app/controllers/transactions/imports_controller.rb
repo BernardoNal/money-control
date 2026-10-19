@@ -62,6 +62,8 @@ module Transactions
 
       if result.success?
         redirect_to account_path(@account), notice: result.message
+      elsif @transaction_import.status == "expired"
+        redirect_to account_transaction_import_preview_path(@account, @transaction_import)
       else
         redirect_to account_transaction_import_preview_path(@account, @transaction_import), alert: result.message
       end

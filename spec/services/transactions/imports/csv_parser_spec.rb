@@ -44,6 +44,15 @@ RSpec.describe Transactions::Imports::CsvParser do
     expect(row.transaction_type).to eq("Entrada")
   end
 
+  it "keeps a stable source identifier when the export provides one" do
+    result = parse(<<~CSV)
+      Data,Valor,Descrição,Identificador
+      2026-09-09,110.00,Pix recebido,abc-123
+    CSV
+
+    expect(result.valid_rows.first.source_identifier).to eq("abc-123")
+  end
+
   it "supports English headers and ISO dates" do
     result = parse(<<~CSV)
       date,amount,description,category
