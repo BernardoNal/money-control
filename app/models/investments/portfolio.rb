@@ -5,6 +5,7 @@ module Investments
 
     belongs_to :user
     has_many :incomes, class_name: "Investments::Income", dependent: :destroy
+    has_many :income_imports, class_name: "Investments::IncomeImport", dependent: :destroy
     has_many :transactions, class_name: "Investments::Transaction", dependent: :destroy
 
     validates :name, presence: true, uniqueness: { scope: :user_id }

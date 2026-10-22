@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_19_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -49,6 +49,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000000) do
     t.datetime "updated_at", null: false
     t.integer "subcategory"
     t.index ["symbol"], name: "index_investments_assets_on_symbol", unique: true
+  end
+
+  create_table "investments_income_imports", force: :cascade do |t|
+    t.bigint "portfolio_id", null: false
+    t.string "original_filename", null: false
+    t.string "status", default: "pending", null: false
+    t.jsonb "rows", default: [], null: false
+    t.jsonb "summary", default: {}, null: false
+    t.datetime "expires_at"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["portfolio_id", "status"], name: "index_investments_income_imports_on_portfolio_id_and_status"
+    t.index ["portfolio_id"], name: "index_investments_income_imports_on_portfolio_id"
   end
 
   create_table "investments_incomes", force: :cascade do |t|
@@ -144,6 +158,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000000) do
 
   add_foreign_key "accounts", "users"
   add_foreign_key "categories", "users"
+  add_foreign_key "investments_income_imports", "investments_portfolios", column: "portfolio_id"
   add_foreign_key "investments_incomes", "investments_assets", column: "asset_id"
   add_foreign_key "investments_incomes", "investments_portfolios", column: "portfolio_id"
   add_foreign_key "investments_portfolios", "users"

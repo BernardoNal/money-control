@@ -22,6 +22,7 @@
           <% end %>
 
           <%= render ButtonComponent.new(label: "Ver transações", href: investments_transactions_path(portfolio: @portfolio.id), variant: :primary, icon: "fa-solid fa-arrow-right-arrow-left") %>
+          <%= render ButtonComponent.new(label: "Importar recebíveis", href: investments_portfolio_income_import_path(@portfolio), variant: :soft_olive, icon: "fa-solid fa-file-import") %>
         </div>
       </div>
     </div>

@@ -54,6 +54,7 @@ gem "font-awesome-sass"
 gem "pundit"
 gem "prawn"
 gem "prawn-table"
+gem "rubyzip", "~> 2.4"
 
 
 
