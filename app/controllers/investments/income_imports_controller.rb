@@ -1,7 +1,8 @@
 module Investments
   class IncomeImportsController < ApplicationController
     before_action :set_portfolio
-    before_action :set_income_import, only: :show
+    before_action :set_income_import, only: %i[show update]
+    before_action :load_review_collections, only: %i[new create show update]
 
     def new
       @income_import = @portfolio.income_imports.new
@@ -41,6 +42,22 @@ module Investments
     def show
     end
 
+    def update
+      if @income_import.pending?
+        rows, errors = apply_review_changes
+        if errors.any?
+          flash.now[:alert] = errors.to_sentence
+          @income_import.rows = rows
+          return render :show, status: :unprocessable_entity
+        end
+
+        @income_import.update!(rows: rows, summary: summary_for_rows(rows))
+      end
+
+      redirect_to investments_portfolio_income_import_preview_path(@portfolio, @income_import),
+                  notice: "Revisão dos recebíveis atualizada."
+    end
+
     private
 
     def set_portfolio
@@ -49,6 +66,15 @@ module Investments
 
     def set_income_import
       @income_import = @portfolio.income_imports.find(params[:id])
+    end
+
+    def load_review_collections
+      @assets = Investments::Asset.order(:symbol)
+      @assets_by_id = @assets.index_by(&:id)
+      @assets_by_symbol = @assets.index_by { |asset| asset.symbol.upcase }
+      @income_types = Investments::Income.income_types.keys.map do |income_type|
+        [I18n.t("activerecord.attributes.investments/income.income_types.#{income_type}", default: income_type.humanize), income_type]
+      end
     end
 
     def serialize_row(row)
@@ -64,14 +90,83 @@ module Investments
         "requires_review" => row.requires_review,
         "status" => row.status.to_s,
         "errors" => row.errors,
-        "ignored_reason" => row.ignored_reason
+        "ignored_reason" => row.ignored_reason,
+        "pair_role" => row.pair_role,
+        "paired_line_number" => row.paired_line_number,
+        "unsupported_reason" => row.unsupported_reason
       }
     end
 
     def summary_for(rows)
-      rows.group_by { |row| row.status.to_s }.transform_values(&:size).merge(
-        "requires_review" => rows.count(&:requires_review)
+      summary_for_rows(rows.map { |row| serialize_row(row) })
+    end
+
+    def summary_for_rows(rows)
+      rows.group_by { |row| row["status"] }.transform_values(&:size).merge(
+        "requires_review" => rows.count { |row| row["requires_review"] },
+        "unsupported" => rows.count { |row| row["unsupported_reason"].present? }
       )
+    end
+
+    def apply_review_changes
+      classifications = permitted_review_values(:row_classifications)
+      asset_ids = permitted_review_values(:row_asset_ids)
+      selected_lines = permitted_lines(:selected_lines)
+      selection_submitted = params[:selection_submitted].present?
+      errors = []
+
+      rows = @income_import.rows.map do |row|
+        next row unless %w[valid ignored].include?(row["status"])
+
+        line = row["line_number"].to_s
+        classification = classifications[line].presence || row["classification"]
+        classification = nil if classification == "ignored"
+        asset_id = asset_ids[line].presence
+
+        if selection_submitted && !selected_lines.include?(line)
+          row.merge(
+            "classification" => row["classification"],
+            "asset_id" => nil,
+            "asset_symbol" => nil,
+            "requires_review" => false,
+            "ignored_reason" => "Não selecionada para importação.",
+            "status" => "ignored"
+          )
+        else
+          asset = find_asset(asset_id, row)
+          errors << "Selecione um tipo de provento para a linha #{line}." unless Investments::Income.income_types.key?(classification)
+          errors << "Selecione um ativo válido para a linha #{line}." unless asset
+          row.merge(
+            "classification" => classification,
+            "asset_id" => asset&.id,
+            "asset_symbol" => asset&.symbol,
+            "requires_review" => !errors_for_row?(classification, asset),
+            "ignored_reason" => nil
+          )
+        end
+      end
+
+      [rows, errors]
+    end
+
+    def find_asset(asset_id, row)
+      return Investments::Asset.find_by(id: asset_id) if asset_id.present?
+
+      Investments::Asset.find_by(symbol: row["symbol"].to_s.upcase) if row["symbol"].present?
+    end
+
+    def errors_for_row?(classification, asset)
+      Investments::Income.income_types.key?(classification) && asset.present?
+    end
+
+    def permitted_review_values(key)
+      values = params[key]
+      values.respond_to?(:permit) ? values.permit!.to_h.transform_keys(&:to_s) : {}
+    end
+
+    def permitted_lines(key)
+      values = params[key]
+      values.respond_to?(:to_unsafe_h) ? values.to_unsafe_h.values.map(&:to_s) : Array(values).map(&:to_s)
     end
   end
 end

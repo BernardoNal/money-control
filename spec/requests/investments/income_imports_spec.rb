@@ -9,6 +9,10 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     Investments::Portfolio.create!(name: "Carteira principal", user: user)
   end
 
+  let!(:asset) do
+    Investments::Asset.create!(name: "Coca-Cola", symbol: "COCA34", category: :international, currency: "BRL")
+  end
+
   before { sign_in user }
 
   def xlsx
@@ -77,6 +81,80 @@ RSpec.describe "Investments::IncomeImports", type: :request do
 
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include("Selecione um arquivo XLSX")
+  end
+
+  it "saves manual classifications and asset selections without creating incomes" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    expect do
+      patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+        row_classifications: { "2" => "dividends", "3" => "dividends" },
+        row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s }
+      }
+    end.not_to change(Investments::Income, :count)
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    rows = income_import.reload.rows
+    expect(rows).to all(include("asset_id" => asset.id, "requires_review" => false))
+    expect(income_import.summary["requires_review"]).to eq(0)
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "rejects an asset that does not exist and keeps the draft unchanged" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => "999999" }
+    }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include("Selecione um ativo válido para a linha 2")
+    expect(income_import.reload.rows.first["asset_id"]).to be_nil
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "allows ignoring a line without treating it as a pending income" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include("status" => "ignored", "requires_review" => false)
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "validates only the rows selected for import" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.first).to include("status" => "valid", "requires_review" => false)
+    expect(income_import.rows.second).to include("status" => "ignored", "ignored_reason" => "Não selecionada para importação.")
+  ensure
+    file&.tempfile&.close!
   end
 
   it "does not expose another user's portfolio" do

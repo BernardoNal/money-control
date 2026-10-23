@@ -64,6 +64,18 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(result.valid_rows.last.symbol).to be_nil
   end
 
+  it "links a securities lending credit to its matching donor fee" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "Crédito Ref. Taxa de Remuneração BTC EMBJ", "10,00"],
+      [46310, 46310, "Taxa de intermediação doador EMBJ3", "-1,00"]
+    ])
+
+    gross, fee = result.rows
+    expect(gross).to have_attributes(pair_role: "gross", paired_line_number: fee.line_number)
+    expect(fee).to have_attributes(pair_role: "tax", paired_line_number: gross.line_number)
+  end
+
   it "stops at a no-movements marker and rejects files without the movement header" do
     result = parse([
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
@@ -77,5 +89,14 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     missing_header = parse([["Data", "Descrição", "Valor"], [46310, "Dividendos", "1,00"]])
     expect(missing_header).not_to be_valid
     expect(missing_header.errors.first).to include("Cabeçalho")
+  end
+
+  it "marks treasury direct movements as unsupported" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "AMORTIZAÇÃO - TESOURO DIRETO", "0,79"]
+    ])
+
+    expect(result.rows.first.unsupported_reason).to eq("Tesouro Direto ainda não é suportado.")
   end
 end

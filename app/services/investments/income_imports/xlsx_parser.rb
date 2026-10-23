@@ -23,6 +23,9 @@ module Investments
         :status,
         :errors,
         :ignored_reason,
+        :pair_role,
+        :paired_line_number,
+        :unsupported_reason,
         keyword_init: true
       )
 
@@ -140,6 +143,8 @@ module Investments
 
         return Result.new(rows: [], errors: ["O arquivo XLSX não pode exceder #{MAX_ROWS} lançamentos."], headers: headers.keys) if rows.size > MAX_ROWS
 
+        pair_related_rows(rows)
+
         Result.new(rows: rows, errors: [], headers: headers.keys)
       end
 
@@ -166,6 +171,7 @@ module Investments
         amount = parse_amount(row[:cells][headers[:amount]], errors)
         balance = headers[:balance] ? parse_amount(row[:cells][headers[:balance]], []) : nil
         classification = classify(description)
+        unsupported_reason = unsupported_reason_for(description)
 
         NormalizedRow.new(
           line_number: row[:line_number],
@@ -179,8 +185,43 @@ module Investments
           requires_review: classification == "reimbursement" || classification == "other",
           status: errors.empty? ? :valid : :invalid,
           errors: errors,
-          ignored_reason: nil
+          ignored_reason: nil,
+          pair_role: nil,
+          paired_line_number: nil,
+          unsupported_reason: unsupported_reason
         )
+      end
+
+      def unsupported_reason_for(description)
+        return unless normalize_header(description).include?("tesouro_direto")
+
+        "Tesouro Direto ainda não é suportado."
+      end
+
+      def pair_related_rows(rows)
+        lending_rows = rows.select { |row| row.classification == "stock_lending" }
+        fee_rows = rows.select { |row| row.classification == "fee" }
+
+        fee_rows.each do |fee_row|
+          lending_row = lending_rows.find do |candidate|
+            candidate.paired_line_number.nil? &&
+              candidate.movement_date == fee_row.movement_date &&
+              candidate.symbol.present? &&
+              fee_row.symbol.present? &&
+              related_symbols?(candidate.symbol, fee_row.symbol)
+          end
+          next unless lending_row
+
+          lending_row.pair_role = "gross"
+          lending_row.paired_line_number = fee_row.line_number
+          fee_row.pair_role = "tax"
+          fee_row.paired_line_number = lending_row.line_number
+        end
+      end
+
+      def related_symbols?(gross_symbol, fee_symbol)
+        gross_symbol == fee_symbol ||
+          (fee_symbol.start_with?(gross_symbol) && fee_symbol.length - gross_symbol.length <= 2)
       end
 
       def classify(description)

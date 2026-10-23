@@ -17,6 +17,7 @@ Rails.application.routes.draw do
       get "income-import", to: "income_imports#new", as: :income_import
       post "income-import", to: "income_imports#create", as: :income_import_create
       get "income-import/:id", to: "income_imports#show", as: :income_import_preview
+      patch "income-import/:id", to: "income_imports#update", as: :income_import_update
     end
     resources :incomes
     get "income-tax-report", to: "income_tax_reports#show", as: :income_tax_report
