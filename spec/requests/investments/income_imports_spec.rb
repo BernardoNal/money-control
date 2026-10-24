@@ -97,8 +97,8 @@ RSpec.describe "Investments::IncomeImports", type: :request do
 
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     rows = income_import.reload.rows
-    expect(rows).to all(include("asset_id" => asset.id, "requires_review" => false))
-    expect(income_import.summary["requires_review"]).to eq(0)
+    expect(rows).to all(include("asset_id" => asset.id))
+    expect(income_import.summary["possible_duplicate"]).to eq(1)
   ensure
     file&.tempfile&.close!
   end
@@ -153,6 +153,33 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     expect(income_import.reload.rows.first).to include("status" => "valid", "requires_review" => false)
     expect(income_import.rows.second).to include("status" => "ignored", "ignored_reason" => "Não selecionada para importação.")
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "marks an exact match with an existing income as a confirmed duplicate" do
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 1.51,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 10, 15)
+    )
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.first).to include("duplicate_type" => "confirmed")
+    expect(income_import.summary["confirmed_duplicate"]).to eq(1)
   ensure
     file&.tempfile&.close!
   end

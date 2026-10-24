@@ -51,7 +51,14 @@ module Investments
           return render :show, status: :unprocessable_entity
         end
 
-        @income_import.update!(rows: rows, summary: summary_for_rows(rows))
+        validation = IncomeImports::ReviewValidator.call(portfolio: @portfolio, rows: rows)
+        if validation.errors.any?
+          flash.now[:alert] = validation.errors.to_sentence
+          @income_import.rows = validation.rows
+          return render :show, status: :unprocessable_entity
+        end
+
+        @income_import.update!(rows: validation.rows, summary: summary_for_rows(validation.rows))
       end
 
       redirect_to investments_portfolio_income_import_preview_path(@portfolio, @income_import),
@@ -104,7 +111,9 @@ module Investments
     def summary_for_rows(rows)
       rows.group_by { |row| row["status"] }.transform_values(&:size).merge(
         "requires_review" => rows.count { |row| row["requires_review"] },
-        "unsupported" => rows.count { |row| row["unsupported_reason"].present? }
+        "unsupported" => rows.count { |row| row["unsupported_reason"].present? },
+        "possible_duplicate" => rows.count { |row| row["possible_duplicate"] },
+        "confirmed_duplicate" => rows.count { |row| row["confirmed_duplicate"] }
       )
     end
 
