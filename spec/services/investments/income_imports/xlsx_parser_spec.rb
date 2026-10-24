@@ -99,4 +99,14 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
 
     expect(result.rows.first.unsupported_reason).to eq("Tesouro Direto ainda não é suportado.")
   end
+
+  it "keeps a corporate event issuer as an unvalidated asset suggestion" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SAACNOR6", "0,30"]
+    ])
+
+    expect(result.rows.first.symbol).to be_nil
+    expect(result.rows.first.symbol_suggestion).to eq("B3SA")
+  end
 end

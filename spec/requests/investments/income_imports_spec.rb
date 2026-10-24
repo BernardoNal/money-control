@@ -184,6 +184,94 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     file&.tempfile&.close!
   end
 
+  it "confirms selected rows atomically and creates incomes" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import), params: {
+        selection_submitted: "1",
+        selected_lines: ["2"],
+        row_classifications: { "2" => "dividends" },
+        row_asset_ids: { "2" => asset.id.to_s }
+      }
+    end.to change(Investments::Income, :count).by(1)
+
+    expect(response).to redirect_to(investments_portfolio_path(portfolio))
+    expect(income_import.reload.status).to eq("completed")
+    expect(Investments::Income.last).to have_attributes(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: "dividends",
+      gross_amount: BigDecimal("1.51"),
+      net_amount: BigDecimal("1.51"),
+      payment_date: Date.new(2026, 10, 15)
+    )
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "does not replay a completed income import" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+    params = {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+    post investments_portfolio_income_import_confirm_path(portfolio, income_import), params: params
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import), params: params
+    end.not_to change(Investments::Income, :count)
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(flash[:alert]).to include("já foi confirmada")
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "creates one income with the associated donor fee as tax" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Crédito Ref. Taxa de Remuneração BTC EMBJ",
+          "amount" => "10.00",
+          "classification" => "stock_lending",
+          "asset_id" => asset.id,
+          "status" => "valid",
+          "paired_line_number" => 3
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "amount" => "-1.00",
+          "classification" => "fee",
+          "pair_role" => "tax",
+          "status" => "ignored"
+        }
+      ],
+      summary: { "valid" => 1, "ignored" => 1 },
+      expires_at: 1.hour.from_now
+    )
+
+    result = Investments::IncomeImports::Confirmer.call(income_import: income_import)
+
+    expect(result).to be_success
+    expect(Investments::Income.last).to have_attributes(
+      gross_amount: BigDecimal("10.00"),
+      tax_amount: BigDecimal("1.00"),
+      net_amount: BigDecimal("9.00")
+    )
+  end
+
   it "does not expose another user's portfolio" do
     other_user = User.create!(name: "Other", email: "other-income-import@example.com", password: "password123")
     other_portfolio = Investments::Portfolio.create!(name: "Outra", user: other_user)

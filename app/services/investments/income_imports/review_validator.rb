@@ -20,6 +20,8 @@ module Investments
         rows = @rows.map do |row|
           next row unless row["status"] == "valid"
 
+          # Only selected rows reach this point. Ignored rows remain in the
+          # draft so the user can audit what the statement contained.
           classification = row["classification"]
           asset = asset_for(row)
           date = payment_date_for(row)
@@ -50,6 +52,9 @@ module Investments
       def annotate_duplicate(row, asset:, date:, seen:)
         return row unless asset && date && Investments::Income.income_types.key?(row["classification"])
 
+        # Income imports have no bank source identifier, so the stable
+        # identity is the portfolio, asset, type and payment date. Amount
+        # differences are kept as possible duplicates for manual review.
         fingerprint = [asset.id, row["classification"], date.iso8601]
         amount = row["amount"].to_d
         previous = seen[fingerprint]

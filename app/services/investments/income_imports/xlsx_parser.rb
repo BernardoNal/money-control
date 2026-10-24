@@ -19,6 +19,7 @@ module Investments
         :balance,
         :classification,
         :symbol,
+        :symbol_suggestion,
         :requires_review,
         :status,
         :errors,
@@ -182,6 +183,7 @@ module Investments
           balance: balance,
           classification: classification,
           symbol: extract_symbol(description),
+          symbol_suggestion: extract_symbol_suggestion(description),
           requires_review: classification == "reimbursement" || classification == "other",
           status: errors.empty? ? :valid : :invalid,
           errors: errors,
@@ -202,6 +204,9 @@ module Investments
         lending_rows = rows.select { |row| row.classification == "stock_lending" }
         fee_rows = rows.select { |row| row.classification == "fee" }
 
+        # The broker exports the securities-lending gross credit and donor
+        # fee as separate rows. Keep the rows visible, but link them so the
+        # confirmation step creates one income with a retained tax amount.
         fee_rows.each do |fee_row|
           lending_row = lending_rows.find do |candidate|
             candidate.paired_line_number.nil? &&
@@ -241,6 +246,13 @@ module Investments
       def extract_symbol(description)
         tokens = description.upcase.scan(/\b[A-Z0-9]{4,6}\b/)
         tokens.find { |token| token.match?(/\A(?=.*[A-Z])(?=.*\d)[A-Z0-9]{4,6}\z/) } || description.upcase[/\bBTC\s+([A-Z]{4,6}\d{0,2})\b/, 1]
+      end
+
+      # Corporate-event identifiers can contain an issuer prefix without a
+      # complete ticker. Keep it as a suggestion only; another issue will
+      # define authoritative event-to-asset resolution.
+      def extract_symbol_suggestion(description)
+        description.to_s.upcase[/\bBR([A-Z0-9]{3,5})(?:ACNOR|ACNPR|BDR|CTF)\d+\b/, 1]
       end
 
       def parse_date(value, errors, label)

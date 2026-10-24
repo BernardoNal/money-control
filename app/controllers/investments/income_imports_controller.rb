@@ -1,8 +1,8 @@
 module Investments
   class IncomeImportsController < ApplicationController
     before_action :set_portfolio
-    before_action :set_income_import, only: %i[show update]
-    before_action :load_review_collections, only: %i[new create show update]
+    before_action :set_income_import, only: %i[show update confirm]
+    before_action :load_review_collections, only: %i[new create show update confirm]
 
     def new
       @income_import = @portfolio.income_imports.new
@@ -44,25 +44,30 @@ module Investments
 
     def update
       if @income_import.pending?
-        rows, errors = apply_review_changes
-        if errors.any?
-          flash.now[:alert] = errors.to_sentence
-          @income_import.rows = rows
-          return render :show, status: :unprocessable_entity
-        end
+        rows, errors = reviewed_rows
+        return render_review_error(rows, errors) if errors.any?
 
-        validation = IncomeImports::ReviewValidator.call(portfolio: @portfolio, rows: rows)
-        if validation.errors.any?
-          flash.now[:alert] = validation.errors.to_sentence
-          @income_import.rows = validation.rows
-          return render :show, status: :unprocessable_entity
-        end
-
-        @income_import.update!(rows: validation.rows, summary: summary_for_rows(validation.rows))
+        @income_import.update!(rows: rows, summary: summary_for_rows(rows))
       end
 
       redirect_to investments_portfolio_income_import_preview_path(@portfolio, @income_import),
                   notice: "Revisão dos recebíveis atualizada."
+    end
+
+    def confirm
+      if @income_import.pending? && review_changes_submitted?
+        rows, errors = reviewed_rows
+        return render_review_error(rows, errors) if errors.any?
+
+        @income_import.update!(rows: rows, summary: summary_for_rows(rows))
+      end
+
+      result = IncomeImports::Confirmer.call(income_import: @income_import)
+      if result.success?
+        redirect_to investments_portfolio_path(@portfolio), notice: result.message
+      else
+        redirect_to investments_portfolio_income_import_preview_path(@portfolio, @income_import), alert: result.message
+      end
     end
 
     private
@@ -94,6 +99,7 @@ module Investments
         "balance" => row.balance&.to_s("F"),
         "classification" => row.classification,
         "symbol" => row.symbol,
+        "symbol_suggestion" => row.symbol_suggestion,
         "requires_review" => row.requires_review,
         "status" => row.status.to_s,
         "errors" => row.errors,
@@ -156,6 +162,26 @@ module Investments
       end
 
       [rows, errors]
+    end
+
+    def reviewed_rows
+      rows, errors = apply_review_changes
+      return [rows, errors] if errors.any?
+
+      # Re-run domain validation on every save and confirm request so a stale
+      # preview cannot bypass asset, date or duplicate checks.
+      validation = IncomeImports::ReviewValidator.call(portfolio: @portfolio, rows: rows)
+      [validation.rows, validation.errors]
+    end
+
+    def render_review_error(rows, errors)
+      flash.now[:alert] = errors.to_sentence
+      @income_import.rows = rows
+      render :show, status: :unprocessable_entity
+    end
+
+    def review_changes_submitted?
+      params[:selection_submitted].present? || params[:row_classifications].present? || params[:row_asset_ids].present?
     end
 
     def find_asset(asset_id, row)

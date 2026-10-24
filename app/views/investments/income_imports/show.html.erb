@@ -83,6 +83,9 @@
                   <input type="hidden" name="row_asset_ids[<%= row["line_number"] %>]" value="<%= selected_asset&.id %>" data-searchable-select-value>
                   <div role="listbox" data-searchable-select-results class="relative z-10 mt-1 hidden max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"></div>
                   <p class="mt-1 hidden text-xs text-rose-600" data-searchable-select-error></p>
+                  <% if row["symbol_suggestion"].present? %>
+                    <p class="mt-1 text-xs text-slate-500">Sugestão de ativo: <%= row["symbol_suggestion"] %></p>
+                  <% end %>
                 </div>
               <% else %>
                 <%= row["asset_symbol"].presence || row["symbol"].presence || "-" %>
@@ -152,6 +155,7 @@
 
       <div class="mt-6 flex flex-wrap items-center gap-3">
         <%= submit_tag "Salvar revisão", class: "inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800" %>
+        <%= submit_tag "Confirmar importação", formaction: investments_portfolio_income_import_confirm_path(@portfolio, @income_import), formmethod: :post, class: "inline-flex items-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800" %>
         <p class="text-sm text-slate-500">Escolha o tipo e o ativo para cada linha que será importada. Marque "Não importar" para taxas, impostos ou linhas sem recebível.</p>
       </div>
       <% end %>
