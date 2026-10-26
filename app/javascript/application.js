@@ -247,6 +247,7 @@ const initializeSearchableSelect = () => {
     const hidden = root.querySelector("[data-searchable-select-value]")
     const results = root.querySelector("[data-searchable-select-results]")
     const error = root.querySelector("[data-searchable-select-error]")
+    const suggestion = root.querySelector("[data-searchable-select-suggestion]")
     const form = root.closest("form")
     const searchUrl = root.dataset.searchUrl
     let timer
@@ -269,6 +270,13 @@ const initializeSearchableSelect = () => {
       showError("")
       closeResults()
     }
+
+    // Suggestions come from imported descriptions and remain user-confirmed.
+    suggestion?.addEventListener("click", () => {
+      const suggestionId = root.dataset.suggestionId
+      const suggestionLabel = root.dataset.suggestionLabel
+      if (suggestionId && suggestionLabel) selectOption({ id: suggestionId, label: suggestionLabel })
+    })
 
     const renderResults = (options) => {
       results.replaceChildren()

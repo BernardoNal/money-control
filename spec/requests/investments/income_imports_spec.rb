@@ -13,13 +13,17 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     Investments::Asset.create!(name: "Coca-Cola", symbol: "COCA34", category: :international, currency: "BRL")
   end
 
+  let!(:suggested_asset) do
+    Investments::Asset.create!(name: "B3 S.A.", symbol: "B3SA3", category: :stock, currency: "BRL")
+  end
+
   before { sign_in user }
 
   def xlsx
     rows = [
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
       [46310, 46310, "DIVIDENDOS DE CLIENTES COCA34 S/ 5", "1,51"],
-      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRXPLGCTF002", "0,82"]
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SAACNOR6", "0,82"]
     ]
     worksheet = rows.each_with_index.map do |values, row_index|
       cells = values.each_with_index.map do |value, column_index|
@@ -55,6 +59,19 @@ RSpec.describe "Investments::IncomeImports", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Carregar XLSX em Carteira principal")
+  end
+
+  it "renders a matching corporate-event asset as a manual suggestion" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    get investments_portfolio_income_import_preview_path(portfolio, income_import)
+
+    expect(response.body).to include("Usar sugestão: B3SA3")
+    expect(response.body).to include("Nenhum recebível foi criado ainda.")
+  ensure
+    file&.tempfile&.close!
   end
 
   it "persists an account-scoped preview without creating incomes" do

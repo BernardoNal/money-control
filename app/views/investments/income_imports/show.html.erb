@@ -70,7 +70,13 @@
             <td class="px-3 py-4 font-semibold text-slate-700">
               <% if editable && @income_import.pending? %>
                 <% selected_asset = @assets_by_id[row["asset_id"].to_i] || @assets_by_symbol[row["symbol"].to_s.upcase] %>
-                <div data-searchable-select data-search-url="<%= search_investments_assets_path %>" data-search-params="{}" class="min-w-60">
+                <% suggested_asset = @assets_by_suggestion[row["symbol_suggestion"].to_s.upcase] %>
+                <div data-searchable-select
+                     data-search-url="<%= search_investments_assets_path %>"
+                     data-search-params="{}"
+                     data-suggestion-id="<%= suggested_asset&.id %>"
+                     data-suggestion-label="<%= suggested_asset ? "#{suggested_asset.symbol} - #{suggested_asset.name}" : "" %>"
+                     class="min-w-60">
                   <input type="search"
                          value="<%= selected_asset ? "#{selected_asset.symbol} - #{selected_asset.name}" : "" %>"
                          placeholder="Buscar ativo"
@@ -83,8 +89,12 @@
                   <input type="hidden" name="row_asset_ids[<%= row["line_number"] %>]" value="<%= selected_asset&.id %>" data-searchable-select-value>
                   <div role="listbox" data-searchable-select-results class="relative z-10 mt-1 hidden max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"></div>
                   <p class="mt-1 hidden text-xs text-rose-600" data-searchable-select-error></p>
-                  <% if row["symbol_suggestion"].present? %>
-                    <p class="mt-1 text-xs text-slate-500">Sugestão de ativo: <%= row["symbol_suggestion"] %></p>
+                  <% if row["symbol_suggestion"].present? && suggested_asset.present? %>
+                    <button type="button" data-searchable-select-suggestion class="mt-1 text-xs font-semibold text-blue-700 hover:text-blue-900">
+                      Usar sugestão: <%= suggested_asset.symbol %>
+                    </button>
+                  <% elsif row["symbol_suggestion"].present? %>
+                    <p class="mt-1 text-xs text-slate-500">Sugestão para busca: <%= row["symbol_suggestion"] %></p>
                   <% end %>
                 </div>
               <% else %>

@@ -84,9 +84,18 @@ module Investments
       @assets = Investments::Asset.order(:symbol)
       @assets_by_id = @assets.index_by(&:id)
       @assets_by_symbol = @assets.index_by { |asset| asset.symbol.upcase }
+      @assets_by_suggestion = unique_assets_by_suggestion(@assets)
       @income_types = Investments::Income.income_types.keys.map do |income_type|
         [I18n.t("activerecord.attributes.investments/income.income_types.#{income_type}", default: income_type.humanize), income_type]
       end
+    end
+
+    # Only expose a suggestion when the issuer prefix resolves to one asset;
+    # ambiguous matches must remain a manual choice in the import review.
+    def unique_assets_by_suggestion(assets)
+      assets.group_by { |asset| asset.symbol.to_s.upcase.sub(/\d+\z/, "") }
+        .filter_map { |suggestion, matches| [suggestion, matches.first] if matches.one? }
+        .to_h
     end
 
     def serialize_row(row)
