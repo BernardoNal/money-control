@@ -12,20 +12,21 @@
       <%= render ButtonComponent.new(label: "Nova transação", href: new_transaction_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
-    <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-200">
+    <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-400">
       <table class="min-w-full text-left text-sm">
-        <thead class="bg-slate-100 text-slate-600">
+        <thead class="bg-slate-500 text-slate-300">
           <tr>
             <th class="px-5 py-4 font-semibold">Descrição</th>
             <th class="px-5 py-4 font-semibold">Valor</th>
             <th class="px-5 py-4 font-semibold">Data</th>
             <th class="px-5 py-4 font-semibold">Conta</th>
+            <th class="px-5 py-4 font-semibold">Categoria</th>
             <th class="px-5 py-4 font-semibold text-right">Ações</th>
           </tr>
         </thead>
         <tbody class="bg-white">
           <% @transactions.limit(total_transactions).offset(offset).each do |transaction| %>
-            <tr class="border-t border-slate-200">
+            <tr class="border-t border-slate-400">
               <td class="px-5 py-4 font-medium text-slate-900"><%= transaction.description %></td>
               <td class="px-5 py-4">
                 <span class="<%= transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
@@ -34,17 +35,16 @@
               </td>
               <td class="px-5 py-4 text-slate-700"><%= transaction.date.strftime("%d/%m/%Y") %></td>
               <td class="px-5 py-4 text-slate-700"><%= "#{transaction.account.name} - #{transaction.account.bank}" %></td>
+              <td class="px-5 py-4 text-slate-700"><%= transaction_category_label(transaction.category) %></td>
               <td class="px-5 py-4">
                 <div class="flex items-center justify-end gap-3">
-                  <%= link_to transaction_path(transaction), class: "text-slate-500 transition hover:text-slate-900" do %>
+                  <button type="button"
+                          data-transaction-dialog-target="transaction-dialog-<%= transaction.id %>"
+                          aria-label="Ver detalhes da transação"
+                          title="Ver detalhes da transação"
+                          class="text-slate-500 transition hover:text-slate-900">
                     <i class="fa-solid fa-eye"></i>
-                  <% end %>
-                  <%= link_to edit_transaction_path(transaction), class: "text-emerald-600 transition hover:text-emerald-700" do %>
-                    <i class="fa-solid fa-pen-to-square"></i>
-                  <% end %>
-                  <%= link_to transaction_path(transaction), data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta transação?" }, class: "text-rose-600 transition hover:text-rose-700" do %>
-                    <i class="fa-solid fa-trash"></i>
-                  <% end %>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -71,4 +71,41 @@
       <% end %>
     </div>
   </section>
+
+  <% @transactions.limit(total_transactions).offset(offset).each do |transaction| %>
+    <dialog id="transaction-dialog-<%= transaction.id %>"
+            data-transaction-dialog
+            aria-labelledby="transaction-dialog-title-<%= transaction.id %>"
+            class="m-auto w-[calc(100%-2rem)] max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-300 bg-white p-0 text-slate-950 shadow-2xl backdrop:bg-slate-950/40">
+      <div class="p-6 sm:p-8">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Detalhes da transação</p>
+            <h2 id="transaction-dialog-title-<%= transaction.id %>" class="mt-2 break-words text-2xl font-semibold"><%= transaction.description %></h2>
+            <p class="mt-2 text-2xl font-semibold <%= transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %>">
+              <%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+            </p>
+          </div>
+
+          <form method="dialog">
+            <button type="submit"
+                    aria-label="Fechar detalhes da transação"
+                    title="Fechar"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </form>
+        </div>
+
+        <div class="mt-6">
+          <%= render "details", transaction: transaction %>
+        </div>
+
+        <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
+          <%= render ButtonComponent.new(label: "Editar", href: edit_transaction_path(transaction), variant: :primary, icon: "fa-solid fa-pen-to-square") %>
+          <%= render ButtonComponent.new(label: "Apagar", href: transaction_path(transaction), variant: :danger, icon: "fa-solid fa-trash", data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja apagar esta transação?" }) %>
+        </div>
+      </div>
+    </dialog>
+  <% end %>
 </div>

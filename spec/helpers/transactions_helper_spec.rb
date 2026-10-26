@@ -11,5 +11,13 @@ require 'rails_helper'
 #   end
 # end
 RSpec.describe TransactionsHelper, type: :helper do
-  pending "add some examples to (or delete) #{__FILE__}"
+  it "hides default direction category labels" do
+    expect(helper.transaction_category_label(double(name: "Sem categoria (Entrada)"))).to eq("--")
+    expect(helper.transaction_category_label(double(name: "Sem categoria (Saída)"))).to eq("--")
+  end
+
+  it "keeps real category names" do
+    expect(helper.transaction_category_label(double(name: "Mercado"))).to eq("Mercado")
+    expect(helper.transaction_category_label(nil)).to eq("--")
+  end
 end

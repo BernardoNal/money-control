@@ -59,6 +59,35 @@ end
     sign_in user
   end
 
+  describe "GET /index" do
+    it "renders a details dialog for the current user's transaction" do
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Compra no mercado",
+        date: Date.current
+      )
+
+      get transactions_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(
+        "transaction-dialog-#{transaction.id}",
+        "Ver detalhes da transação",
+        category.name
+      )
+      expect(response.body).not_to include("Abrir página completa")
+    end
+
+    it "does not render another user's transaction in the index" do
+      get transactions_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include(other_transaction.description)
+    end
+  end
+
   describe "GET /show" do
     it "allows access to a transaction owned by the current user" do
       transaction = Transaction.create!(
