@@ -1,0 +1,178 @@
+<% classification_labels = {
+  "dividends" => "Dividendos",
+  "jcp" => "JCP",
+  "fii_income" => "Rendimento de FII",
+  "stock_lending" => "Aluguel de ativos",
+  "amortization" => "Amortização",
+  "tax" => "Imposto",
+  "fee" => "Taxa",
+  "reimbursement" => "Reembolso de evento",
+  "other" => "Outro"
+} %>
+<div class="mx-auto w-full max-w-7xl">
+  <section class="rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm sm:p-10">
+    <%= render ButtonComponent.new(label: "Voltar para a carteira", href: investments_portfolio_path(@portfolio), variant: :soft_olive, icon: "fa-solid fa-arrow-left") %>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Revisão da importação</p>
+        <h1 class="mt-3 max-w-full break-words text-3xl font-semibold text-slate-950"><%= @income_import.original_filename %></h1>
+        <p class="mt-2 text-slate-600">Carteira: <%= @portfolio.name %></p>
+      </div>
+      <p class="text-sm text-slate-500">Nenhum recebível foi criado ainda.</p>
+    </div>
+
+    <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+      <% { "valid" => ["Válidas", "text-emerald-700"], "invalid" => ["Com erro", "text-red-700"], "ignored" => ["Ignoradas", "text-slate-600"], "requires_review" => ["Revisão manual", "text-amber-700"], "unsupported" => ["Fora do escopo", "text-slate-600"], "possible_duplicate" => ["Possíveis duplicadas", "text-amber-700"], "confirmed_duplicate" => ["Duplicadas confirmadas", "text-red-700"] }.each do |key, (label, color)| %>
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p class="whitespace-nowrap text-sm text-slate-500"><%= label %></p>
+          <p class="mt-1 text-2xl font-semibold <%= color %>"><%= @income_import.summary[key].to_i %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @income_import.pending? %>
+      <% pair_groups = {} %>
+      <% next_pair_group = 0 %>
+      <% @income_import.rows.each do |paired_row| %>
+        <% next unless paired_row["pair_role"] == "gross" %>
+        <% next_pair_group += 1 %>
+        <% pair_groups[paired_row["line_number"].to_s] = next_pair_group %>
+        <% pair_groups[paired_row["paired_line_number"].to_s] = next_pair_group %>
+      <% end %>
+      <%= form_with url: investments_portfolio_income_import_update_path(@portfolio, @income_import), method: :patch, class: "mt-8" do |form| %>
+      <%= hidden_field_tag :selection_submitted, "1" %>
+    <div class="mt-8 overflow-x-auto rounded-2xl border border-slate-400">
+      <table class="min-w-[920px] divide-y divide-slate-200 text-left text-sm">
+        <thead class="bg-slate-600 text-xs uppercase tracking-wide text-slate-300">
+          <tr>
+            <th class="px-3 py-3">Movimentação</th>
+            <th class="px-3 py-3">Lançamento</th>
+            <th class="px-3 py-3">Ativo</th>
+            <th class="px-3 py-3">Valor</th>
+            <th class="px-3 py-3">Tipo de provento</th>
+            <th class="px-3 py-3">
+              <label class="inline-flex items-center gap-2">
+                <input type="checkbox" data-income-import-select-all class="h-4 w-4 rounded border-slate-300 text-slate-950">
+                <span>Importar</span>
+              </label>
+            </th>
+            <th class="px-3 py-3">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% @income_import.rows.each do |row| %>
+            <% editable = %w[valid ignored].include?(row["status"]) && row["unsupported_reason"].blank? %>
+            <% valid = row["status"] == "valid" %>
+            <% value_color = row["amount"].to_s.to_f.negative? ? "text-rose-600" : "text-emerald-700" %>
+            <tr>
+              <td class="px-3 py-4 text-slate-700"><%= row["movement_date"].present? ? Date.parse(row["movement_date"]).strftime("%d/%m/%Y") : "-" %></td>
+              <td class="max-w-md px-3 py-4 font-medium text-slate-900"><%= row["description"].presence || row["ignored_reason"] || "-" %></td>
+            <td class="px-3 py-4 font-semibold text-slate-700">
+              <% if editable && @income_import.pending? %>
+                <% selected_asset = @assets_by_id[row["asset_id"].to_i] || @assets_by_symbol[row["symbol"].to_s.upcase] %>
+                <% suggested_asset = @assets_by_suggestion[row["symbol_suggestion"].to_s.upcase] %>
+                <div data-searchable-select
+                     data-search-url="<%= search_investments_assets_path %>"
+                     data-search-params="{}"
+                     data-suggestion-id="<%= suggested_asset&.id %>"
+                     data-suggestion-label="<%= suggested_asset ? "#{suggested_asset.symbol} - #{suggested_asset.name}" : "" %>"
+                     class="min-w-60">
+                  <input type="search"
+                         value="<%= selected_asset ? "#{selected_asset.symbol} - #{selected_asset.name}" : "" %>"
+                         placeholder="Buscar ativo"
+                         autocomplete="off"
+                         role="combobox"
+                         aria-autocomplete="list"
+                         aria-expanded="false"
+                         data-searchable-select-input
+                         class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                  <input type="hidden" name="row_asset_ids[<%= row["line_number"] %>]" value="<%= selected_asset&.id %>" data-searchable-select-value>
+                  <div role="listbox" data-searchable-select-results class="relative z-10 mt-1 hidden max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"></div>
+                  <p class="mt-1 hidden text-xs text-rose-600" data-searchable-select-error></p>
+                  <% if row["symbol_suggestion"].present? && suggested_asset.present? %>
+                    <button type="button" data-searchable-select-suggestion class="mt-1 text-xs font-semibold text-blue-700 hover:text-blue-900">
+                      Usar sugestão: <%= suggested_asset.symbol %>
+                    </button>
+                  <% elsif row["symbol_suggestion"].present? %>
+                    <p class="mt-1 text-xs text-slate-500">Sugestão para busca: <%= row["symbol_suggestion"] %></p>
+                  <% end %>
+                </div>
+              <% else %>
+                <%= row["asset_symbol"].presence || row["symbol"].presence || "-" %>
+              <% end %>
+            </td>
+              <td class="px-3 py-4 font-semibold <%= value_color %>">
+                <%= row["amount"].present? ? number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".") : "-" %>
+                <% if row["pair_role"] == "gross" %>
+                  <p class="mt-1 text-xs font-normal text-blue-700">Evento <%= pair_groups[row["line_number"].to_s] %> · bruto</p>
+                <% elsif row["pair_role"] == "tax" %>
+                  <p class="mt-1 text-xs font-normal text-rose-600">Evento <%= pair_groups[row["line_number"].to_s] %> · taxa</p>
+                <% end %>
+              </td>
+            <td class="px-3 py-4 text-slate-700">
+              <% if editable && @income_import.pending? %>
+                <%= select_tag "row_classifications[#{row["line_number"]}]", options_for_select(@income_types, row["classification"] == "ignored" ? nil : row["classification"]), include_blank: "Selecione o tipo", class: "min-w-52 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" %>
+              <% else %>
+                <%= classification_labels.fetch(row["classification"], row["classification"].presence || "-") %>
+              <% end %>
+            </td>
+            <td class="px-3 py-4">
+              <% if editable && @income_import.pending? %>
+                  <% selected_for_import = row["status"] == "valid" && !%w[tax fee].include?(row["classification"]) && row["pair_role"] != "tax" && row["unsupported_reason"].blank? %>
+                  <%= check_box_tag "selected_lines[]", row["line_number"], selected_for_import, disabled: row["unsupported_reason"].present? || %w[tax fee].include?(row["classification"]), data: { income_import_row: true }, class: "h-4 w-4 rounded border-slate-300 text-slate-950" %>
+              <% else %>
+                  <span class="text-slate-400"><%= row["unsupported_reason"].presence || (row["status"] == "ignored" ? "Não" : "Sim") %></span>
+              <% end %>
+            </td>
+              <td class="px-3 py-4">
+                <% status_label = if row["duplicate_type"] == "confirmed"
+                                    "Duplicada confirmada"
+                                  elsif row["duplicate_type"] == "possible"
+                                    "Possível duplicada"
+                                  elsif row["unsupported_reason"].present?
+                                    "Fora do escopo"
+                                  elsif row["status"] == "ignored"
+                                    "Ignorada"
+                                  elsif !valid
+                                    "Com erro"
+                                  elsif row["requires_review"]
+                                    "Revisão manual"
+                                  else
+                                    "Válida"
+                                  end %>
+                <% status_color = if row["duplicate_type"] == "confirmed"
+                                    "text-red-700"
+                                  elsif row["duplicate_type"] == "possible"
+                                    "text-amber-700"
+                                  elsif row["unsupported_reason"].present?
+                                    "text-slate-600"
+                                  elsif !valid
+                                    "text-red-700"
+                                  elsif row["requires_review"]
+                                    "text-amber-700"
+                                  else
+                                    "text-emerald-700"
+                                  end %>
+                <span class="whitespace-nowrap font-semibold <%= status_color %>"><%= status_label %></span>
+                <% if row["unsupported_reason"].present? %><p class="mt-1 text-xs text-slate-500"><%= row["unsupported_reason"] %></p><% end %>
+                <% if row["errors"].present? %><p class="mt-1 text-xs text-red-700"><%= row["errors"].to_sentence %></p><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <%= submit_tag "Salvar revisão", class: "inline-flex items-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800" %>
+        <%= submit_tag "Confirmar importação", formaction: investments_portfolio_income_import_confirm_path(@portfolio, @income_import), formmethod: :post, class: "inline-flex items-center rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800" %>
+        <p class="text-sm text-slate-500">Escolha o tipo e o ativo para cada linha que será importada. Marque "Não importar" para taxas, impostos ou linhas sem recebível.</p>
+      </div>
+      <% end %>
+    <% else %>
+      <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        A revisão foi salva. A confirmação e a criação dos recebíveis serão adicionadas no próximo checkpoint.
+      </div>
+    <% end %>
+  </section>
+</div>
