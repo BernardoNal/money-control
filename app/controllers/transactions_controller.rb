@@ -4,7 +4,7 @@ class TransactionsController < ApplicationController
   before_action :set_accounts, only: %i[new create edit update]
 
   def index
-    @transactions = policy_scope(Transaction).order(date: :desc)
+    @transactions = policy_scope(Transaction).includes(:account, :category).order(date: :desc)
   end
 
   def show

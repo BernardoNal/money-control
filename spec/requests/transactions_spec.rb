@@ -72,12 +72,27 @@ end
       get transaction_path(transaction)
 
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Detalhes da transação", "Recebedor/Pagador", "Categoria")
     end
 
     it "does not expose another user's transaction" do
       get transaction_path(other_transaction)
 
       expect(response).to redirect_to(root_path)
+    end
+
+    it "renders an expense transaction with its negative amount" do
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -35,
+        description: "Conta de luz",
+        date: Date.current
+      )
+
+      get transaction_path(transaction)
+
+      expect(response.body).to include("Conta de luz", "-R$ 35,00")
     end
 
     it "redirects with a friendly alert when the transaction does not exist" do
