@@ -86,6 +86,60 @@ end
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include(other_transaction.description)
     end
+
+    it "filters transactions by search text, direction, and date range" do
+      matching_transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -35,
+        description: "Supermercado do mês",
+        to_whom: "Mercado Central",
+        date: Date.new(2026, 10, 20)
+      )
+      Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Salário",
+        date: Date.new(2026, 10, 20)
+      )
+
+      get transactions_path, params: {
+        query: "Mercado",
+        direction: "expense",
+        date_from: "2026-10-01",
+        date_to: "2026-10-31"
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(matching_transaction.description)
+      expect(response.body).not_to include("Salário")
+    end
+
+    it "filters transactions by an account and category owned by the current user" do
+      destination_account = Account.create!(user: user, name: "Reserva", bank: "Inter", initial_balance: 0)
+      destination_category = Category.create!(user: user, name: "Moradia", is_income: false, icon: "🏠", color: "#0055aa")
+      matching_transaction = Transaction.create!(
+        account: destination_account,
+        category: destination_category,
+        amount: -80,
+        description: "Aluguel",
+        date: Date.current
+      )
+      other_transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -20,
+        description: "Mercado",
+        date: Date.current
+      )
+
+      get transactions_path, params: { account_id: destination_account.id, category_id: destination_category.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(matching_transaction.description, destination_category.name)
+      expect(response.body).not_to include("transaction-dialog-#{other_transaction.id}")
+    end
   end
 
   describe "GET /show" do

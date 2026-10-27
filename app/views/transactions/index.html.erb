@@ -12,6 +12,59 @@
       <%= render ButtonComponent.new(label: "Nova transação", href: new_transaction_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
     </div>
 
+    <%= form_with url: transactions_path, method: :get, local: true, class: "mt-6 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-10" do |form| %>
+      <div class="sm:col-span-2 lg:col-span-2">
+        <%= form.label :query, "Buscar", class: "mb-1.5 block text-sm font-medium text-slate-700" %>
+        <%= form.text_field :query, value: @filters[:query], placeholder: "Descrição ou recebedor/pagador", class: "w-full" %>
+      </div>
+
+      <div class="lg:col-span-1">
+        <%= form.label :account_id, "Conta", class: "mb-1.5 block text-sm font-medium text-slate-700" %>
+        <%= form.select :account_id, options_from_collection_for_select(@filter_accounts, :id, :name, @filters[:account_id]), { include_blank: "Todas" }, class: "w-full" %>
+      </div>
+
+      <div class="lg:col-span-2">
+        <%= form.label :category_id, "Categoria", class: "mb-1.5 block text-sm font-medium text-slate-700" %>
+        <%= form.select :category_id, options_from_collection_for_select(@filter_categories, :id, :name, @filters[:category_id]), { include_blank: "Todas" }, class: "w-full" %>
+      </div>
+
+      <div class="lg:col-span-2">
+        <%= form.label :date_from, "De", class: "mb-1.5 block text-sm font-medium text-slate-700" %>
+        <%= form.date_field :date_from, value: @filters[:date_from], class: "w-full" %>
+      </div>
+
+      <div class="lg:col-span-2">
+        <%= form.label :date_to, "Até", class: "mb-1.5 block text-sm font-medium text-slate-700" %>
+        <%= form.date_field :date_to, value: @filters[:date_to], class: "w-full" %>
+      </div>
+
+      <div class="flex items-end justify-start gap-3 sm:col-span-2 lg:col-span-1">
+        <button type="submit"
+                aria-label="Aplicar filtros"
+                title="Aplicar filtros"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#000080] text-white transition hover:bg-[#000066] focus:outline-none focus:ring-4 focus:ring-blue-200">
+          <i class="fa-solid fa-filter"></i>
+        </button>
+        <%= link_to transactions_path,
+                    aria: { label: "Limpar filtros" },
+                    title: "Limpar filtros",
+                    class: "inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-700 no-underline transition hover:bg-white" do %>
+          <i class="fa-solid fa-eraser"></i>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% type_filter_params = request.query_parameters.except("set", "direction") %>
+    <div class="mt-6 flex flex-wrap items-center">
+      <div class="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white">
+        <% [["Todos", nil], ["Entradas", "income"], ["Saídas", "expense"]].each do |label, value| %>
+          <% active = value.present? ? @filters[:direction] == value : @filters[:direction].blank? %>
+          <% filter_params = value.present? ? type_filter_params.merge(direction: value) : type_filter_params %>
+          <%= link_to label, transactions_path(filter_params), class: "inline-flex min-h-10 items-center px-4 text-sm font-medium no-underline transition #{active ? 'bg-slate-500 text-white' : 'text-slate-700 hover:bg-slate-100'}" %>
+        <% end %>
+      </div>
+    </div>
+
     <div class="mt-8 overflow-x-auto rounded-3xl border border-slate-400">
       <table class="min-w-full text-left text-sm">
         <thead class="bg-slate-500 text-slate-300">
