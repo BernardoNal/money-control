@@ -109,4 +109,16 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(result.rows.first.symbol).to be_nil
     expect(result.rows.first.symbol_suggestion).to eq("B3SA")
   end
+
+  it "preserves the source description and normalizes repeated whitespace" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "  CREDITO   DE REEMBOLSO\n DE EVENTO   BRB3SAACNOR6  ", "0,30"]
+    ])
+
+    row = result.rows.first
+    expect(row.source_description).to include("CREDITO   DE REEMBOLSO")
+    expect(row.description).to eq("CREDITO DE REEMBOLSO DE EVENTO BRB3SAACNOR6")
+    expect(row.source_event_identifier).to eq("BRB3SAACNOR6")
+  end
 end

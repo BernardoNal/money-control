@@ -14,10 +14,12 @@ module Investments
         :line_number,
         :movement_date,
         :settlement_date,
+        :source_description,
         :description,
         :amount,
         :balance,
         :classification,
+        :source_event_identifier,
         :symbol,
         :symbol_suggestion,
         :requires_review,
@@ -163,7 +165,8 @@ module Investments
       end
 
       def build_row(row, headers)
-        description = row[:cells][headers[:description]].to_s.strip
+        source_description = row[:cells][headers[:description]].to_s
+        description = normalize_description(source_description)
         return nil if description.blank? || normalize_header(description).start_with?("nao_ha_lancamentos")
 
         errors = []
@@ -178,10 +181,12 @@ module Investments
           line_number: row[:line_number],
           movement_date: movement_date,
           settlement_date: settlement_date,
+          source_description: source_description,
           description: description,
           amount: amount,
           balance: balance,
           classification: classification,
+          source_event_identifier: extract_event_identifier(description),
           symbol: extract_symbol(description),
           symbol_suggestion: extract_symbol_suggestion(description),
           requires_review: classification == "reimbursement" || classification == "other",
@@ -255,6 +260,10 @@ module Investments
         description.to_s.upcase[/\bBR([A-Z0-9]{3,5})(?:ACNOR|ACNPR|BDR|CTF)\d+\b/, 1]
       end
 
+      def extract_event_identifier(description)
+        description.to_s.upcase[/\bBR[A-Z0-9]{3,}(?:ACNOR|ACNPR|BDR|CTF)\d+\b/]
+      end
+
       def parse_date(value, errors, label)
         return errors << "#{label} é obrigatória." && nil if value.blank?
 
@@ -291,6 +300,12 @@ module Investments
           .encode("ASCII", replace: "")
           .gsub(/[^a-z0-9]+/, "_")
           .sub(/\A_+|_+\z/, "")
+      end
+
+      # Keep the source value untouched for audit while making the displayed
+      # description readable when spreadsheets contain repeated whitespace.
+      def normalize_description(value)
+        value.to_s.gsub(/[[:space:]]+/, " ").strip
       end
     end
   end

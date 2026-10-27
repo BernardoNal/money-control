@@ -86,6 +86,7 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     expect(income_import.portfolio).to eq(portfolio)
     expect(income_import.rows.first["classification"]).to eq("dividends")
+    expect(income_import.rows.first["source_classification"]).to eq("dividends")
     expect(income_import.rows.second["requires_review"]).to be(true)
   ensure
     file&.tempfile&.close!
@@ -115,7 +116,24 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     rows = income_import.reload.rows
     expect(rows).to all(include("asset_id" => asset.id))
-    expect(income_import.summary["possible_duplicate"]).to eq(1)
+    expect(income_import.summary["possible_duplicate"]).to eq(0)
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "does not flag a JCP and reimbursement event as the same source event" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      row_classifications: { "2" => "jcp", "3" => "jcp" },
+      row_asset_ids: { "2" => suggested_asset.id.to_s, "3" => suggested_asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.map { |row| row["duplicate_type"] }).to all(be_nil)
+    expect(income_import.rows.second["source_classification"]).to eq("reimbursement")
   ensure
     file&.tempfile&.close!
   end

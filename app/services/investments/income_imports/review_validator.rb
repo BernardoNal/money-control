@@ -52,10 +52,16 @@ module Investments
       def annotate_duplicate(row, asset:, date:, seen:)
         return row unless asset && date && Investments::Income.income_types.key?(row["classification"])
 
-        # Income imports have no bank source identifier, so the stable
-        # identity is the portfolio, asset, type and payment date. Amount
-        # differences are kept as possible duplicates for manual review.
-        fingerprint = [asset.id, row["classification"], date.iso8601]
+        # Keep the reviewed classification for the generated income, but use
+        # source context to avoid merging distinct statement events that the
+        # user classified with the same income type.
+        fingerprint = [
+          asset.id,
+          row["classification"],
+          row["source_classification"].presence || row["classification"],
+          row["source_event_identifier"],
+          date.iso8601
+        ]
         amount = row["amount"].to_d
         previous = seen[fingerprint]
         duplicate_type = if previous && previous.to_d == amount
@@ -63,7 +69,12 @@ module Investments
                          elsif previous
                            "possible"
                          else
-                           duplicate_for_existing(fingerprint: fingerprint, amount: amount)
+                           duplicate_for_existing(
+                             asset_id: asset.id,
+                             classification: row["classification"],
+                             date: date,
+                             amount: amount
+                           )
                          end
         seen[fingerprint] = amount
         return row unless duplicate_type
@@ -76,8 +87,7 @@ module Investments
         )
       end
 
-      def duplicate_for_existing(fingerprint:, amount:)
-        asset_id, classification, date = fingerprint
+      def duplicate_for_existing(asset_id:, classification:, date:, amount:)
         income_type = Investments::Income.income_types.fetch(classification)
         relation = @portfolio.incomes.where(asset_id: asset_id, income_type: income_type, payment_date: date)
         return nil unless relation.exists?
