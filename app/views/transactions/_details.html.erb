@@ -1,0 +1,29 @@
+<% transaction = local_assigns.fetch(:transaction) %>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <p class="text-sm text-slate-500">Data</p>
+    <p class="mt-2 text-lg font-semibold text-slate-950"><%= l(transaction.date) %></p>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <p class="text-sm text-slate-500">Recebedor/Pagador</p>
+    <p class="mt-2 break-words text-lg font-semibold text-slate-950"><%= transaction.to_whom.presence || "-" %></p>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <p class="text-sm text-slate-500">Método de pagamento</p>
+    <p class="mt-2 text-lg font-semibold text-slate-950"><%= transaction.payment_method.presence || "-" %></p>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <p class="text-sm text-slate-500">Conta</p>
+    <p class="mt-2 break-words text-lg font-semibold text-slate-950"><%= "#{transaction.account.name} - #{transaction.account.bank}" %></p>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <p class="text-sm text-slate-500">Categoria</p>
+    <p class="mt-2 break-words text-lg font-semibold text-slate-950"><%= transaction_category_label(transaction.category) %></p>
+  </div>
+
+</div>

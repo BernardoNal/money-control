@@ -59,6 +59,89 @@ end
     sign_in user
   end
 
+  describe "GET /index" do
+    it "renders a details dialog for the current user's transaction" do
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Compra no mercado",
+        date: Date.current
+      )
+
+      get transactions_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(
+        "transaction-dialog-#{transaction.id}",
+        "Ver detalhes da transação",
+        category.name
+      )
+      expect(response.body).not_to include("Abrir página completa")
+    end
+
+    it "does not render another user's transaction in the index" do
+      get transactions_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include(other_transaction.description)
+    end
+
+    it "filters transactions by search text, direction, and date range" do
+      matching_transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -35,
+        description: "Supermercado do mês",
+        to_whom: "Mercado Central",
+        date: Date.new(2026, 10, 20)
+      )
+      Transaction.create!(
+        account: account,
+        category: category,
+        amount: 100,
+        description: "Salário",
+        date: Date.new(2026, 10, 20)
+      )
+
+      get transactions_path, params: {
+        query: "Mercado",
+        direction: "expense",
+        date_from: "2026-10-01",
+        date_to: "2026-10-31"
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(matching_transaction.description)
+      expect(response.body).not_to include("Salário")
+    end
+
+    it "filters transactions by an account and category owned by the current user" do
+      destination_account = Account.create!(user: user, name: "Reserva", bank: "Inter", initial_balance: 0)
+      destination_category = Category.create!(user: user, name: "Moradia", is_income: false, icon: "🏠", color: "#0055aa")
+      matching_transaction = Transaction.create!(
+        account: destination_account,
+        category: destination_category,
+        amount: -80,
+        description: "Aluguel",
+        date: Date.current
+      )
+      other_transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -20,
+        description: "Mercado",
+        date: Date.current
+      )
+
+      get transactions_path, params: { account_id: destination_account.id, category_id: destination_category.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(matching_transaction.description, destination_category.name)
+      expect(response.body).not_to include("transaction-dialog-#{other_transaction.id}")
+    end
+  end
+
   describe "GET /show" do
     it "allows access to a transaction owned by the current user" do
       transaction = Transaction.create!(
@@ -72,12 +155,27 @@ end
       get transaction_path(transaction)
 
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Detalhes da transação", "Recebedor/Pagador", "Categoria")
     end
 
     it "does not expose another user's transaction" do
       get transaction_path(other_transaction)
 
       expect(response).to redirect_to(root_path)
+    end
+
+    it "renders an expense transaction with its negative amount" do
+      transaction = Transaction.create!(
+        account: account,
+        category: category,
+        amount: -35,
+        description: "Conta de luz",
+        date: Date.current
+      )
+
+      get transaction_path(transaction)
+
+      expect(response.body).to include("Conta de luz", "-R$ 35,00")
     end
 
     it "redirects with a friendly alert when the transaction does not exist" do
