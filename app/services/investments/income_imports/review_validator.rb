@@ -30,7 +30,10 @@ module Investments
           errors << "A data da linha #{row["line_number"]} é inválida." unless date
 
           annotated = annotate_duplicate(row, asset: asset, date: date, seen: seen)
-          annotated.merge("requires_review" => annotated["requires_review"] || annotated["duplicate_type"] == "possible")
+          annotated.merge(
+            "requires_review" => annotated["requires_review"] ||
+              (annotated["duplicate_type"] == "possible" && annotated["duplicate_resolution"] != "accepted")
+          )
         end
 
         Result.new(rows: rows, errors: errors)
@@ -83,7 +86,8 @@ module Investments
           "duplicate_type" => duplicate_type,
           "possible_duplicate" => duplicate_type == "possible",
           "confirmed_duplicate" => duplicate_type == "confirmed",
-          "duplicate_reason" => duplicate_reason(duplicate_type)
+          "duplicate_reason" => duplicate_reason(duplicate_type),
+          "requires_review" => duplicate_type == "possible" && row["duplicate_resolution"] != "accepted"
         )
       end
 

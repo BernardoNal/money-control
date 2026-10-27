@@ -19,7 +19,11 @@ module Investments
 
         rows = income_import.rows.select { |row| row["status"] == "valid" }
         return failure("Não há recebíveis válidos selecionados para importar.") if rows.empty?
-        return failure(duplicate_message(rows)) if rows.any? { |row| row["duplicate_type"].present? }
+        blocking_duplicates = rows.select do |row|
+          row["duplicate_type"] == "confirmed" ||
+            (row["duplicate_type"] == "possible" && row["duplicate_resolution"] != "accepted")
+        end
+        return failure(duplicate_message(blocking_duplicates)) if blocking_duplicates.any?
 
         created_count = 0
         # The draft and all generated incomes must change together. A single
@@ -78,7 +82,7 @@ module Investments
 
       def duplicate_message(rows)
         lines = rows.filter_map { |row| row["line_number"] if row["duplicate_type"].present? }
-        "Revise as possíveis duplicidades antes de confirmar (linhas: #{lines.join(", ")})."
+        "Revise as duplicidades antes de confirmar (linhas: #{lines.join(", ")})."
       end
 
       def expired?

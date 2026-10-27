@@ -127,17 +127,20 @@ module Investments
     end
 
     def summary_for_rows(rows)
+      active_rows = rows.reject { |row| row["status"] == "ignored" }
       rows.group_by { |row| row["status"] }.transform_values(&:size).merge(
         "requires_review" => rows.count { |row| row["requires_review"] },
         "unsupported" => rows.count { |row| row["unsupported_reason"].present? },
-        "possible_duplicate" => rows.count { |row| row["possible_duplicate"] },
-        "confirmed_duplicate" => rows.count { |row| row["confirmed_duplicate"] }
+        "possible_duplicate" => active_rows.count { |row| row["possible_duplicate"] },
+        "confirmed_duplicate" => active_rows.count { |row| row["confirmed_duplicate"] },
+        "resolved_possible_duplicate" => active_rows.count { |row| row["duplicate_resolution"] == "accepted" }
       )
     end
 
     def apply_review_changes
       classifications = permitted_review_values(:row_classifications)
       asset_ids = permitted_review_values(:row_asset_ids)
+      duplicate_resolutions = permitted_review_values(:duplicate_resolutions)
       selected_lines = permitted_lines(:selected_lines)
       selection_submitted = params[:selection_submitted].present?
       errors = []
@@ -149,13 +152,15 @@ module Investments
         classification = classifications[line].presence || row["classification"]
         classification = nil if classification == "ignored"
         asset_id = asset_ids[line].presence
+        duplicate_resolution = duplicate_resolutions[line].presence
 
-        if selection_submitted && !selected_lines.include?(line)
+        if selection_submitted && !selected_lines.include?(line) && duplicate_resolution != "ignored"
           row.merge(
             "classification" => row["classification"],
             "asset_id" => nil,
             "asset_symbol" => nil,
             "requires_review" => false,
+            "duplicate_resolution" => "ignored",
             "ignored_reason" => "Não selecionada para importação.",
             "status" => "ignored"
           )
@@ -163,13 +168,24 @@ module Investments
           asset = find_asset(asset_id, row)
           errors << "Selecione um tipo de provento para a linha #{line}." unless Investments::Income.income_types.key?(classification)
           errors << "Selecione um ativo válido para a linha #{line}." unless asset
-          row.merge(
+          reviewed_row = row.merge(
             "classification" => classification,
             "asset_id" => asset&.id,
             "asset_symbol" => asset&.symbol,
             "requires_review" => !errors_for_row?(classification, asset),
-            "ignored_reason" => nil
+            "ignored_reason" => nil,
+            "status" => "valid"
           )
+          reviewed_row = reviewed_row.merge("duplicate_resolution" => duplicate_resolution) if duplicate_resolution.present?
+          reviewed_row = reviewed_row.except("duplicate_resolution") if duplicate_resolution.blank?
+          if duplicate_resolution == "ignored"
+            reviewed_row = reviewed_row.merge(
+              "requires_review" => false,
+              "ignored_reason" => "Duplicidade possível ignorada pelo usuário.",
+              "status" => "ignored"
+            )
+          end
+          reviewed_row
         end
       end
 
@@ -193,7 +209,7 @@ module Investments
     end
 
     def review_changes_submitted?
-      params[:selection_submitted].present? || params[:row_classifications].present? || params[:row_asset_ids].present?
+      params[:selection_submitted].present? || params[:row_classifications].present? || params[:row_asset_ids].present? || params[:duplicate_resolutions].present?
     end
 
     def find_asset(asset_id, row)

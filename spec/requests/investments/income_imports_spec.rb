@@ -138,6 +138,135 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     file&.tempfile&.close!
   end
 
+  it "allows the user to resolve a possible duplicate before confirmation" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 1",
+          "source_description" => "Dividendos COCA34 evento 1",
+          "amount" => "1.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 2",
+          "source_description" => "Dividendos COCA34 evento 2",
+          "amount" => "2.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        }
+      ],
+      summary: {},
+      expires_at: 1.hour.from_now
+    )
+
+    params = {
+      selection_submitted: "1",
+      selected_lines: %w[2 3],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s },
+      duplicate_resolutions: { "3" => "accepted" }
+    }
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: params
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "duplicate_type" => "possible",
+      "duplicate_resolution" => "accepted",
+      "requires_review" => false
+    )
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import)
+    end.to change(Investments::Income, :count).by(2)
+
+    expect(income_import.reload.status).to eq("completed")
+  end
+
+  it "ignores a possible duplicate when the user excludes its row" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 1",
+          "amount" => "1.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 2",
+          "amount" => "2.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        }
+      ],
+      summary: {},
+      expires_at: 1.hour.from_now
+    )
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s },
+      duplicate_resolutions: { "3" => "ignored" }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "status" => "ignored",
+      "ignored_reason" => "Duplicidade possível ignorada pelo usuário."
+    )
+  end
+
+  it "reactivates an ignored row when it is selected again" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: %w[2 3],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "status" => "valid",
+      "ignored_reason" => nil
+    )
+  end
+
   it "rejects an asset that does not exist and keeps the draft unchanged" do
     file = upload
     post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
@@ -215,6 +344,37 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     expect(income_import.reload.rows.first).to include("duplicate_type" => "confirmed")
     expect(income_import.summary["confirmed_duplicate"]).to eq(1)
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "does not block confirmation when an exact duplicate is excluded" do
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 1.51,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 10, 15)
+    )
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import), params: {
+        selection_submitted: "1",
+        selected_lines: ["3"],
+        row_classifications: { "2" => "dividends", "3" => "dividends" },
+        row_asset_ids: { "2" => asset.id.to_s, "3" => suggested_asset.id.to_s }
+      }
+    end.to change(Investments::Income, :count).by(1)
+
+    expect(response).to redirect_to(investments_portfolio_path(portfolio))
+    expect(income_import.reload.rows.first).to include(
+      "status" => "ignored",
+      "ignored_reason" => "Não selecionada para importação."
+    )
   ensure
     file&.tempfile&.close!
   end
