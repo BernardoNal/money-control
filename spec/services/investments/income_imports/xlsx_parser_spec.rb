@@ -76,6 +76,15 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(fee).to have_attributes(pair_role: "tax", paired_line_number: gross.line_number)
   end
 
+  it "keeps the base ticker as a suggestion for securities lending credits" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "Crédito Ref. Taxa de Remuneração BTC XPLG", "0,08"]
+    ])
+
+    expect(result.rows.first).to have_attributes(symbol: "XPLG", symbol_suggestion: "XPLG")
+  end
+
   it "stops at a no-movements marker and rejects files without the movement header" do
     result = parse([
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],

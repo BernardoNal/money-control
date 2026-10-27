@@ -188,7 +188,7 @@ module Investments
           classification: classification,
           source_event_identifier: extract_event_identifier(description),
           symbol: extract_symbol(description),
-          symbol_suggestion: extract_symbol_suggestion(description),
+          symbol_suggestion: extract_symbol_suggestion(description) || extract_btc_symbol_suggestion(description),
           requires_review: classification == "reimbursement" || classification == "other",
           status: errors.empty? ? :valid : :invalid,
           errors: errors,
@@ -258,6 +258,14 @@ module Investments
       # define authoritative event-to-asset resolution.
       def extract_symbol_suggestion(description)
         description.to_s.upcase[/\bBR([A-Z0-9]{3,5})(?:ACNOR|ACNPR|BDR|CTF)\d+\b/, 1]
+      end
+
+      # Some brokerage descriptions contain the ticker base after BTC while
+      # the asset catalog stores the complete ticker, such as XPLG11.
+      def extract_btc_symbol_suggestion(description)
+        return unless classify(description) == "stock_lending"
+
+        description.to_s.upcase[/\bBTC\s+([A-Z]{4,6})\b/, 1]
       end
 
       def extract_event_identifier(description)
