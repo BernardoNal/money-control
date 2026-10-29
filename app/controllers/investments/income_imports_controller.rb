@@ -118,6 +118,10 @@ module Investments
         "ignored_reason" => row.ignored_reason,
         "pair_role" => row.pair_role,
         "paired_line_number" => row.paired_line_number,
+        "paired_line_numbers" => row.paired_line_numbers,
+        "pair_candidates" => row.pair_candidates,
+        "deduction_kind" => row.deduction_kind,
+        "pair_conflict_reason" => row.pair_conflict_reason,
         "unsupported_reason" => row.unsupported_reason
       }
     end
@@ -141,6 +145,7 @@ module Investments
       classifications = permitted_review_values(:row_classifications)
       asset_ids = permitted_review_values(:row_asset_ids)
       duplicate_resolutions = permitted_review_values(:duplicate_resolutions)
+      pair_resolutions = permitted_review_values(:pair_resolutions)
       selected_lines = permitted_lines(:selected_lines)
       selection_submitted = params[:selection_submitted].present?
       errors = []
@@ -189,7 +194,32 @@ module Investments
         end
       end
 
-      [rows, errors]
+      [apply_pair_resolutions(rows, pair_resolutions), errors]
+    end
+
+    def apply_pair_resolutions(rows, resolutions)
+      rows_by_line = rows.index_by { |row| row["line_number"].to_s }
+
+      resolutions.each do |line, value|
+        next unless value.to_s.start_with?("line:")
+
+        deduction = rows_by_line[line.to_s]
+        gross = rows_by_line[value.to_s.delete_prefix("line:")]
+        next unless deduction && gross && Array(deduction["pair_candidates"]).map(&:to_s).include?(gross["line_number"].to_s)
+
+        gross["pair_role"] = "gross"
+        gross["paired_line_numbers"] = Array(gross["paired_line_numbers"].presence || gross["paired_line_number"])
+        gross["paired_line_numbers"] << deduction["line_number"] unless gross["paired_line_numbers"].map(&:to_s).include?(deduction["line_number"].to_s)
+        gross["paired_line_number"] ||= deduction["line_number"]
+        deduction["pair_role"] = "tax"
+        deduction["paired_line_number"] = gross["line_number"]
+        deduction["deduction_kind"] = deduction["classification"] == "fee" ? "fee" : "tax"
+        deduction["pair_candidates"] = []
+        deduction["pair_conflict_reason"] = nil
+        deduction["requires_review"] = false
+      end
+
+      rows
     end
 
     def reviewed_rows
@@ -209,7 +239,7 @@ module Investments
     end
 
     def review_changes_submitted?
-      params[:selection_submitted].present? || params[:row_classifications].present? || params[:row_asset_ids].present? || params[:duplicate_resolutions].present?
+      params[:selection_submitted].present? || params[:row_classifications].present? || params[:row_asset_ids].present? || params[:duplicate_resolutions].present? || params[:pair_resolutions].present?
     end
 
     def find_asset(asset_id, row)

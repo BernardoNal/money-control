@@ -64,14 +64,17 @@ module Investments
       end
 
       def tax_amount_for(row)
-        return 0.to_d unless row["paired_line_number"]
+        paired_lines = Array(row["paired_line_numbers"].presence || row["paired_line_number"])
+        return 0.to_d if paired_lines.empty?
 
-        # Brokerage files report securities-lending income and its donor fee
-        # as separate movements; the fee becomes tax on the single income.
-        tax_row = income_import.rows.find do |candidate|
-          candidate["line_number"].to_s == row["paired_line_number"].to_s && candidate["pair_role"] == "tax"
+        # Fees and withholding rows are stored as deductions on one income
+        # because the current income model exposes a single deduction field.
+        income_import.rows.sum do |candidate|
+          next 0.to_d unless paired_lines.map(&:to_s).include?(candidate["line_number"].to_s)
+          next 0.to_d unless candidate["pair_role"] == "tax"
+
+          candidate["amount"].to_d.abs
         end
-        tax_row ? tax_row["amount"].to_d.abs : 0.to_d
       end
 
       def parse_date(value)

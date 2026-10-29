@@ -467,6 +467,101 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     )
   end
 
+  it "sums multiple lending deductions on the generated income" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Crédito Ref. Taxa de Remuneração BTC XPLG",
+          "amount" => "10.00",
+          "classification" => "stock_lending",
+          "asset_id" => asset.id,
+          "status" => "valid",
+          "pair_role" => "gross",
+          "paired_line_number" => 3,
+          "paired_line_numbers" => [3, 4]
+        },
+        {
+          "line_number" => 3,
+          "amount" => "-1.00",
+          "classification" => "fee",
+          "pair_role" => "tax",
+          "paired_line_number" => 2,
+          "deduction_kind" => "fee",
+          "status" => "ignored"
+        },
+        {
+          "line_number" => 4,
+          "amount" => "-0.50",
+          "classification" => "tax",
+          "pair_role" => "tax",
+          "paired_line_number" => 2,
+          "deduction_kind" => "tax",
+          "status" => "ignored"
+        }
+      ],
+      summary: { "valid" => 1, "ignored" => 2 },
+      expires_at: 1.hour.from_now
+    )
+
+    result = Investments::IncomeImports::Confirmer.call(income_import: income_import)
+
+    expect(result).to be_success
+    expect(Investments::Income.last).to have_attributes(
+      gross_amount: BigDecimal("10.00"),
+      tax_amount: BigDecimal("1.50"),
+      net_amount: BigDecimal("8.50")
+    )
+  end
+
+  it "allows manually linking an ambiguous deduction to a lending event" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Crédito Ref. Taxa de Remuneração BTC XPLG",
+          "amount" => "10.00",
+          "classification" => "stock_lending",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "description" => "Taxa de intermediação doador XPLG11",
+          "amount" => "-1.00",
+          "classification" => "fee",
+          "pair_candidates" => [2],
+          "pair_conflict_reason" => "Mais de um crédito de aluguel pode receber este desconto.",
+          "status" => "ignored"
+        }
+      ],
+      summary: { "valid" => 1, "ignored" => 1 },
+      expires_at: 1.hour.from_now
+    )
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "stock_lending" },
+      row_asset_ids: { "2" => asset.id.to_s },
+      pair_resolutions: { "3" => "line:2" }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "pair_role" => "tax",
+      "paired_line_number" => 2,
+      "pair_conflict_reason" => nil
+    )
+  end
+
   it "does not expose another user's portfolio" do
     other_user = User.create!(name: "Other", email: "other-income-import@example.com", password: "password123")
     other_portfolio = Investments::Portfolio.create!(name: "Outra", user: other_user)

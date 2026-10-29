@@ -56,7 +56,9 @@
         <% next unless paired_row["pair_role"] == "gross" %>
         <% next_pair_group += 1 %>
         <% pair_groups[paired_row["line_number"].to_s] = next_pair_group %>
-        <% pair_groups[paired_row["paired_line_number"].to_s] = next_pair_group %>
+        <% Array(paired_row["paired_line_numbers"].presence || paired_row["paired_line_number"]).each do |paired_line| %>
+          <% pair_groups[paired_line.to_s] = next_pair_group %>
+        <% end %>
       <% end %>
       <%= form_with url: investments_portfolio_income_import_update_path(@portfolio, @income_import), method: :patch, class: "mt-8" do |form| %>
       <%= hidden_field_tag :selection_submitted, "1" %>
@@ -125,7 +127,7 @@
                 <% if row["pair_role"] == "gross" %>
                   <p class="mt-1 text-xs font-normal text-blue-700">Evento <%= pair_groups[row["line_number"].to_s] %> · bruto</p>
                 <% elsif row["pair_role"] == "tax" %>
-                  <p class="mt-1 text-xs font-normal text-rose-600">Evento <%= pair_groups[row["line_number"].to_s] %> · taxa</p>
+                  <p class="mt-1 text-xs font-normal text-rose-600">Evento <%= pair_groups[row["line_number"].to_s] %> · <%= row["deduction_kind"] == "fee" ? "taxa" : "imposto" %></p>
                 <% end %>
               </td>
             <td class="px-3 py-4 text-slate-700">
@@ -179,6 +181,12 @@
                 <span class="whitespace-nowrap font-semibold <%= status_color %>"><%= status_label %></span>
                 <% if row["unsupported_reason"].present? %><p class="mt-1 text-xs text-slate-500"><%= row["unsupported_reason"] %></p><% end %>
                 <% if row["duplicate_reason"].present? %><p class="mt-1 max-w-xs text-xs text-amber-700"><%= row["duplicate_reason"] %></p><% end %>
+                <% if row["pair_conflict_reason"].present? %>
+                  <p class="mt-1 max-w-xs text-xs text-amber-700"><%= row["pair_conflict_reason"] %></p>
+                  <% if @income_import.pending? %>
+                    <%= select_tag "pair_resolutions[#{row["line_number"]}]", options_for_select([["Manter separado", ""]] + Array(row["pair_candidates"]).map { |line| ["Vincular ao evento #{line}", "line:#{line}"] }), include_blank: false, class: "mt-2 min-w-52 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm" %>
+                  <% end %>
+                <% end %>
                 <% if row["duplicate_type"] == "possible" && row["status"] == "valid" && @income_import.pending? %>
                   <%= select_tag "duplicate_resolutions[#{row["line_number"]}]", options_for_select([["Manter em revisão", "pending"], ["Importar como válido", "accepted"], ["Ignorar linha", "ignored"]], row["duplicate_resolution"].presence || "pending"), class: "mt-2 min-w-52 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm" %>
                 <% elsif row["duplicate_resolution"] == "accepted" %>

@@ -28,6 +28,10 @@ module Investments
         :ignored_reason,
         :pair_role,
         :paired_line_number,
+        :paired_line_numbers,
+        :pair_candidates,
+        :deduction_kind,
+        :pair_conflict_reason,
         :unsupported_reason,
         keyword_init: true
       )
@@ -195,6 +199,10 @@ module Investments
           ignored_reason: nil,
           pair_role: nil,
           paired_line_number: nil,
+          paired_line_numbers: [],
+          pair_candidates: [],
+          deduction_kind: nil,
+          pair_conflict_reason: nil,
           unsupported_reason: unsupported_reason
         )
       end
@@ -207,26 +215,36 @@ module Investments
 
       def pair_related_rows(rows)
         lending_rows = rows.select { |row| row.classification == "stock_lending" }
-        fee_rows = rows.select { |row| row.classification == "fee" }
+        deduction_rows = rows.select { |row| %w[fee tax].include?(row.classification) }
 
-        # The broker exports the securities-lending gross credit and donor
-        # fee as separate rows. Keep the rows visible, but link them so the
-        # confirmation step creates one income with a retained tax amount.
-        fee_rows.each do |fee_row|
-          lending_row = lending_rows.find do |candidate|
-            candidate.paired_line_number.nil? &&
-              candidate.movement_date == fee_row.movement_date &&
+        # Link unambiguous brokerage fee and withholding rows to one lending
+        # credit. Ambiguous candidates remain available for manual review.
+        deduction_rows.each do |deduction_row|
+          candidates = lending_rows.select do |candidate|
+            candidate.movement_date == deduction_row.movement_date &&
               candidate.symbol.present? &&
-              fee_row.symbol.present? &&
-              related_symbols?(candidate.symbol, fee_row.symbol)
+              deduction_row.symbol.present? &&
+              related_symbols?(candidate.symbol, deduction_row.symbol)
           end
-          next unless lending_row
+          next if candidates.empty?
 
-          lending_row.pair_role = "gross"
-          lending_row.paired_line_number = fee_row.line_number
-          fee_row.pair_role = "tax"
-          fee_row.paired_line_number = lending_row.line_number
+          if candidates.one?
+            link_pair(candidate: candidates.first, deduction: deduction_row)
+          else
+            deduction_row.pair_candidates = candidates.map(&:line_number)
+            deduction_row.pair_conflict_reason = "Mais de um crédito de aluguel pode receber este desconto."
+            deduction_row.requires_review = true
+          end
         end
+      end
+
+      def link_pair(candidate:, deduction:)
+        candidate.pair_role = "gross"
+        candidate.paired_line_numbers << deduction.line_number unless candidate.paired_line_numbers.include?(deduction.line_number)
+        candidate.paired_line_number ||= deduction.line_number
+        deduction.pair_role = "tax"
+        deduction.paired_line_number = candidate.line_number
+        deduction.deduction_kind = deduction.classification == "fee" ? "fee" : "tax"
       end
 
       def related_symbols?(gross_symbol, fee_symbol)

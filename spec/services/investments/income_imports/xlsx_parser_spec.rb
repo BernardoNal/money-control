@@ -85,6 +85,20 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(result.rows.first).to have_attributes(symbol: "XPLG", symbol_suggestion: "XPLG")
   end
 
+  it "links multiple lending deductions to the same gross credit" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "Crédito Ref. Taxa de Remuneração BTC XPLG", "10,00"],
+      [46310, 46310, "Taxa de intermediação doador XPLG11", "-0,04"],
+      [46310, 46310, "DEBITO CBLC IRRF S/ RENDIMENTO DE BTC XPLG", "-0,01"]
+    ])
+
+    gross, fee, tax = result.rows
+    expect(gross).to have_attributes(pair_role: "gross", paired_line_numbers: [fee.line_number, tax.line_number])
+    expect(fee).to have_attributes(pair_role: "tax", deduction_kind: "fee", paired_line_number: gross.line_number)
+    expect(tax).to have_attributes(pair_role: "tax", deduction_kind: "tax", paired_line_number: gross.line_number)
+  end
+
   it "stops at a no-movements marker and rejects files without the movement header" do
     result = parse([
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
