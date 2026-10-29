@@ -148,6 +148,8 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Investimentos")
       expect(response.body).to include("Main Portfolio")
+      expect(response.body).to include(investments_incomes_path(portfolio: portfolio.id))
+      expect(response.body).to include("Ver recebíveis")
       expect(response.body).to include("Visão geral")
       expect(response.body).to include("Carteira")
       expect(response.body).to include("Total investido")

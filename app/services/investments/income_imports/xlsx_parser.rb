@@ -14,10 +14,12 @@ module Investments
         :line_number,
         :movement_date,
         :settlement_date,
+        :source_description,
         :description,
         :amount,
         :balance,
         :classification,
+        :source_event_identifier,
         :symbol,
         :symbol_suggestion,
         :requires_review,
@@ -26,6 +28,10 @@ module Investments
         :ignored_reason,
         :pair_role,
         :paired_line_number,
+        :paired_line_numbers,
+        :pair_candidates,
+        :deduction_kind,
+        :pair_conflict_reason,
         :unsupported_reason,
         keyword_init: true
       )
@@ -163,7 +169,8 @@ module Investments
       end
 
       def build_row(row, headers)
-        description = row[:cells][headers[:description]].to_s.strip
+        source_description = row[:cells][headers[:description]].to_s
+        description = normalize_description(source_description)
         return nil if description.blank? || normalize_header(description).start_with?("nao_ha_lancamentos")
 
         errors = []
@@ -178,18 +185,24 @@ module Investments
           line_number: row[:line_number],
           movement_date: movement_date,
           settlement_date: settlement_date,
+          source_description: source_description,
           description: description,
           amount: amount,
           balance: balance,
           classification: classification,
+          source_event_identifier: extract_event_identifier(description),
           symbol: extract_symbol(description),
-          symbol_suggestion: extract_symbol_suggestion(description),
+          symbol_suggestion: extract_symbol_suggestion(description) || extract_btc_symbol_suggestion(description),
           requires_review: classification == "reimbursement" || classification == "other",
           status: errors.empty? ? :valid : :invalid,
           errors: errors,
           ignored_reason: nil,
           pair_role: nil,
           paired_line_number: nil,
+          paired_line_numbers: [],
+          pair_candidates: [],
+          deduction_kind: nil,
+          pair_conflict_reason: nil,
           unsupported_reason: unsupported_reason
         )
       end
@@ -202,26 +215,36 @@ module Investments
 
       def pair_related_rows(rows)
         lending_rows = rows.select { |row| row.classification == "stock_lending" }
-        fee_rows = rows.select { |row| row.classification == "fee" }
+        deduction_rows = rows.select { |row| %w[fee tax].include?(row.classification) }
 
-        # The broker exports the securities-lending gross credit and donor
-        # fee as separate rows. Keep the rows visible, but link them so the
-        # confirmation step creates one income with a retained tax amount.
-        fee_rows.each do |fee_row|
-          lending_row = lending_rows.find do |candidate|
-            candidate.paired_line_number.nil? &&
-              candidate.movement_date == fee_row.movement_date &&
+        # Link unambiguous brokerage fee and withholding rows to one lending
+        # credit. Ambiguous candidates remain available for manual review.
+        deduction_rows.each do |deduction_row|
+          candidates = lending_rows.select do |candidate|
+            candidate.movement_date == deduction_row.movement_date &&
               candidate.symbol.present? &&
-              fee_row.symbol.present? &&
-              related_symbols?(candidate.symbol, fee_row.symbol)
+              deduction_row.symbol.present? &&
+              related_symbols?(candidate.symbol, deduction_row.symbol)
           end
-          next unless lending_row
+          next if candidates.empty?
 
-          lending_row.pair_role = "gross"
-          lending_row.paired_line_number = fee_row.line_number
-          fee_row.pair_role = "tax"
-          fee_row.paired_line_number = lending_row.line_number
+          if candidates.one?
+            link_pair(candidate: candidates.first, deduction: deduction_row)
+          else
+            deduction_row.pair_candidates = candidates.map(&:line_number)
+            deduction_row.pair_conflict_reason = "Mais de um crédito de aluguel pode receber este desconto."
+            deduction_row.requires_review = true
+          end
         end
+      end
+
+      def link_pair(candidate:, deduction:)
+        candidate.pair_role = "gross"
+        candidate.paired_line_numbers << deduction.line_number unless candidate.paired_line_numbers.include?(deduction.line_number)
+        candidate.paired_line_number ||= deduction.line_number
+        deduction.pair_role = "tax"
+        deduction.paired_line_number = candidate.line_number
+        deduction.deduction_kind = deduction.classification == "fee" ? "fee" : "tax"
       end
 
       def related_symbols?(gross_symbol, fee_symbol)
@@ -253,6 +276,18 @@ module Investments
       # define authoritative event-to-asset resolution.
       def extract_symbol_suggestion(description)
         description.to_s.upcase[/\bBR([A-Z0-9]{3,5})(?:ACNOR|ACNPR|BDR|CTF)\d+\b/, 1]
+      end
+
+      # Some brokerage descriptions contain the ticker base after BTC while
+      # the asset catalog stores the complete ticker, such as XPLG11.
+      def extract_btc_symbol_suggestion(description)
+        return unless classify(description) == "stock_lending"
+
+        description.to_s.upcase[/\bBTC\s+([A-Z]{4,6})\b/, 1]
+      end
+
+      def extract_event_identifier(description)
+        description.to_s.upcase[/\bBR[A-Z0-9]{3,}(?:ACNOR|ACNPR|BDR|CTF)\d+\b/]
       end
 
       def parse_date(value, errors, label)
@@ -291,6 +326,12 @@ module Investments
           .encode("ASCII", replace: "")
           .gsub(/[^a-z0-9]+/, "_")
           .sub(/\A_+|_+\z/, "")
+      end
+
+      # Keep the source value untouched for audit while making the displayed
+      # description readable when spreadsheets contain repeated whitespace.
+      def normalize_description(value)
+        value.to_s.gsub(/[[:space:]]+/, " ").strip
       end
     end
   end

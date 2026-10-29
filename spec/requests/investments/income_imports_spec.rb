@@ -86,6 +86,7 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     expect(income_import.portfolio).to eq(portfolio)
     expect(income_import.rows.first["classification"]).to eq("dividends")
+    expect(income_import.rows.first["source_classification"]).to eq("dividends")
     expect(income_import.rows.second["requires_review"]).to be(true)
   ensure
     file&.tempfile&.close!
@@ -115,9 +116,155 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     rows = income_import.reload.rows
     expect(rows).to all(include("asset_id" => asset.id))
-    expect(income_import.summary["possible_duplicate"]).to eq(1)
+    expect(income_import.summary["possible_duplicate"]).to eq(0)
   ensure
     file&.tempfile&.close!
+  end
+
+  it "does not flag a JCP and reimbursement event as the same source event" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      row_classifications: { "2" => "jcp", "3" => "jcp" },
+      row_asset_ids: { "2" => suggested_asset.id.to_s, "3" => suggested_asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.map { |row| row["duplicate_type"] }).to all(be_nil)
+    expect(income_import.rows.second["source_classification"]).to eq("reimbursement")
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "allows the user to resolve a possible duplicate before confirmation" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 1",
+          "source_description" => "Dividendos COCA34 evento 1",
+          "amount" => "1.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 2",
+          "source_description" => "Dividendos COCA34 evento 2",
+          "amount" => "2.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        }
+      ],
+      summary: {},
+      expires_at: 1.hour.from_now
+    )
+
+    params = {
+      selection_submitted: "1",
+      selected_lines: %w[2 3],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s },
+      duplicate_resolutions: { "3" => "accepted" }
+    }
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: params
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "duplicate_type" => "possible",
+      "duplicate_resolution" => "accepted",
+      "requires_review" => false
+    )
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import)
+    end.to change(Investments::Income, :count).by(2)
+
+    expect(income_import.reload.status).to eq("completed")
+  end
+
+  it "ignores a possible duplicate when the user excludes its row" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 1",
+          "amount" => "1.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Dividendos COCA34 evento 2",
+          "amount" => "2.00",
+          "classification" => "dividends",
+          "source_classification" => "dividends",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        }
+      ],
+      summary: {},
+      expires_at: 1.hour.from_now
+    )
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s },
+      duplicate_resolutions: { "3" => "ignored" }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "status" => "ignored",
+      "ignored_reason" => "Duplicidade possível ignorada pelo usuário."
+    )
+  end
+
+  it "reactivates an ignored row when it is selected again" do
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s }
+    }
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: %w[2 3],
+      row_classifications: { "2" => "dividends", "3" => "dividends" },
+      row_asset_ids: { "2" => asset.id.to_s, "3" => asset.id.to_s }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "status" => "valid",
+      "ignored_reason" => nil
+    )
   end
 
   it "rejects an asset that does not exist and keeps the draft unchanged" do
@@ -197,6 +344,37 @@ RSpec.describe "Investments::IncomeImports", type: :request do
     expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
     expect(income_import.reload.rows.first).to include("duplicate_type" => "confirmed")
     expect(income_import.summary["confirmed_duplicate"]).to eq(1)
+  ensure
+    file&.tempfile&.close!
+  end
+
+  it "does not block confirmation when an exact duplicate is excluded" do
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 1.51,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 10, 15)
+    )
+    file = upload
+    post investments_portfolio_income_import_create_path(portfolio), params: { income_import: { file: file } }, as: :multipart
+    income_import = Investments::IncomeImport.last
+
+    expect do
+      post investments_portfolio_income_import_confirm_path(portfolio, income_import), params: {
+        selection_submitted: "1",
+        selected_lines: ["3"],
+        row_classifications: { "2" => "dividends", "3" => "dividends" },
+        row_asset_ids: { "2" => asset.id.to_s, "3" => suggested_asset.id.to_s }
+      }
+    end.to change(Investments::Income, :count).by(1)
+
+    expect(response).to redirect_to(investments_portfolio_path(portfolio))
+    expect(income_import.reload.rows.first).to include(
+      "status" => "ignored",
+      "ignored_reason" => "Não selecionada para importação."
+    )
   ensure
     file&.tempfile&.close!
   end
@@ -286,6 +464,101 @@ RSpec.describe "Investments::IncomeImports", type: :request do
       gross_amount: BigDecimal("10.00"),
       tax_amount: BigDecimal("1.00"),
       net_amount: BigDecimal("9.00")
+    )
+  end
+
+  it "sums multiple lending deductions on the generated income" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Crédito Ref. Taxa de Remuneração BTC XPLG",
+          "amount" => "10.00",
+          "classification" => "stock_lending",
+          "asset_id" => asset.id,
+          "status" => "valid",
+          "pair_role" => "gross",
+          "paired_line_number" => 3,
+          "paired_line_numbers" => [3, 4]
+        },
+        {
+          "line_number" => 3,
+          "amount" => "-1.00",
+          "classification" => "fee",
+          "pair_role" => "tax",
+          "paired_line_number" => 2,
+          "deduction_kind" => "fee",
+          "status" => "ignored"
+        },
+        {
+          "line_number" => 4,
+          "amount" => "-0.50",
+          "classification" => "tax",
+          "pair_role" => "tax",
+          "paired_line_number" => 2,
+          "deduction_kind" => "tax",
+          "status" => "ignored"
+        }
+      ],
+      summary: { "valid" => 1, "ignored" => 2 },
+      expires_at: 1.hour.from_now
+    )
+
+    result = Investments::IncomeImports::Confirmer.call(income_import: income_import)
+
+    expect(result).to be_success
+    expect(Investments::Income.last).to have_attributes(
+      gross_amount: BigDecimal("10.00"),
+      tax_amount: BigDecimal("1.50"),
+      net_amount: BigDecimal("8.50")
+    )
+  end
+
+  it "allows manually linking an ambiguous deduction to a lending event" do
+    income_import = portfolio.income_imports.create!(
+      original_filename: "income.xlsx",
+      rows: [
+        {
+          "line_number" => 2,
+          "movement_date" => "2026-10-15",
+          "settlement_date" => "2026-10-15",
+          "description" => "Crédito Ref. Taxa de Remuneração BTC XPLG",
+          "amount" => "10.00",
+          "classification" => "stock_lending",
+          "asset_id" => asset.id,
+          "status" => "valid"
+        },
+        {
+          "line_number" => 3,
+          "movement_date" => "2026-10-15",
+          "description" => "Taxa de intermediação doador XPLG11",
+          "amount" => "-1.00",
+          "classification" => "fee",
+          "pair_candidates" => [2],
+          "pair_conflict_reason" => "Mais de um crédito de aluguel pode receber este desconto.",
+          "status" => "ignored"
+        }
+      ],
+      summary: { "valid" => 1, "ignored" => 1 },
+      expires_at: 1.hour.from_now
+    )
+
+    patch investments_portfolio_income_import_update_path(portfolio, income_import), params: {
+      selection_submitted: "1",
+      selected_lines: ["2"],
+      row_classifications: { "2" => "stock_lending" },
+      row_asset_ids: { "2" => asset.id.to_s },
+      pair_resolutions: { "3" => "line:2" }
+    }
+
+    expect(response).to redirect_to(investments_portfolio_income_import_preview_path(portfolio, income_import))
+    expect(income_import.reload.rows.second).to include(
+      "pair_role" => "tax",
+      "paired_line_number" => 2,
+      "pair_conflict_reason" => nil
     )
   end
 
