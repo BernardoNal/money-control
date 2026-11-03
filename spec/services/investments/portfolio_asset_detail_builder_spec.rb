@@ -46,7 +46,7 @@ RSpec.describe Investments::PortfolioAssetDetailBuilder do
       currency: "BRL",
       as_of: Time.zone.parse("2026-10-20 12:00:00")
     )
-    price_lookup = instance_double(MarketData::PriceLookupService, call: price_data)
+    price_lookup = instance_double(MarketData::PriceLookupService, call: price_data, historical_price: nil)
 
     result = described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup)
 
@@ -63,7 +63,7 @@ RSpec.describe Investments::PortfolioAssetDetailBuilder do
   end
 
   it "falls back to cost basis when market data is unavailable" do
-    price_lookup = instance_double(MarketData::PriceLookupService)
+    price_lookup = instance_double(MarketData::PriceLookupService, historical_price: nil)
     allow(price_lookup).to receive(:call).and_raise(MarketData::NotFoundError, "not found")
 
     result = described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup)
@@ -75,5 +75,46 @@ RSpec.describe Investments::PortfolioAssetDetailBuilder do
       unrealized_profit_loss_percentage: BigDecimal("0"),
       price_source: :cost_basis
     )
+  end
+
+  it "compares the current value with the position and price from the previous year end" do
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 5,
+      price: 9,
+      fees: 0,
+      date: Date.new(2025, 12, 20)
+    )
+    historical_price = MarketData::HistoricalPriceData.new(
+      symbol: asset.symbol,
+      price: BigDecimal("20"),
+      currency: asset.currency,
+      as_of: Date.new(2025, 12, 30)
+    )
+    price_data = MarketData::PriceData.new(
+      symbol: asset.symbol,
+      price: BigDecimal("12"),
+      currency: asset.currency,
+      as_of: Time.current
+    )
+    price_lookup = instance_double(
+      MarketData::PriceLookupService,
+      call: price_data,
+      historical_price: historical_price
+    )
+
+    result = described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup)
+
+    expect(result.annual_comparison).to have_attributes(
+      reference_date: Date.new(2025, 12, 30),
+      reference_quantity: BigDecimal("5"),
+      reference_price: BigDecimal("20"),
+      reference_value: BigDecimal("100"),
+      current_value: BigDecimal("156"),
+      change: BigDecimal("56")
+    )
+    expect(result.annual_comparison.change_percentage).to eq(BigDecimal("56"))
   end
 end

@@ -52,7 +52,11 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: MarketData::PriceData.new(symbol: asset.symbol, price: 12, currency: asset.currency, as_of: Time.current))
+      instance_double(
+        MarketData::PriceLookupService,
+        call: MarketData::PriceData.new(symbol: asset.symbol, price: 12, currency: asset.currency, as_of: Time.current),
+        historical_price: nil
+      )
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)

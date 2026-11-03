@@ -11,13 +11,14 @@ module Investments
 
     ZERO = BigDecimal("0")
 
-    def initialize(portfolio:, asset:)
+    def initialize(portfolio:, asset:, as_of: nil)
       @portfolio = portfolio
       @asset = asset
+      @as_of = as_of
     end
 
-    def self.call(portfolio:, asset:)
-      new(portfolio: portfolio, asset: asset).call
+    def self.call(portfolio:, asset:, as_of: nil)
+      new(portfolio: portfolio, asset: asset, as_of: as_of).call
     end
 
     def call
@@ -48,15 +49,16 @@ module Investments
 
     private
 
-    attr_reader :portfolio, :asset
+    attr_reader :portfolio, :asset, :as_of
 
     def transactions
       # Chronological order is part of the calculation because each sell depends
       # on the position built by previous buy operations.
-      Investments::Transaction
+      relation = Investments::Transaction
         .where(portfolio: portfolio, asset: asset)
         .where(transaction_type: [:buy, :sell])
-        .order(:date, :id)
+      relation = relation.where("date <= ?", as_of) if as_of.present?
+      relation.order(:date, :id)
     end
 
     def transaction_total(transaction)

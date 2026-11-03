@@ -321,6 +321,61 @@ RSpec.describe MarketData::Providers::BrapiProvider do
     end
   end
 
+  describe "#fetch_historical_price" do
+    it "returns the last stock close available before the requested date" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "PETR4",
+              "data" => {
+                "historicalDataPrice" => [
+                  { "date" => Time.zone.parse("2025-12-29 17:00:00").to_i, "close" => 31.5 },
+                  { "date" => Time.zone.parse("2025-12-30 17:00:00").to_i, "close" => 32.15 }
+                ]
+              }
+            }
+          ]
+        }.to_json
+      )
+
+      allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
+        expect(hostname).to eq("brapi.dev")
+        expect(port).to eq(443)
+        expect(use_ssl).to be(true)
+
+        http = instance_double("Net::HTTP")
+        expect(http).to receive(:request) do |request|
+          expect(request.path).to include("/api/v2/stocks/historical")
+          expect(request.path).to include("symbols=PETR4")
+          expect(request.path).to include("startDate=2025-12-23")
+          expect(request.path).to include("endDate=2025-12-30")
+          expect(request["Authorization"]).to eq("Bearer test-token")
+          response
+        end
+
+        block.call(http)
+      end
+
+      result = provider.fetch_historical_price(
+        symbol: "PETR4",
+        asset_category: :stock,
+        date: Date.new(2025, 12, 30)
+      )
+
+      expect(result).to eq(
+        MarketData::HistoricalPriceData.new(
+          symbol: "PETR4",
+          price: BigDecimal("32.15"),
+          currency: nil,
+          as_of: Date.new(2025, 12, 30)
+        )
+      )
+    end
+  end
+
   def expect_request(response, symbol)
     allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
       expect(hostname).to eq("brapi.dev")
