@@ -116,4 +116,83 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     expect(response.body.index("10/01/2026")).to be < response.body.index("10/02/2026")
     expect(response.body).not_to include("PETR4", "R$ 6.993,00")
   end
+
+  it "renders corporate actions without inventing price or total values" do
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 2,
+      price: 10,
+      fees: 0,
+      date: Date.new(2026, 1, 1)
+    )
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :transfer,
+      quantity: 2,
+      price: nil,
+      fees: 0,
+      date: Date.new(2026, 1, 2),
+      notes: "Transferência entre custódias"
+    )
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :split,
+      quantity: 4,
+      price: nil,
+      fees: 0,
+      date: Date.new(2026, 1, 3)
+    )
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :reverse_split,
+      quantity: 2,
+      price: nil,
+      fees: 0,
+      date: Date.new(2026, 1, 4)
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Transferência", "Split", "Reverse Split", "Transferência entre custódias")
+    expect(response.body.scan("—").size).to be >= 6
+  end
+
+  it "paginates the asset history in groups of five" do
+    6.times do |index|
+      Investments::Transaction.create!(
+        portfolio: portfolio,
+        asset: asset,
+        transaction_type: :buy,
+        quantity: 1,
+        price: 10,
+        fees: 0,
+        date: Date.new(2026, 1, index + 1)
+      )
+    end
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response.body).to include("6 movimentações", "Página 1", "history_set=5")
+    expect(response.body).to include("01/01/2026", "05/01/2026")
+    expect(response.body).not_to include("06/01/2026")
+
+    get investments_portfolio_asset_detail_path(portfolio, asset), params: { history_set: 5 }
+
+    expect(response.body).to include("Página 2", "06/01/2026", "history_set=0")
+    expect(response.body).not_to include("01/01/2026")
+  end
 end
