@@ -8,6 +8,9 @@ module Investments
         portfolio: @portfolio,
         asset: @asset
       )
+      @asset_transactions = @portfolio.transactions
+        .where(asset: @asset)
+        .order(:date, :id)
     end
 
     private

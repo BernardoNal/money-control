@@ -64,4 +64,56 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("AAPL34", "Resultado não realizado", "R$ 24,00", "R$ 4,00")
   end
+
+  it "renders only the selected asset transactions in chronological order" do
+    other_asset = Investments::Asset.create!(name: "Petrobras", symbol: "PETR4", category: :stock, currency: "BRL")
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 2,
+      price: 10,
+      fees: 1,
+      date: Date.new(2026, 1, 10),
+      notes: "Aporte inicial"
+    )
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :sell,
+      quantity: 1,
+      price: 12,
+      fees: 0,
+      date: Date.new(2026, 2, 10)
+    )
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: other_asset,
+      transaction_type: :buy,
+      quantity: 999,
+      price: 7,
+      fees: 0,
+      date: Date.new(2026, 1, 5)
+    )
+    Investments::Transaction.create!(
+      portfolio: other_portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 50,
+      price: 1,
+      fees: 0,
+      date: Date.new(2026, 1, 1)
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Histórico de transações", "Aporte inicial", "Compra", "Venda", "R$ 20,00", "R$ 12,00")
+    expect(response.body.index("10/01/2026")).to be < response.body.index("10/02/2026")
+    expect(response.body).not_to include("PETR4", "R$ 6.993,00")
+  end
 end
