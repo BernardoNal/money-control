@@ -75,6 +75,37 @@ module MarketData
         price_data
       end
 
+      # Returns the last available daily close on or before the requested date.
+      # The endpoint differs for FIIs, while stocks also cover BDRs and ETFs.
+      def fetch_historical_price(symbol:, asset_category:, date:)
+        normalized_symbol = symbol.to_s.strip.upcase
+        target_date = Date.parse(date.to_s)
+        payload = get_json(
+          path: historical_path(asset_category),
+          query_params: {
+            symbols: normalized_symbol,
+            startDate: (target_date - 7).iso8601,
+            endDate: target_date.iso8601,
+            sortOrder: "asc"
+          }
+        )
+
+        points = historical_points(payload, asset_category, normalized_symbol)
+        point = points
+          .filter_map { |item| historical_point(item) }
+          .select { |item| item[:date] <= target_date }
+          .max_by { |item| item[:date] }
+
+        raise NotFoundError, "Historical price not found for symbol #{normalized_symbol}" if point.blank?
+
+        HistoricalPriceData.new(
+          symbol: normalized_symbol,
+          price: point.fetch(:price),
+          currency: nil,
+          as_of: point.fetch(:date)
+        )
+      end
+
       private
 
       attr_reader :api_token, :max_symbols_per_request
@@ -107,6 +138,26 @@ module MarketData
             as_of: parse_time(price_payload["regularMarketTime"])
           )
         end
+      end
+
+      def historical_path(asset_category)
+        asset_category.to_s == "fii" ? "/fii/historical" : "/stocks/historical"
+      end
+
+      def historical_points(payload, asset_category, symbol)
+        if asset_category.to_s == "fii"
+          payload.fetch("fiis", []).find { |item| item["symbol"].to_s.casecmp?(symbol) }.to_h.fetch("historicalDataPrice", [])
+        else
+          payload.fetch("results", []).find { |item| item["symbol"].to_s.casecmp?(symbol) }.to_h.dig("data", "historicalDataPrice") || []
+        end
+      end
+
+      def historical_point(item)
+        timestamp = item["date"]
+        price = item["close"]
+        return if timestamp.blank? || price.blank?
+
+        { date: Time.zone.at(timestamp.to_i).to_date, price: BigDecimal(price.to_s) }
       end
 
       # Executes a BRAPI request and translates transport or payload errors into provider-level failures.

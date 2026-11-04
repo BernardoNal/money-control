@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       collection { get :search }
     end
     resources :portfolios do
+      get "assets/:asset_id", to: "portfolio_assets#show", as: :asset_detail
       get "income-import", to: "income_imports#new", as: :income_import
       post "income-import", to: "income_imports#create", as: :income_import_create
       get "income-import/:id", to: "income_imports#show", as: :income_import_preview

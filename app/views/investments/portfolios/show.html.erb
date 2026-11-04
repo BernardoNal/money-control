@@ -238,7 +238,9 @@
                   <% @dashboard.asset_entries.each do |entry| %>
                     <tr class="border-b border-gray-100 last:border-b-0">
                       <td class="py-4 pr-6">
-                        <div class="font-medium text-gray-900"><%= entry.asset.symbol %></div>
+                        <%= link_to investments_portfolio_asset_detail_path(@portfolio, entry.asset), class: "font-medium text-[#000080] hover:underline" do %>
+                          <%= entry.asset.symbol %>
+                        <% end %>
                         <div class="mt-1 text-xs text-gray-500"><%= entry.asset.name %></div>
                       </td>
                       <td class="py-4 pr-6 text-gray-700"><%= number_with_precision(entry.quantity, precision: 8, strip_insignificant_zeros: true) %></td>
