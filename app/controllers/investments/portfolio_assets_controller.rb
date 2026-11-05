@@ -8,6 +8,16 @@ module Investments
         portfolio: @portfolio,
         asset: @asset
       )
+      asset_transactions = @portfolio.transactions
+        .where(asset: @asset)
+        .order(:date, :id)
+      @asset_transactions_page_size = 5
+      @asset_transactions_total = asset_transactions.count
+      requested_offset = params[:history_set].to_i
+      @asset_transactions_offset = requested_offset % @asset_transactions_page_size == 0 ? requested_offset : 0
+      @asset_transactions = asset_transactions
+        .limit(@asset_transactions_page_size)
+        .offset(@asset_transactions_offset)
     end
 
     private
