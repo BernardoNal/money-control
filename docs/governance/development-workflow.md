@@ -135,6 +135,15 @@ After implementation, review:
 - Turbo and Hotwire behavior
 - accessibility
 
+### Pagination UX
+
+Paginated interfaces must preserve the user's context across navigation:
+
+- preserve active filters, tabs, and the selected pagination state in generated links
+- use dedicated query parameters when a page contains more than one independent pagination
+- return the user to the paginated section after a full-page reload, using an anchor or an equivalent mechanism
+- add request coverage for pagination links and preserved context
+
 ### Tests
 
 - broken specs

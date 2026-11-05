@@ -186,7 +186,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
 
     get investments_portfolio_asset_detail_path(portfolio, asset)
 
-    expect(response.body).to include("6 movimentações", "Página 1", "history_set=5")
+    expect(response.body).to include("6 movimentações", "Página 1", "history_set=5", "#transaction-history")
     expect(response.body).to include("01/01/2026", "05/01/2026")
     expect(response.body).not_to include("06/01/2026")
 
