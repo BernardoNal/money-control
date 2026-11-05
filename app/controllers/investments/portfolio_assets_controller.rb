@@ -18,6 +18,21 @@ module Investments
       @asset_transactions = asset_transactions
         .limit(@asset_transactions_page_size)
         .offset(@asset_transactions_offset)
+
+      @asset_incomes = @portfolio.incomes
+        .where(asset: @asset)
+        .order(:payment_date, :id)
+      @asset_incomes_by_type = @asset_incomes.group_by(&:income_type)
+        .sort_by { |income_type, _| Investments::Income.income_types.fetch(income_type) }
+        .to_h
+      @selected_income_type = permitted_income_type(params[:income_type_tab])
+      @selected_income_type = @asset_incomes_by_type.keys.first unless @asset_incomes_by_type.key?(@selected_income_type)
+      selected_incomes = @asset_incomes_by_type.fetch(@selected_income_type, [])
+      @asset_income_page_size = 5
+      @asset_income_total = selected_incomes.size
+      requested_income_offset = params[:income_history_set].to_i
+      @asset_income_offset = requested_income_offset % @asset_income_page_size == 0 ? requested_income_offset : 0
+      @visible_asset_incomes = selected_incomes.slice(@asset_income_offset, @asset_income_page_size) || []
     end
 
     private
@@ -33,6 +48,13 @@ module Investments
       return if @asset
 
       redirect_to investments_portfolio_path(@portfolio), alert: "Ativo não encontrado neste portfólio."
+    end
+
+    def permitted_income_type(value)
+      return if value.blank?
+      return value if Investments::Income.income_types.key?(value)
+
+      nil
     end
   end
 end
