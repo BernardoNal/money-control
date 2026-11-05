@@ -307,4 +307,26 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     expect(response.body).to include("Dividendos", "Página 2", "06/03/2026", "R$ 6,00", "#income-history")
     expect(response.body).not_to include("01/03/2026")
   end
+
+  it "renders a clear empty state when the asset has no income records" do
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 1,
+      price: 10,
+      fees: 0,
+      date: Date.new(2026, 1, 1)
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Nenhum recebimento encontrado para este ativo nesta carteira.")
+    expect(response.body).not_to include("Tipos de recebíveis")
+  end
 end
