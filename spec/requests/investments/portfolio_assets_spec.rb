@@ -195,4 +195,116 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     expect(response.body).to include("Página 2", "06/01/2026", "history_set=0")
     expect(response.body).not_to include("01/01/2026")
   end
+
+  it "groups the selected asset incomes, orders them, and calculates totals" do
+    other_asset = Investments::Asset.create!(name: "Petrobras", symbol: "PETR4", category: :stock, currency: "BRL")
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 1,
+      price: 10,
+      fees: 0,
+      date: Date.new(2026, 1, 1)
+    )
+    first_income = Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 10,
+      tax_amount: 1,
+      payment_date: Date.new(2026, 1, 10),
+      reference_date: Date.new(2025, 12, 31)
+    )
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 20,
+      tax_amount: 2,
+      payment_date: Date.new(2026, 2, 10)
+    )
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :jcp,
+      gross_amount: 5,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 1, 20)
+    )
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: other_asset,
+      income_type: :dividends,
+      gross_amount: 999,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 1, 1)
+    )
+    Investments::Income.create!(
+      portfolio: other_portfolio,
+      asset: asset,
+      income_type: :dividends,
+      gross_amount: 888,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 1, 1)
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Histórico de recebíveis", "Dividendos", "JCP", "Total bruto", "R$ 35,00", "R$ 3,00", "R$ 32,00")
+    expect(response.body).to include("R$ 9,00", "R$ 18,00")
+    expect(response.body).not_to include("R$ 999,00", "R$ 888,00", "PETR4")
+    expect(response.body.index("10/01/2026")).to be < response.body.index("10/02/2026")
+    expect(response.body).to include(investments_income_path(first_income))
+
+    get investments_portfolio_asset_detail_path(portfolio, asset), params: { income_type_tab: "jcp" }
+
+    expect(response.body).to include("JCP", "R$ 5,00")
+    expect(response.body).not_to include("R$ 9,00", "R$ 18,00")
+  end
+
+  it "paginates incomes independently inside the selected type tab" do
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 1,
+      price: 10,
+      fees: 0,
+      date: Date.new(2026, 1, 1)
+    )
+    6.times do |index|
+      Investments::Income.create!(
+        portfolio: portfolio,
+        asset: asset,
+        income_type: :dividends,
+        gross_amount: index + 1,
+        tax_amount: 0,
+        payment_date: Date.new(2026, 3, index + 1)
+      )
+    end
+    Investments::Income.create!(
+      portfolio: portfolio,
+      asset: asset,
+      income_type: :jcp,
+      gross_amount: 50,
+      tax_amount: 0,
+      payment_date: Date.new(2026, 1, 20)
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset), params: { income_type_tab: "dividends", income_history_set: 5 }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Dividendos", "Página 2", "06/03/2026", "R$ 6,00", "#income-history")
+    expect(response.body).not_to include("01/03/2026")
+  end
 end

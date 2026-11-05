@@ -195,6 +195,115 @@
           </div>
         <% end %>
       </div>
+
+      <div id="income-history" class="mt-6 scroll-mt-6 rounded-2xl border border-slate-300 bg-white p-5 lg:p-6">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-950">Histórico de recebíveis</h2>
+            <p class="mt-1 text-sm text-slate-500">Proventos deste ativo nesta carteira, agrupados por tipo.</p>
+          </div>
+          <span class="text-sm text-slate-500"><%= @asset_incomes.size %> recebimentos</span>
+        </div>
+
+        <% if @asset_incomes_by_type.any? %>
+          <% total_gross_amount = @asset_incomes.sum(&:gross_amount).to_d %>
+          <% total_tax_amount = @asset_incomes.sum(&:tax_amount).to_d %>
+          <% total_net_amount = @asset_incomes.sum(&:net_amount).to_d %>
+
+          <div class="mt-5 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-sm text-slate-500">Total bruto</p>
+              <p class="mt-2 text-xl font-semibold text-slate-900"><%= number_to_currency(total_gross_amount, unit: currency_unit, separator: ",", delimiter: ".") %></p>
+            </div>
+            <div class="rounded-2xl border border-red-200 bg-red-50 p-4">
+              <p class="text-sm text-red-600">Total de impostos</p>
+              <p class="mt-2 text-xl font-semibold text-red-700"><%= number_to_currency(total_tax_amount, unit: currency_unit, separator: ",", delimiter: ".") %></p>
+            </div>
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+              <p class="text-sm text-emerald-700">Total líquido</p>
+              <p class="mt-2 text-xl font-semibold text-emerald-700"><%= number_to_currency(total_net_amount, unit: currency_unit, separator: ",", delimiter: ".") %></p>
+            </div>
+          </div>
+
+          <div class="mt-6 flex gap-2 overflow-x-auto border-b border-slate-200 pb-2" role="tablist" aria-label="Tipos de recebíveis">
+            <% @asset_incomes_by_type.each do |income_type, incomes| %>
+              <% active_income_type = income_type == @selected_income_type %>
+              <%= link_to request.query_parameters.merge(income_type_tab: income_type, income_history_set: 0, anchor: "income-history"),
+                          role: "tab",
+                          aria: { selected: active_income_type },
+                          class: "whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition #{active_income_type ? 'border-[#000080] bg-[#000080] text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'}" do %>
+                <%= incomes.first.human_income_type %> (<%= incomes.size %>)
+              <% end %>
+            <% end %>
+          </div>
+
+          <% selected_incomes = @asset_incomes_by_type.fetch(@selected_income_type, []) %>
+          <% group_gross_amount = selected_incomes.sum(&:gross_amount).to_d %>
+          <% group_tax_amount = selected_incomes.sum(&:tax_amount).to_d %>
+          <% group_net_amount = selected_incomes.sum(&:net_amount).to_d %>
+          <section class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-5" role="tabpanel">
+            <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-3">
+              <h3 class="font-semibold text-slate-900"><%= selected_incomes.first.human_income_type %></h3>
+              <p class="text-sm font-semibold text-emerald-700"><%= number_to_currency(group_net_amount, unit: currency_unit, separator: ",", delimiter: ".") %> líquido</p>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+              <table class="min-w-full text-left text-sm">
+                <thead class="border-b border-slate-200 text-slate-500">
+                  <tr>
+                    <th class="py-3 pr-6 font-medium">Pagamento</th>
+                    <th class="py-3 pr-6 font-medium">Referência</th>
+                    <th class="py-3 pr-6 font-medium">Bruto</th>
+                    <th class="py-3 pr-6 font-medium">Imposto</th>
+                    <th class="py-3 font-medium">Líquido</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @visible_asset_incomes.each do |income| %>
+                    <tr class="border-b border-white last:border-b-0">
+                      <td class="whitespace-nowrap py-3 pr-6">
+                        <%= link_to l(income.payment_date), investments_income_path(income), class: "font-medium text-[#000080] hover:underline" %>
+                      </td>
+                      <td class="whitespace-nowrap py-3 pr-6 text-slate-600"><%= income.reference_date.present? ? l(income.reference_date) : "—" %></td>
+                      <td class="whitespace-nowrap py-3 pr-6 text-slate-700"><%= number_to_currency(income.gross_amount, unit: currency_unit, separator: ",", delimiter: ".") %></td>
+                      <td class="whitespace-nowrap py-3 pr-6 text-red-600"><%= number_to_currency(income.tax_amount, unit: currency_unit, separator: ",", delimiter: ".") %></td>
+                      <td class="whitespace-nowrap py-3 font-semibold text-emerald-700"><%= number_to_currency(income.net_amount, unit: currency_unit, separator: ",", delimiter: ".") %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-slate-200 pt-3 text-sm text-slate-600">
+              <span>Bruto: <strong class="text-slate-900"><%= number_to_currency(group_gross_amount, unit: currency_unit, separator: ",", delimiter: ".") %></strong></span>
+              <span>Imposto: <strong class="text-red-600"><%= number_to_currency(group_tax_amount, unit: currency_unit, separator: ",", delimiter: ".") %></strong></span>
+              <span>Líquido: <strong class="text-emerald-700"><%= number_to_currency(group_net_amount, unit: currency_unit, separator: ",", delimiter: ".") %></strong></span>
+            </div>
+
+            <% if @asset_income_total > @asset_income_page_size %>
+              <% current_income_page = (@asset_income_offset / @asset_income_page_size) + 1 %>
+              <% next_income_offset = @asset_income_offset + @asset_income_page_size %>
+              <div class="mt-4 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 text-sm">
+                <% if @asset_income_offset.positive? %>
+                  <%= link_to "Anterior", request.query_parameters.merge(income_type_tab: @selected_income_type, income_history_set: @asset_income_offset - @asset_income_page_size, anchor: "income-history"), class: "font-medium text-[#000080] hover:underline" %>
+                <% else %>
+                  <span class="text-slate-400">Anterior</span>
+                <% end %>
+                <span class="text-slate-500">Página <%= current_income_page %></span>
+                <% if next_income_offset < @asset_income_total %>
+                  <%= link_to "Próxima", request.query_parameters.merge(income_type_tab: @selected_income_type, income_history_set: next_income_offset, anchor: "income-history"), class: "font-medium text-[#000080] hover:underline" %>
+                <% else %>
+                  <span class="text-slate-400">Próxima</span>
+                <% end %>
+              </div>
+            <% end %>
+          </section>
+        <% else %>
+          <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">
+            Nenhum recebimento encontrado para este ativo nesta carteira.
+          </div>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
