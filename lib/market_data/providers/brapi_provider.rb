@@ -80,30 +80,48 @@ module MarketData
       def fetch_historical_price(symbol:, asset_category:, date:)
         normalized_symbol = symbol.to_s.strip.upcase
         target_date = Date.parse(date.to_s)
+        point = fetch_historical_prices(
+          symbol: normalized_symbol,
+          asset_category: asset_category,
+          start_date: target_date - 7,
+          end_date: target_date
+        ).select { |item| item.as_of <= target_date }.max_by(&:as_of)
+
+        raise NotFoundError, "Historical price not found for symbol #{normalized_symbol}" if point.blank?
+
+        point
+      end
+
+      # Returns all available daily closes in the requested period in ascending order.
+      def fetch_historical_prices(symbol:, asset_category:, start_date:, end_date:)
+        normalized_symbol = symbol.to_s.strip.upcase
+        from_date = Date.parse(start_date.to_s)
+        to_date = Date.parse(end_date.to_s)
         payload = get_json(
           path: historical_path(asset_category),
           query_params: {
             symbols: normalized_symbol,
-            startDate: (target_date - 7).iso8601,
-            endDate: target_date.iso8601,
+            startDate: from_date.iso8601,
+            endDate: to_date.iso8601,
             sortOrder: "asc"
           }
         )
 
         points = historical_points(payload, asset_category, normalized_symbol)
-        point = points
           .filter_map { |item| historical_point(item) }
-          .select { |item| item[:date] <= target_date }
-          .max_by { |item| item[:date] }
+          .select { |item| item[:date].between?(from_date, to_date) }
+          .sort_by { |item| item[:date] }
 
-        raise NotFoundError, "Historical price not found for symbol #{normalized_symbol}" if point.blank?
+        return [] if points.empty?
 
-        HistoricalPriceData.new(
-          symbol: normalized_symbol,
-          price: point.fetch(:price),
-          currency: nil,
-          as_of: point.fetch(:date)
-        )
+        points.map do |point|
+          HistoricalPriceData.new(
+            symbol: normalized_symbol,
+            price: point.fetch(:price),
+            currency: nil,
+            as_of: point.fetch(:date)
+          )
+        end
       end
 
       private

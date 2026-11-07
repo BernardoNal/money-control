@@ -18,6 +18,10 @@ module MarketData
       raise NotImplementedError, "#{self.class.name} must implement #fetch_historical_price"
     end
 
+    def fetch_historical_prices(symbol:, asset_category:, start_date:, end_date:)
+      raise NotImplementedError, "#{self.class.name} must implement #fetch_historical_prices"
+    end
+
     # Defines the batch price lookup contract for provider implementations.
     def fetch_prices(symbols:)
       raise NotImplementedError, "#{self.class.name} must implement #fetch_prices"

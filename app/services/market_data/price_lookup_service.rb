@@ -17,6 +17,15 @@ module MarketData
       )
     end
 
+    def historical_prices(symbol:, asset_category:, start_date:, end_date:)
+      provider.fetch_historical_prices(
+        symbol: normalize_symbol(symbol),
+        asset_category: asset_category,
+        start_date: start_date,
+        end_date: end_date
+      )
+    end
+
     # Batches normalized symbols and indexes returned prices for dashboard consumers.
     def call_many(symbols:)
       normalized_symbols = symbols.map { |symbol| normalize_symbol(symbol) }.reject(&:blank?).uniq
