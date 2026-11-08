@@ -29,7 +29,12 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
   end
 
   it "builds market value and invested cost for each historical price" do
-    result = described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup_service)
+    result = described_class.call(
+      portfolio: portfolio,
+      asset: asset,
+      price_lookup_service: price_lookup_service,
+      to_date: Date.new(2026, 2, 10)
+    )
 
     expect(result.source).to eq(:market)
     expect(result.points).to contain_exactly(
@@ -54,13 +59,36 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
       quantity: 100, price: 1, fees: 0, date: Date.new(2026, 1, 1)
     )
 
-    described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup_service)
+    described_class.call(
+      portfolio: portfolio,
+      asset: asset,
+      price_lookup_service: price_lookup_service,
+      to_date: Date.new(2026, 2, 10)
+    )
 
     expect(price_lookup_service).to have_received(:historical_prices).with(
       symbol: "AAPL34",
       asset_category: "international",
       start_date: Date.new(2026, 1, 10),
-      end_date: Date.current
+      end_date: Date.new(2026, 2, 10)
+    )
+  end
+
+  it "uses the latest market quote date as the historical range end" do
+    quote_date = Date.new(2026, 2, 28)
+
+    described_class.call(
+      portfolio: portfolio,
+      asset: asset,
+      price_lookup_service: price_lookup_service,
+      to_date: quote_date
+    )
+
+    expect(price_lookup_service).to have_received(:historical_prices).with(
+      symbol: "AAPL34",
+      asset_category: "international",
+      start_date: Date.new(2026, 1, 10),
+      end_date: quote_date
     )
   end
 

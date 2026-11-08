@@ -55,7 +55,8 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
       instance_double(
         MarketData::PriceLookupService,
         call: MarketData::PriceData.new(symbol: asset.symbol, price: 12, currency: asset.currency, as_of: Time.current),
-        historical_price: nil
+        historical_price: nil,
+        historical_prices: []
       )
     )
 
@@ -63,6 +64,37 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("AAPL34", "Resultado não realizado", "R$ 24,00", "R$ 4,00")
+  end
+
+  it "renders the performance summary and market value chart when historical prices are available" do
+    transaction_date = Date.current - 10.days
+    Investments::Transaction.create!(
+      portfolio: portfolio,
+      asset: asset,
+      transaction_type: :buy,
+      quantity: 2,
+      price: 10,
+      fees: 0,
+      date: transaction_date
+    )
+
+    allow(MarketData::PriceLookupService).to receive(:new).and_return(
+      instance_double(
+        MarketData::PriceLookupService,
+        call: MarketData::PriceData.new(symbol: asset.symbol, price: 12, currency: asset.currency, as_of: Time.current),
+        historical_price: nil,
+        historical_prices: [
+          MarketData::HistoricalPriceData.new(symbol: asset.symbol, price: 10, currency: asset.currency, as_of: transaction_date),
+          MarketData::HistoricalPriceData.new(symbol: asset.symbol, price: 12, currency: asset.currency, as_of: Date.current)
+        ]
+      )
+    )
+
+    get investments_portfolio_asset_detail_path(portfolio, asset)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Evolução da posição", "Retorno total", "Custo x valor de mercado")
+    expect(response.body).to include("Comparação entre custo investido e valor de mercado do ativo")
   end
 
   it "renders only the selected asset transactions in chronological order" do
@@ -106,7 +138,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)
@@ -157,7 +189,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)
@@ -181,7 +213,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     end
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)
@@ -250,7 +282,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)
@@ -298,7 +330,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset), params: { income_type_tab: "dividends", income_history_set: 5 }
@@ -320,7 +352,7 @@ RSpec.describe "Investments::PortfolioAssets", type: :request do
     )
 
     allow(MarketData::PriceLookupService).to receive(:new).and_return(
-      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil)
+      instance_double(MarketData::PriceLookupService, call: nil, historical_price: nil, historical_prices: [])
     )
 
     get investments_portfolio_asset_detail_path(portfolio, asset)

@@ -113,6 +113,94 @@
         </div>
       <% end %>
 
+      <section class="mt-6 rounded-2xl border border-slate-300 bg-white p-5 lg:p-6" aria-labelledby="performance-heading">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 id="performance-heading" class="text-lg font-semibold text-slate-950">Evolução da posição</h2>
+            <p class="mt-1 text-sm text-slate-500">Compare o custo investido com o valor de mercado do ativo.</p>
+          </div>
+          <% performance_return_positive = @performance.total_return.positive? %>
+          <% performance_return_negative = @performance.total_return.negative? %>
+          <% performance_return_tone = performance_return_positive ? "text-emerald-700" : performance_return_negative ? "text-rose-700" : "text-slate-700" %>
+          <% performance_return_percentage = @performance.total_invested_amount.zero? ? 0 : (@performance.total_return / @performance.total_invested_amount * 100) %>
+          <div class="text-left sm:text-right">
+            <p class="text-sm text-slate-500">Retorno total</p>
+            <p class="mt-1 text-2xl font-semibold <%= performance_return_tone %>"><%= number_to_currency(@performance.total_return, unit: currency_unit, separator: ",", delimiter: ".") %></p>
+            <p class="text-sm font-medium <%= performance_return_tone %>"><%= number_with_precision(performance_return_percentage, precision: 2) %>%</p>
+          </div>
+        </div>
+
+        <% if @performance_history.points.any? %>
+          <% performance_points = @performance_history.points %>
+          <% chart_width = 900 %>
+          <% chart_height = 300 %>
+          <% chart_padding_left = 76 %>
+          <% chart_padding_right = 24 %>
+          <% chart_padding_top = 24 %>
+          <% chart_padding_bottom = 48 %>
+          <% chart_plot_width = chart_width - chart_padding_left - chart_padding_right %>
+          <% chart_plot_height = chart_height - chart_padding_top - chart_padding_bottom %>
+          <% chart_values = performance_points.flat_map { |point| [point.market_value.to_d, point.invested_amount.to_d] } %>
+          <% chart_min_value = chart_values.min || 0.to_d %>
+          <% chart_max_value = chart_values.max || 0.to_d %>
+          <% chart_range = chart_max_value - chart_min_value %>
+          <% chart_range = 1.to_d if chart_range.zero? %>
+          <% chart_step = performance_points.length > 1 ? chart_plot_width.to_f / (performance_points.length - 1) : 0 %>
+          <% chart_points = performance_points.each_with_index.map do |point, index| %>
+            <% x = chart_padding_left + (index * chart_step) %>
+            <% market_y = chart_padding_top + ((chart_max_value - point.market_value.to_d) / chart_range * chart_plot_height).to_f %>
+            <% invested_y = chart_padding_top + ((chart_max_value - point.invested_amount.to_d) / chart_range * chart_plot_height).to_f %>
+            <% { x: x, market_y: market_y, invested_y: invested_y, point: point } %>
+          <% end %>
+          <% chart_reference_values = 4.times.map { |index| chart_max_value - (chart_range * index / 3) } %>
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-slate-900">Custo x valor de mercado</h3>
+                <p class="mt-1 text-sm text-slate-500">A diferença entre as linhas mostra a valorização ou desvalorização da posição.</p>
+              </div>
+              <div class="flex flex-wrap gap-4 text-xs text-slate-600" aria-label="Legenda do gráfico">
+                <span class="flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-[#2563eb]" aria-hidden="true"></i>Valor de mercado</span>
+                <span class="flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-[#0f766e]" aria-hidden="true"></i>Custo investido</span>
+              </div>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+              <svg class="h-72 min-w-[42rem] w-full" viewBox="0 0 <%= chart_width %> <%= chart_height %>" role="img" aria-label="Comparação entre custo investido e valor de mercado do ativo">
+                <% chart_reference_values.each_with_index do |reference_value, index| %>
+                  <% reference_y = chart_padding_top + (index * chart_plot_height / 3.0) %>
+                  <line x1="<%= chart_padding_left %>" y1="<%= reference_y %>" x2="<%= chart_width - chart_padding_right %>" y2="<%= reference_y %>" stroke="#cbd5e1" stroke-width="1.5" />
+                  <text x="<%= chart_padding_left - 10 %>" y="<%= reference_y + 4 %>" text-anchor="end" fill="#64748b" font-size="11"><%= number_to_currency(reference_value, unit: currency_unit, separator: ",", delimiter: ".") %></text>
+                <% end %>
+                <polyline points="<%= chart_points.map { |point| "#{point[:x]},#{point[:market_y]}" }.join(" ") %>" fill="none" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" />
+                <polyline points="<%= chart_points.map { |point| "#{point[:x]},#{point[:invested_y]}" }.join(" ") %>" fill="none" stroke="#0f766e" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" />
+                <% chart_points.each_with_index do |chart_point, index| %>
+                  <% next unless index.zero? || index == chart_points.length - 1 || index == chart_points.length / 2 %>
+                  <circle cx="<%= chart_point[:x] %>" cy="<%= chart_point[:market_y] %>" r="5" fill="#2563eb">
+                    <title><%= l(chart_point[:point].date) %> — valor de mercado: <%= number_to_currency(chart_point[:point].market_value, unit: currency_unit, separator: ",", delimiter: ".") %></title>
+                  </circle>
+                  <circle cx="<%= chart_point[:x] %>" cy="<%= chart_point[:invested_y] %>" r="4" fill="#0f766e">
+                    <title><%= l(chart_point[:point].date) %> — custo investido: <%= number_to_currency(chart_point[:point].invested_amount, unit: currency_unit, separator: ",", delimiter: ".") %></title>
+                  </circle>
+                  <text x="<%= chart_point[:x] %>" y="<%= chart_height - 14 %>" text-anchor="middle" fill="#64748b" font-size="11"><%= chart_point[:point].date.strftime("%m/%y") %></text>
+                <% end %>
+              </svg>
+            </div>
+
+            <div class="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-sm sm:grid-cols-3">
+              <span class="text-slate-600">Custo investido: <strong class="text-slate-900"><%= number_to_currency(@performance.total_invested_amount, unit: currency_unit, separator: ",", delimiter: ".") %></strong></span>
+              <span class="text-slate-600">Recebíveis líquidos: <strong class="text-emerald-700"><%= number_to_currency(@performance.income_total, unit: currency_unit, separator: ",", delimiter: ".") %></strong></span>
+              <span class="text-slate-600">Período: <strong class="text-slate-900"><%= l(@performance_history.from_date) %> a <%= l(@performance_history.to_date) %></strong></span>
+            </div>
+          </div>
+        <% else %>
+          <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+            <i class="fa-solid fa-chart-line text-2xl text-slate-300" aria-hidden="true"></i>
+            <p class="mt-3 text-sm text-slate-600">Não há histórico de cotações disponível para comparar custo e valor de mercado.</p>
+          </div>
+        <% end %>
+      </section>
+
       <details id="transaction-history" class="mt-6 scroll-mt-6 rounded-2xl border border-slate-300 bg-white p-5 lg:p-6" open>
         <summary class="flex cursor-pointer list-none items-end justify-between gap-3">
           <div>

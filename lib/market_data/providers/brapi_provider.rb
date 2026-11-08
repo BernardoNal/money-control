@@ -172,7 +172,8 @@ module MarketData
 
       def historical_point(item)
         timestamp = item["date"]
-        price = item["close"]
+        # Adjusted close is the correct basis for return analysis because it accounts for corporate actions.
+        price = item["adjustedClose"].presence || item["close"]
         return if timestamp.blank? || price.blank?
 
         { date: Time.zone.at(timestamp.to_i).to_date, price: BigDecimal(price.to_s) }

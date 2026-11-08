@@ -8,6 +8,16 @@ module Investments
         portfolio: @portfolio,
         asset: @asset
       )
+      @performance = Investments::PortfolioAssetPerformanceBuilder.call(
+        portfolio: @portfolio,
+        asset: @asset,
+        current_market_value: @detail.current_market_value
+      )
+      @performance_history = Investments::PortfolioAssetPerformanceHistoryBuilder.call(
+        portfolio: @portfolio,
+        asset: @asset,
+        to_date: @detail.price_as_of&.to_date
+      )
       asset_transactions = @portfolio.transactions
         .where(asset: @asset)
         .order(:date, :id)

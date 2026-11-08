@@ -333,7 +333,7 @@ RSpec.describe MarketData::Providers::BrapiProvider do
               "data" => {
                 "historicalDataPrice" => [
                   { "date" => Time.zone.parse("2025-12-29 17:00:00").to_i, "close" => 31.5 },
-                  { "date" => Time.zone.parse("2025-12-30 17:00:00").to_i, "close" => 32.15 }
+                  { "date" => Time.zone.parse("2025-12-30 17:00:00").to_i, "close" => 32.15, "adjustedClose" => 32.4 }
                 ]
               }
             }
@@ -368,7 +368,7 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(result).to eq(
         MarketData::HistoricalPriceData.new(
           symbol: "PETR4",
-          price: BigDecimal("32.15"),
+          price: BigDecimal("32.4"),
           currency: nil,
           as_of: Date.new(2025, 12, 30)
         )
@@ -385,8 +385,8 @@ RSpec.describe MarketData::Providers::BrapiProvider do
               "symbol" => "PETR4",
               "data" => {
                 "historicalDataPrice" => [
-                  { "date" => Time.zone.parse("2026-07-03 17:00:00").to_i, "close" => 31.5 },
-                  { "date" => Time.zone.parse("2026-07-02 17:00:00").to_i, "close" => 30.5 },
+                  { "date" => Time.zone.parse("2026-07-03 17:00:00").to_i, "close" => 31.5, "adjustedClose" => 31.7 },
+                  { "date" => Time.zone.parse("2026-07-02 17:00:00").to_i, "close" => 30.5, "adjustedClose" => 30.8 },
                   { "date" => Time.zone.parse("2026-08-01 17:00:00").to_i, "close" => 32.15 }
                 ]
               }
@@ -405,7 +405,7 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       )
 
       expect(result.map(&:as_of)).to eq([Date.new(2026, 7, 2), Date.new(2026, 7, 3)])
-      expect(result.map(&:price)).to eq([BigDecimal("30.5"), BigDecimal("31.5")])
+      expect(result.map(&:price)).to eq([BigDecimal("30.8"), BigDecimal("31.7")])
     end
   end
 

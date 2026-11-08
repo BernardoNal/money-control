@@ -11,22 +11,28 @@ module Investments
 
     Result = Struct.new(:points, :from_date, :to_date, :source, keyword_init: true)
 
-    def self.call(portfolio:, asset:, price_lookup_service: MarketData::PriceLookupService.new)
+    # The current BRAPI plan allows a maximum 90-day historical window per request.
+    MAX_HISTORICAL_DAYS = 90
+
+    def self.call(portfolio:, asset:, price_lookup_service: MarketData::PriceLookupService.new, to_date: nil)
       new(
         portfolio: portfolio,
         asset: asset,
-        price_lookup_service: price_lookup_service
+        price_lookup_service: price_lookup_service,
+        to_date: to_date
       ).call
     end
 
-    def initialize(portfolio:, asset:, price_lookup_service:)
+    def initialize(portfolio:, asset:, price_lookup_service:, to_date: nil)
       @portfolio = portfolio
       @asset = asset
       @price_lookup_service = price_lookup_service
+      @to_date = to_date&.to_date
     end
 
     def call
       return empty_result if transactions.empty?
+      return empty_result if from_date > to_date
 
       prices = price_lookup_service.historical_prices(
         symbol: asset.symbol,
@@ -107,11 +113,11 @@ module Investments
     end
 
     def from_date
-      @from_date ||= transactions.first ? [transactions.first.date, Date.current.prev_year].max : Date.current.prev_year
+      @from_date ||= transactions.first ? [transactions.first.date, to_date - (MAX_HISTORICAL_DAYS - 1)].max : to_date - (MAX_HISTORICAL_DAYS - 1)
     end
 
     def to_date
-      Date.current
+      @to_date || Date.current
     end
 
     def empty_result(source: :unavailable)
