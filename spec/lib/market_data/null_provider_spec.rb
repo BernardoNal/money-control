@@ -17,4 +17,15 @@ RSpec.describe MarketData::NullProvider do
     expect { provider.fetch_price(symbol: "AAPL") }
       .to raise_error(MarketData::ConfigurationError, "No market data provider configured")
   end
+
+  it "raises a configuration error for historical price retrieval" do
+    expect do
+      provider.fetch_historical_prices(
+        symbol: "AAPL",
+        asset_category: :stock,
+        start_date: Date.new(2026, 1, 1),
+        end_date: Date.new(2026, 1, 31)
+      )
+    end.to raise_error(MarketData::ConfigurationError, "No market data provider configured")
+  end
 end

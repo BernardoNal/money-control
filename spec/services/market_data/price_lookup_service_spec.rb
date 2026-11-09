@@ -17,6 +17,33 @@ RSpec.describe MarketData::PriceLookupService do
       expect(provider).to have_received(:fetch_price).with(symbol: "PETR4")
     end
   end
+
+  describe "#historical_prices" do
+    it "delegates a normalized historical range to the provider" do
+      historical_prices = [
+        MarketData::HistoricalPriceData.new(
+          symbol: "PETR4", price: BigDecimal("32.15"), currency: "BRL", as_of: Date.new(2026, 7, 13)
+        )
+      ]
+      provider = instance_double(MarketData::Provider, fetch_historical_prices: historical_prices)
+
+      result = described_class.new(provider: provider).historical_prices(
+        symbol: " petr4 ",
+        asset_category: :stock,
+        start_date: Date.new(2026, 7, 1),
+        end_date: Date.new(2026, 7, 31)
+      )
+
+      expect(result).to eq(historical_prices)
+      expect(provider).to have_received(:fetch_historical_prices).with(
+        symbol: "PETR4",
+        asset_category: :stock,
+        start_date: Date.new(2026, 7, 1),
+        end_date: Date.new(2026, 7, 31)
+      )
+    end
+  end
+
   describe "#call_many" do
     it "normalizes symbols, removes duplicates and indexes prices by symbol" do
       petr4 = MarketData::PriceData.new(

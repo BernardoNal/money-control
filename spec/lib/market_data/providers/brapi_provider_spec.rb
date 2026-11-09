@@ -333,7 +333,7 @@ RSpec.describe MarketData::Providers::BrapiProvider do
               "data" => {
                 "historicalDataPrice" => [
                   { "date" => Time.zone.parse("2025-12-29 17:00:00").to_i, "close" => 31.5 },
-                  { "date" => Time.zone.parse("2025-12-30 17:00:00").to_i, "close" => 32.15 }
+                  { "date" => Time.zone.parse("2025-12-30 17:00:00").to_i, "close" => 32.15, "adjustedClose" => 32.4 }
                 ]
               }
             }
@@ -368,11 +368,44 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       expect(result).to eq(
         MarketData::HistoricalPriceData.new(
           symbol: "PETR4",
-          price: BigDecimal("32.15"),
+          price: BigDecimal("32.4"),
           currency: nil,
           as_of: Date.new(2025, 12, 30)
         )
       )
+    end
+
+    it "returns all stock closes in the requested period in chronological order" do
+      response = instance_double(
+        Net::HTTPOK,
+        code: "200",
+        body: {
+          "results" => [
+            {
+              "symbol" => "PETR4",
+              "data" => {
+                "historicalDataPrice" => [
+                  { "date" => Time.zone.parse("2026-07-03 17:00:00").to_i, "close" => 31.5, "adjustedClose" => 31.7 },
+                  { "date" => Time.zone.parse("2026-07-02 17:00:00").to_i, "close" => 30.5, "adjustedClose" => 30.8 },
+                  { "date" => Time.zone.parse("2026-08-01 17:00:00").to_i, "close" => 32.15 }
+                ]
+              }
+            }
+          ]
+        }.to_json
+      )
+
+      expect_request_for_historical_prices(response, "PETR4", "2026-07-01", "2026-07-31")
+
+      result = provider.fetch_historical_prices(
+        symbol: "PETR4",
+        asset_category: :stock,
+        start_date: Date.new(2026, 7, 1),
+        end_date: Date.new(2026, 7, 31)
+      )
+
+      expect(result.map(&:as_of)).to eq([Date.new(2026, 7, 2), Date.new(2026, 7, 3)])
+      expect(result.map(&:price)).to eq([BigDecimal("30.8"), BigDecimal("31.7")])
     end
   end
 
@@ -441,6 +474,27 @@ RSpec.describe MarketData::Providers::BrapiProvider do
       http = instance_double("Net::HTTP")
       expect(http).to receive(:request) do |request|
         expect(request.path).to eq("/api/v2/stocks/quote?symbols=#{symbol}")
+        expect(request["Authorization"]).to eq("Bearer test-token")
+        response
+      end
+
+      block.call(http)
+    end
+  end
+
+  def expect_request_for_historical_prices(response, symbol, start_date, end_date)
+    allow(Net::HTTP).to receive(:start) do |hostname, port, use_ssl:, &block|
+      expect(hostname).to eq("brapi.dev")
+      expect(port).to eq(443)
+      expect(use_ssl).to be(true)
+
+      http = instance_double("Net::HTTP")
+      expect(http).to receive(:request) do |request|
+        expect(request.path).to include("/api/v2/stocks/historical")
+        expect(request.path).to include("symbols=#{symbol}")
+        expect(request.path).to include("startDate=#{start_date}")
+        expect(request.path).to include("endDate=#{end_date}")
+        expect(request.path).to include("sortOrder=asc")
         expect(request["Authorization"]).to eq("Bearer test-token")
         response
       end

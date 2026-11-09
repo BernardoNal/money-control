@@ -20,5 +20,9 @@ module MarketData
     def fetch_prices(symbols:)
       raise ConfigurationError, MESSAGE
     end
+
+    def fetch_historical_prices(symbol:, asset_category:, start_date:, end_date:)
+      raise ConfigurationError, MESSAGE
+    end
   end
 end

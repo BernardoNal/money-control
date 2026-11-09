@@ -1,5 +1,11 @@
 module Investments
   class PortfolioAssetsController < ApplicationController
+    PERFORMANCE_PERIODS = {
+      "7d" => "Semana",
+      "30d" => "Mês",
+      "90d" => "90 dias"
+    }.freeze
+
     before_action :set_portfolio
     before_action :set_asset
 
@@ -7,6 +13,17 @@ module Investments
       @detail = Investments::PortfolioAssetDetailBuilder.call(
         portfolio: @portfolio,
         asset: @asset
+      )
+      @performance = Investments::PortfolioAssetPerformanceBuilder.call(
+        portfolio: @portfolio,
+        asset: @asset,
+        current_market_value: @detail.current_market_value
+      )
+      @performance_history = Investments::PortfolioAssetPerformanceHistoryBuilder.call(
+        portfolio: @portfolio,
+        asset: @asset,
+        to_date: @detail.price_as_of&.to_date,
+        period: performance_period
       )
       asset_transactions = @portfolio.transactions
         .where(asset: @asset)
@@ -56,5 +73,12 @@ module Investments
 
       nil
     end
+
+    def performance_period
+      value = params[:performance_period].to_s
+      PERFORMANCE_PERIODS.key?(value) ? value : "90d"
+    end
+
+    helper_method :performance_period
   end
 end
