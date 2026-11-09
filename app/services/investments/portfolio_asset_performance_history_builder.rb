@@ -9,25 +9,28 @@ module Investments
       keyword_init: true
     )
 
-    Result = Struct.new(:points, :from_date, :to_date, :source, keyword_init: true)
+    Result = Struct.new(:points, :from_date, :to_date, :source, :period, keyword_init: true)
 
     # The current BRAPI plan allows a maximum 90-day historical window per request.
-    MAX_HISTORICAL_DAYS = 90
+    PERIOD_DAYS = { "7d" => 7, "30d" => 30, "90d" => 90 }.freeze
+    DEFAULT_PERIOD = "90d".freeze
 
-    def self.call(portfolio:, asset:, price_lookup_service: MarketData::PriceLookupService.new, to_date: nil)
+    def self.call(portfolio:, asset:, price_lookup_service: MarketData::PriceLookupService.new, to_date: nil, period: DEFAULT_PERIOD)
       new(
         portfolio: portfolio,
         asset: asset,
         price_lookup_service: price_lookup_service,
-        to_date: to_date
+        to_date: to_date,
+        period: period
       ).call
     end
 
-    def initialize(portfolio:, asset:, price_lookup_service:, to_date: nil)
+    def initialize(portfolio:, asset:, price_lookup_service:, to_date: nil, period: DEFAULT_PERIOD)
       @portfolio = portfolio
       @asset = asset
       @price_lookup_service = price_lookup_service
       @to_date = to_date&.to_date
+      @period = PERIOD_DAYS.key?(period.to_s) ? period.to_s : DEFAULT_PERIOD
     end
 
     def call
@@ -46,7 +49,8 @@ module Investments
         points: build_points(prices),
         from_date: from_date,
         to_date: to_date,
-        source: :market
+        source: :market,
+        period: period
       )
     rescue MarketData::ConfigurationError, MarketData::NotFoundError, MarketData::ProviderError
       empty_result(source: :unavailable)
@@ -55,6 +59,8 @@ module Investments
     private
 
     attr_reader :portfolio, :asset, :price_lookup_service
+
+    attr_reader :period
 
     def build_points(prices)
       quantity = BigDecimal("0")
@@ -113,7 +119,7 @@ module Investments
     end
 
     def from_date
-      @from_date ||= transactions.first ? [transactions.first.date, to_date - (MAX_HISTORICAL_DAYS - 1)].max : to_date - (MAX_HISTORICAL_DAYS - 1)
+      @from_date ||= transactions.first ? [transactions.first.date, to_date - (period_days - 1)].max : to_date - (period_days - 1)
     end
 
     def to_date
@@ -121,7 +127,11 @@ module Investments
     end
 
     def empty_result(source: :unavailable)
-      Result.new(points: [], from_date: from_date, to_date: to_date, source: source)
+      Result.new(points: [], from_date: from_date, to_date: to_date, source: source, period: period)
+    end
+
+    def period_days
+      PERIOD_DAYS.fetch(period)
     end
   end
 end

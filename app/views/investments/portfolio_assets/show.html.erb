@@ -113,10 +113,10 @@
         </div>
       <% end %>
 
-      <section class="mt-6 rounded-2xl border border-slate-300 bg-white p-5 lg:p-6" aria-labelledby="performance-heading">
+      <section id="performance-heading" class="mt-6 scroll-mt-6 rounded-2xl border border-slate-300 bg-white p-5 lg:p-6" aria-labelledby="performance-title">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 id="performance-heading" class="text-lg font-semibold text-slate-950">Evolução da posição</h2>
+            <h2 id="performance-title" class="text-lg font-semibold text-slate-950">Evolução da posição</h2>
             <p class="mt-1 text-sm text-slate-500">Compare o custo investido com o valor de mercado do ativo.</p>
           </div>
           <% performance_return_positive = @performance.total_return.positive? %>
@@ -128,6 +128,18 @@
             <p class="mt-1 text-2xl font-semibold <%= performance_return_tone %>"><%= number_to_currency(@performance.total_return, unit: currency_unit, separator: ",", delimiter: ".") %></p>
             <p class="text-sm font-medium <%= performance_return_tone %>"><%= number_with_precision(performance_return_percentage, precision: 2) %>%</p>
           </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Período da evolução da posição">
+          <% Investments::PortfolioAssetsController::PERFORMANCE_PERIODS.each do |period_key, period_label| %>
+            <% selected_period = period_key == performance_period %>
+            <%= link_to request.query_parameters.merge(performance_period: period_key, anchor: "performance-heading"),
+                        role: "tab",
+                        aria: { selected: selected_period },
+                        class: "rounded-full border px-4 py-2 text-sm font-medium transition #{selected_period ? 'border-[#000080] bg-[#000080] text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'}" do %>
+              <%= period_label %>
+            <% end %>
+          <% end %>
         </div>
 
         <% if @performance_history.points.any? %>

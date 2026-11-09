@@ -33,7 +33,8 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
       portfolio: portfolio,
       asset: asset,
       price_lookup_service: price_lookup_service,
-      to_date: Date.new(2026, 2, 10)
+      to_date: Date.new(2026, 2, 10),
+      period: "90d"
     )
 
     expect(result.source).to eq(:market)
@@ -63,7 +64,8 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
       portfolio: portfolio,
       asset: asset,
       price_lookup_service: price_lookup_service,
-      to_date: Date.new(2026, 2, 10)
+      to_date: Date.new(2026, 2, 10),
+      period: "90d"
     )
 
     expect(price_lookup_service).to have_received(:historical_prices).with(
@@ -81,7 +83,8 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
       portfolio: portfolio,
       asset: asset,
       price_lookup_service: price_lookup_service,
-      to_date: quote_date
+      to_date: quote_date,
+      period: "90d"
     )
 
     expect(price_lookup_service).to have_received(:historical_prices).with(
@@ -98,5 +101,22 @@ RSpec.describe Investments::PortfolioAssetPerformanceHistoryBuilder do
     result = described_class.call(portfolio: portfolio, asset: asset, price_lookup_service: price_lookup_service)
 
     expect(result).to have_attributes(points: [], source: :unavailable)
+  end
+
+  it "limits the requested history to the selected period" do
+    described_class.call(
+      portfolio: portfolio,
+      asset: asset,
+      price_lookup_service: price_lookup_service,
+      to_date: Date.new(2026, 2, 10),
+      period: "7d"
+    )
+
+    expect(price_lookup_service).to have_received(:historical_prices).with(
+      symbol: "AAPL34",
+      asset_category: "international",
+      start_date: Date.new(2026, 2, 4),
+      end_date: Date.new(2026, 2, 10)
+    )
   end
 end
