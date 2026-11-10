@@ -97,6 +97,24 @@ const initializePrivacyMode = () => {
       element.setAttribute("aria-label", isHidden ? "Valor financeiro oculto" : visibleValue)
     })
 
+    // Chart labels and SVG titles need the same masking treatment as regular financial values.
+    document.querySelectorAll("[data-sensitive-chart-value]").forEach((element) => {
+      const visibleValue = element.dataset.sensitiveChartVisibleValue || element.textContent
+      const maskedValue = element.dataset.sensitiveChartMaskedValue || "••••••"
+      element.textContent = isHidden ? maskedValue : visibleValue
+      if (element.hasAttribute("aria-label")) {
+        element.setAttribute("aria-label", isHidden ? "Valor financeiro oculto" : visibleValue)
+      }
+      if (element.hasAttribute("title")) {
+        element.setAttribute("title", isHidden ? "Valor financeiro oculto" : visibleValue)
+      }
+    })
+
+    document.querySelectorAll("[data-sensitive-chart-title]").forEach((element) => {
+      const visibleTitle = element.dataset.sensitiveChartTitle
+      element.setAttribute("title", isHidden ? "Valores financeiros ocultos" : visibleTitle)
+    })
+
     toggles.forEach((toggle) => {
       const icon = toggle.querySelector("[data-privacy-toggle-icon]")
       const label = toggle.querySelector("[data-privacy-toggle-label]")

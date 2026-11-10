@@ -123,7 +123,7 @@
               <% end %>
             </td>
               <td class="px-3 py-4 font-semibold <%= value_color %>">
-                <%= row["amount"].present? ? number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".") : "-" %>
+                <%= row["amount"].present? ? privacy_value(number_to_currency(row["amount"], unit: "R$ ", separator: ",", delimiter: ".")) : "-" %>
                 <% if row["pair_role"] == "gross" %>
                   <p class="mt-1 text-xs font-normal text-blue-700">Evento <%= pair_groups[row["line_number"].to_s] %> · bruto</p>
                 <% elsif row["pair_role"] == "tax" %>

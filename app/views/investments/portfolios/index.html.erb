@@ -35,7 +35,7 @@
             <div class="mt-4 grid gap-5 sm:grid-cols-2">
               <div class="rounded-3xl bg-white px-5 py-5 shadow-lg ring-1 ring-slate-200">
                 <p class="text-sm font-semibold tracking-[0.18em] text-slate-500">Investido</p>
-                <p class="mt-4 whitespace-nowrap font-semibold leading-none text-slate-950"><%= number_to_currency(invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+                <p class="mt-4 whitespace-nowrap font-semibold leading-none text-slate-950"><%= privacy_value(number_to_currency(invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
               </div>
 
               <div class="rounded-3xl bg-white px-5 py-5 shadow-lg ring-1 ring-slate-200">
@@ -48,7 +48,7 @@
                   <% else %>
                     <i class="fa-solid fa-minus text-sm text-slate-400"></i>
                   <% end %>
-                  <span><%= number_to_currency(current_value, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                  <span><%= privacy_value(number_to_currency(current_value, unit: "R$ ", separator: ",", delimiter: ".")) %></span>
                 </p>
               </div>
             </div>
@@ -57,9 +57,9 @@
               <p class="text-sm font-semibold tracking-[0.18em] text-slate-500">Variação</p>
               <div class="mt-5 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-end">
                 <div class="<%= positive_variation ? 'text-emerald-700' : negative_variation ? 'text-rose-700' : 'text-slate-700' %>">
-                  <p class="whitespace-nowrap font-semibold leading-none"><%= number_to_currency(variation_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+                  <p class="whitespace-nowrap font-semibold leading-none"><%= privacy_value(number_to_currency(variation_amount, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
                   <p class="mt-3 inline-flex w-fit rounded-full px-2.5 py-1 font-semibold ring-1 <%= positive_variation ? 'bg-emerald-100 text-emerald-700 ring-emerald-400' : negative_variation ? 'bg-rose-100 text-rose-700 ring-rose-400' : 'bg-slate-100 text-slate-600 ring-slate-400' %>">
-                    <%= number_with_precision(variation_percentage, precision: 2, separator: ",", delimiter: ".") %>%
+                    <%= privacy_value("#{number_with_precision(variation_percentage, precision: 2, separator: ",", delimiter: ".")}%") %>
                   </p>
                 </div>
 

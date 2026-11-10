@@ -132,21 +132,21 @@
                 </td>
 
                 <td class="px-4 py-4 text-right text-slate-700">
-                  <%= number_with_precision(
+                    <%= privacy_value(number_with_precision(
                         transaction.quantity,
                         precision: 8,
                         strip_insignificant_zeros: true
-                      ) %>
+                      )) %>
                 </td>
 
                 <td class="px-4 py-4 text-right text-slate-700">
                   <% if transaction.price.present? %>
-                    <%= number_to_currency(
+                    <%= privacy_value(number_to_currency(
                           transaction.price,
                           unit: "R$ ",
                           separator: ",",
                           delimiter: "."
-                        ) %>
+                        )) %>
                   <% else %>
                     —
                   <% end %>
@@ -154,12 +154,12 @@
 
                 <td class="px-4 py-4 text-right text-slate-700">
                   <% if transaction.fees != 0 %>
-                    <%= number_to_currency(
+                    <%= privacy_value(number_to_currency(
                           transaction.fees,
                           unit: "R$ ",
                           separator: ",",
                           delimiter: "."
-                        ) %>
+                        )) %>
                   <% else %>
                     —
                   <% end %>
@@ -167,12 +167,12 @@
 
                 <td class="px-4 py-4 text-right text-slate-700">
                   <% if transaction.price.present? %>
-                    <%= number_to_currency(
+                    <%= privacy_value(number_to_currency(
                           transaction.price * transaction.quantity,
                           unit: "R$ ",
                           separator: ",",
                           delimiter: "."
-                        ) %>
+                        )) %>
                   <% else %>
                     —
                   <% end %>

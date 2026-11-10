@@ -23,12 +23,12 @@
 
         <p class="mt-2 text-3xl font-semibold <%= @transaction.transaction_type == "sell" ? "text-rose-600" : "text-emerald-600" %>">
           <% if @transaction.price.present? %>
-            <%= number_to_currency(
+            <%= privacy_value(number_to_currency(
                   @transaction.price * @transaction.quantity,
                   unit: "R$ ",
                   separator: ",",
                   delimiter: "."
-                ) %>
+                )) %>
           <% else %>
             —
           <% end %>
@@ -83,11 +83,11 @@
       <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <p class="text-sm text-slate-500">Quantidade</p>
         <p class="mt-2 text-lg font-semibold text-slate-950">
-          <%= number_with_precision(
+          <%= privacy_value(number_with_precision(
                 @transaction.quantity,
                 precision: 8,
                 strip_insignificant_zeros: true
-              ) %>
+              )) %>
         </p>
       </div>
 
@@ -95,12 +95,12 @@
         <p class="text-sm text-slate-500">Preço por ativo</p>
         <p class="mt-2 text-lg font-semibold text-slate-950">
           <% if @transaction.price.present? %>
-            <%= number_to_currency(
+            <%= privacy_value(number_to_currency(
                   @transaction.price,
                   unit: "R$ ",
                   separator: ",",
                   delimiter: "."
-                ) %>
+                )) %>
           <% else %>
             —
           <% end %>
@@ -111,12 +111,12 @@
         <p class="text-sm text-slate-500">Taxas</p>
         <p class="mt-2 text-lg font-semibold text-slate-950">
           <% if @transaction.fees.present? && @transaction.fees != 0 %>
-            <%= number_to_currency(
+            <%= privacy_value(number_to_currency(
                   @transaction.fees,
                   unit: "R$ ",
                   separator: ",",
                   delimiter: "."
-                ) %>
+                )) %>
           <% else %>
             —
           <% end %>
