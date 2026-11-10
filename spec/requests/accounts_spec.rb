@@ -43,6 +43,14 @@ RSpec.describe "Accounts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Transações recentes", "Café", "-R$ 25,00")
     end
+
+    it "renders the global privacy control and marks financial values as sensitive" do
+      get account_path(account)
+
+      expect(response.body).to include('data-privacy-toggle')
+      expect(response.body).to include('data-sensitive-value="true"')
+      expect(response.body).to include('data-sensitive-masked-value="••••••"')
+    end
   end
 
   describe "POST /create" do
