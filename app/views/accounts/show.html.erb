@@ -18,7 +18,7 @@
     <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <p class="text-sm text-slate-500">Saldo inicial</p>
-        <p class="mt-2 text-2xl font-semibold text-slate-950"><%= number_to_currency(@account.initial_balance, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+        <p class="mt-2 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(@account.initial_balance, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
       </div>
 
       <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -33,7 +33,7 @@
 
       <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <p class="text-sm text-slate-500">Limite</p>
-        <p class="mt-2 text-2xl font-semibold text-slate-950"><%= @account.limit.present? ? number_to_currency(@account.limit, unit: "R$ ", separator: ",", delimiter: ".") : "-" %></p>
+              <p class="mt-2 text-2xl font-semibold text-slate-950"><%= @account.limit.present? ? privacy_value(number_to_currency(@account.limit, unit: "R$ ", separator: ",", delimiter: ".")) : "-" %></p>
       </div>
     </div>
 
@@ -79,7 +79,7 @@
                 <p class="font-semibold text-slate-900"><%= transaction.description %></p>
                 <p class="mt-1 text-sm text-slate-500"><%= transaction.category&.name || "Sem categoria" %> · <%= transaction.date.strftime("%d/%m/%Y") %></p>
               </div>
-              <p class="font-semibold <%= transaction.amount.negative? ? "text-rose-600" : "text-emerald-700" %>"><%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+              <p class="font-semibold <%= transaction.amount.negative? ? "text-rose-600" : "text-emerald-700" %>"><%= privacy_value(number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
             <% end %>
           <% end %>
         </div>

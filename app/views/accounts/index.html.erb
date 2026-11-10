@@ -24,7 +24,7 @@
 
             <div class="mt-5">
               <p class="text-sm text-slate-500">Saldo total</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-950"><%= number_to_currency(account.total_balance, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+              <p class="mt-2 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(account.total_balance, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
             </div>
 
             <div class="mt-5">
@@ -36,7 +36,7 @@
                     <li class="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 text-sm">
                       <span class="truncate text-slate-700"><%= transaction.description %></span>
                       <span class="<%= transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-medium">
-                        <%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                        <%= privacy_value(number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
                       </span>
                     </li>
                   <% end %>

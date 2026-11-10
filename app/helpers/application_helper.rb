@@ -1,4 +1,17 @@
 module ApplicationHelper
+  def privacy_value(formatted_value, masked_value: "••••••")
+    content_tag(
+      :span,
+      formatted_value,
+      data: {
+        sensitive_value: true,
+        sensitive_visible_value: formatted_value,
+        sensitive_masked_value: masked_value
+      },
+      aria: { label: formatted_value }
+    )
+  end
+
   def primary_navigation_items
     [
       { label: "Dashboard", path: root_path, icon: "fa-solid fa-chart-line", active: -> { controller_path == "transactions" && action_name == "dashboard" } },

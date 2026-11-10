@@ -80,6 +80,48 @@ const initializeNavbarDropdowns = () => {
   document.addEventListener("click", closeAll)
 }
 
+const PRIVACY_MODE_STORAGE_KEY = "money-control:privacy-mode"
+
+const initializePrivacyMode = () => {
+  const toggles = document.querySelectorAll("[data-privacy-toggle]")
+  if (!toggles.length) return
+
+  const hidden = window.localStorage.getItem(PRIVACY_MODE_STORAGE_KEY) === "hidden"
+  const applyPrivacyMode = (isHidden) => {
+    document.documentElement.dataset.privacyMode = isHidden ? "hidden" : "visible"
+
+    document.querySelectorAll("[data-sensitive-value]").forEach((element) => {
+      const visibleValue = element.dataset.sensitiveVisibleValue || element.textContent
+      const maskedValue = element.dataset.sensitiveMaskedValue || "••••••"
+      element.textContent = isHidden ? maskedValue : visibleValue
+      element.setAttribute("aria-label", isHidden ? "Valor financeiro oculto" : visibleValue)
+    })
+
+    toggles.forEach((toggle) => {
+      const icon = toggle.querySelector("[data-privacy-toggle-icon]")
+      const label = toggle.querySelector("[data-privacy-toggle-label]")
+      toggle.setAttribute("aria-pressed", String(isHidden))
+      toggle.setAttribute("aria-label", isHidden ? "Mostrar valores financeiros" : "Ocultar valores financeiros")
+      toggle.title = isHidden ? "Mostrar valores financeiros" : "Ocultar valores financeiros"
+      icon?.classList.toggle("fa-eye", !isHidden)
+      icon?.classList.toggle("fa-eye-slash", isHidden)
+      if (label) label.textContent = isHidden ? "Mostrar valores" : "Ocultar valores"
+    })
+  }
+
+  toggles.forEach((toggle) => {
+    if (toggle.dataset.privacyInitialized === "true") return
+    toggle.dataset.privacyInitialized = "true"
+    toggle.addEventListener("click", () => {
+      const nextState = document.documentElement.dataset.privacyMode !== "hidden"
+      window.localStorage.setItem(PRIVACY_MODE_STORAGE_KEY, nextState ? "hidden" : "visible")
+      applyPrivacyMode(nextState)
+    })
+  })
+
+  applyPrivacyMode(hidden)
+}
+
 const initializeMobileNavbar = () => {
   const root = document.querySelector("[data-mobile-nav-root]")
   const trigger = document.querySelector("[data-mobile-nav-trigger]")
@@ -233,6 +275,7 @@ const initializeTransactionForm = () => {
 
 document.addEventListener("turbo:load", initializeAssetSubcategoryFilter)
 document.addEventListener("turbo:load", initializeNavbarDropdowns)
+document.addEventListener("turbo:load", initializePrivacyMode)
 document.addEventListener("turbo:load", initializeMobileNavbar)
 document.addEventListener("turbo:load", initializePortfolioTabs)
 document.addEventListener("turbo:load", initializeImportReview)

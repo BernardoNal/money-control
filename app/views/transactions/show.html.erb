@@ -6,7 +6,7 @@
         <p class="mt-7 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Detalhes da transação</p>
         <h1 class="mt-3 max-w-2xl break-words text-3xl font-semibold text-slate-950"><%= @transaction.description %></h1>
         <p class="mt-3 text-3xl font-semibold <%= @transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %>">
-          <%= number_to_currency(@transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+          <%= privacy_value(number_to_currency(@transaction.amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
         </p>
       </div>
 
