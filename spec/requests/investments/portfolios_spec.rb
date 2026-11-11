@@ -167,6 +167,13 @@ RSpec.describe "Investments::Portfolios", type: :request do
       expect(response.body).to include("Sem subcategoria")
     end
 
+    it "marks portfolio metrics for the global privacy mode" do
+      get investments_portfolio_path(portfolio)
+
+      expect(response.body).to include('data-privacy-toggle')
+      expect(response.body).to include('data-sensitive-value="true"')
+    end
+
     it "filters dashboard data by category and preserves selected filters" do
       get investments_portfolio_path(portfolio), params: { category: "stock" }
 

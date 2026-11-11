@@ -83,7 +83,7 @@
               <td class="px-5 py-4 font-medium text-slate-900"><%= transaction.description %></td>
               <td class="px-5 py-4">
                 <span class="<%= transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %> font-semibold">
-                  <%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                  <%= privacy_value(number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
                 </span>
               </td>
               <td class="px-5 py-4 text-slate-700"><%= transaction.date.strftime("%d/%m/%Y") %></td>
@@ -136,7 +136,7 @@
             <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Detalhes da transação</p>
             <h2 id="transaction-dialog-title-<%= transaction.id %>" class="mt-2 break-words text-2xl font-semibold"><%= transaction.description %></h2>
             <p class="mt-2 text-2xl font-semibold <%= transaction.amount.negative? ? 'text-rose-600' : 'text-emerald-600' %>">
-              <%= number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+              <%= privacy_value(number_to_currency(transaction.amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
             </p>
           </div>
 

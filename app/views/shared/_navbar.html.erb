@@ -1,5 +1,5 @@
 <nav class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950 text-white shadow-lg">
-  <div class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+  <div class="mx-auto w-full px-4 py-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between gap-4 lg:hidden">
       <%= link_to root_path, class: "inline-flex min-w-0 items-center gap-3 text-white no-underline" do %>
         <img src="<%= asset_path('$$$.png') %>" class="h-9 w-9 object-contain" alt="Money Control" />
@@ -12,56 +12,63 @@
     </div>
 
     <div class="hidden overflow-visible lg:block">
-      <div class="flex min-w-max items-center gap-3 whitespace-nowrap">
+      <div class="flex w-full min-w-max items-center gap-3 whitespace-nowrap">
         <%= link_to root_path, class: "mr-2 inline-flex items-center gap-3 text-white no-underline" do %>
           <img src="<%= asset_path('$$$.png') %>" class="h-9 w-9 object-contain" alt="Money Control" />
           <p class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-300">Money Control</p>
         <% end %>
 
-        <% primary_navigation_items.each do |item| %>
-          <%= link_to item[:path], class: navigation_item_classes(item) do %>
-            <i class="<%= item[:icon] %>"></i>
-            <span><%= item[:label] %></span>
-          <% end %>
-        <% end %>
-
-        <div class="relative" data-dropdown>
-          <button type="button" class="<%= navigation_item_classes({ active: -> { investments_navigation_items.any? { |item| item[:active].call } } }) %>" data-dropdown-trigger aria-expanded="false">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Investimentos</span>
-            <i class="fa-solid fa-chevron-down text-xs"></i>
-          </button>
-
-          <div class="absolute left-0 top-full z-50 mt-2 hidden w-56 rounded-2xl border border-slate-700 bg-slate-900 p-2 shadow-2xl" data-dropdown-menu>
-            <% investments_navigation_items.each do |item| %>
-              <%= link_to item[:path], class: "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" do %>
-                <i class="<%= item[:icon] %> w-4"></i>
-                <span><%= item[:label] %></span>
-              <% end %>
+        <div class="flex flex-1 items-center justify-center gap-3">
+          <% primary_navigation_items.each do |item| %>
+            <%= link_to item[:path], class: navigation_item_classes(item) do %>
+              <i class="<%= item[:icon] %>"></i>
+              <span><%= item[:label] %></span>
             <% end %>
+          <% end %>
+
+          <div class="relative" data-dropdown>
+            <button type="button" class="<%= navigation_item_classes({ active: -> { investments_navigation_items.any? { |item| item[:active].call } } }) %>" data-dropdown-trigger aria-expanded="false">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Investimentos</span>
+              <i class="fa-solid fa-chevron-down text-xs"></i>
+            </button>
+
+            <div class="absolute left-0 top-full z-50 mt-2 hidden w-56 rounded-2xl border border-slate-700 bg-slate-900 p-2 shadow-2xl" data-dropdown-menu>
+              <% investments_navigation_items.each do |item| %>
+                <%= link_to item[:path], class: "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" do %>
+                  <i class="<%= item[:icon] %> w-4"></i>
+                  <span><%= item[:label] %></span>
+                <% end %>
+              <% end %>
+            </div>
           </div>
         </div>
 
         <% if current_user.present? %>
-          <div class="relative ml-2" data-dropdown>
-            <button type="button" class="inline-flex items-center gap-3 rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white" data-dropdown-trigger aria-expanded="false">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300">
-                <%= user_initials(current_user) %>
-              </div>
-              <span><%= user_display_name(current_user) %></span>
-              <i class="fa-solid fa-chevron-down text-xs"></i>
+          <div class="flex shrink-0 items-center gap-3">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition hover:border-slate-400 hover:bg-slate-800 hover:text-white" data-privacy-toggle aria-pressed="false" aria-label="Ocultar valores financeiros" title="Ocultar valores financeiros">
+              <i class="fa-solid fa-eye" data-privacy-toggle-icon aria-hidden="true"></i>
             </button>
+            <div class="relative" data-dropdown>
+              <button type="button" class="inline-flex items-center gap-3 rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white" data-dropdown-trigger aria-expanded="false">
+                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300">
+                  <%= user_initials(current_user) %>
+                </div>
+                <span><%= user_display_name(current_user) %></span>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+              </button>
 
-            <div class="absolute right-0 top-full z-50 mt-2 hidden w-48 rounded-2xl border border-slate-700 bg-slate-900 p-2 shadow-2xl" data-dropdown-menu>
-              <%= link_to edit_user_registration_path, class: "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" do %>
-                <i class="fa-solid fa-user-gear w-4"></i>
-                <span>Minha conta</span>
-              <% end %>
+              <div class="absolute right-0 top-full z-50 mt-2 hidden w-48 rounded-2xl border border-slate-700 bg-slate-900 p-2 shadow-2xl" data-dropdown-menu>
+                <%= link_to edit_user_registration_path, class: "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" do %>
+                  <i class="fa-solid fa-user-gear w-4"></i>
+                  <span>Minha conta</span>
+                <% end %>
 
-              <%= button_to destroy_user_session_path, method: :delete, form: { class: "mt-1 w-full" }, class: "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-emerald-300 transition hover:bg-slate-800 hover:text-emerald-200" do %>
-                <i class="fa-solid fa-right-from-bracket w-4"></i>
-                <span>Sair</span>
-              <% end %>
+                <%= button_to destroy_user_session_path, method: :delete, form: { class: "mt-1 w-full" }, class: "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-emerald-300 transition hover:bg-slate-800 hover:text-emerald-200" do %>
+                  <i class="fa-solid fa-right-from-bracket w-4"></i>
+                  <span>Sair</span>
+                <% end %>
+              </div>
             </div>
           </div>
         <% end %>
@@ -130,6 +137,15 @@
 
       <% if current_user.present? %>
         <div class="border-t border-slate-800 px-5 py-5">
+          <div class="mb-4 flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3">
+            <div>
+              <p class="text-sm font-medium text-slate-200">Privacidade</p>
+              <p class="mt-1 text-xs text-slate-500">Ocultar valores financeiros</p>
+            </div>
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 text-slate-300 transition hover:border-slate-400 hover:bg-slate-800 hover:text-white" data-privacy-toggle aria-pressed="false" aria-label="Ocultar valores financeiros" title="Ocultar valores financeiros">
+              <i class="fa-solid fa-eye" data-privacy-toggle-icon aria-hidden="true"></i>
+            </button>
+          </div>
           <div class="mb-4 flex items-center gap-3 rounded-3xl bg-slate-900 px-4 py-3 ring-1 ring-slate-800">
             <div class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300">
               <%= user_initials(current_user) %>

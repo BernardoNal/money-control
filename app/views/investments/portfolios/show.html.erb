@@ -84,12 +84,12 @@
       <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
           <p class="text-sm text-slate-500">Total investido</p>
-          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.total_invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(@dashboard.total_invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
         </div>
 
         <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
           <p class="text-sm text-slate-500">Valor atual da carteira</p>
-          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.current_portfolio_value, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+            <p class="mt-3 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(@dashboard.current_portfolio_value, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
           <% if @dashboard.market_value_approximation %>
             <p class="mt-2 text-xs text-amber-700">Valor parcial com fallback por custo em <%= @dashboard.unpriced_asset_symbols.count %> ativo(s).</p>
           <% end %>
@@ -97,12 +97,12 @@
 
         <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
           <p class="text-sm text-slate-500">Lucro/Prejuizo não realizado</p>
-          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.unrealized_profit_loss, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(@dashboard.unrealized_profit_loss, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
         </div>
 
         <div class="rounded-3xl border border-slate-300 bg-slate-50 p-5">
           <p class="text-sm text-slate-500">Renda passiva liquida</p>
-          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></p>
+          <p class="mt-3 text-2xl font-semibold text-slate-950"><%= privacy_value(number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".")) %></p>
         </div>
       </div>
 
@@ -123,7 +123,7 @@
                 <% @dashboard.historical_evolution_points.each do |point| %>
                   <% height = max_historical_amount.to_d.zero? ? 0 : ((point.invested_amount / max_historical_amount.to_d) * 100).to_f %>
                   <div class="flex min-w-20 flex-1 flex-col items-center justify-end gap-2">
-                    <span class="text-xs text-gray-500"><%= number_to_currency(point.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></span>
+                    <span class="text-xs text-gray-500"><%= privacy_value(number_to_currency(point.invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %></span>
                     <div class="flex h-36 w-full items-end rounded-2xl bg-slate-100 px-2 py-2">
                       <div class="w-full rounded-xl bg-blue-600 transition-all" style="height: <%= [height.round(2), 100].min %>%"></div>
                     </div>
@@ -152,12 +152,16 @@
                 <dt class="text-gray-500">Maior alocação</dt>
                 <dd class="font-medium text-gray-900">
                   <% top_asset = @dashboard.asset_entries.first %>
-                  <%= top_asset ? "#{top_asset.asset.symbol} (#{number_with_precision(top_asset.allocation_percentage, precision: 2)}%)" : "-" %>
+                  <% if top_asset %>
+                    <%= top_asset.asset.symbol %> (<%= privacy_value("#{number_with_precision(top_asset.allocation_percentage, precision: 2)}%") %>)
+                  <% else %>
+                    -
+                  <% end %>
                 </dd>
               </div>
               <div class="flex items-start justify-between gap-4">
                 <dt class="text-gray-500">Renda passiva liquida</dt>
-                <dd class="font-medium text-gray-900"><%= number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".") %></dd>
+                <dd class="font-medium text-gray-900"><%= privacy_value(number_to_currency(@dashboard.passive_income_summary, unit: "R$ ", separator: ",", delimiter: ".")) %></dd>
               </div>
               <div class="flex items-start justify-between gap-4">
                 <dt class="text-gray-500">Ativos com cotação</dt>
@@ -243,7 +247,7 @@
                         <% end %>
                         <div class="mt-1 text-xs text-gray-500"><%= entry.asset.name %></div>
                       </td>
-                      <td class="py-4 pr-6 text-gray-700"><%= number_with_precision(entry.quantity, precision: 8, strip_insignificant_zeros: true) %></td>
+                      <td class="py-4 pr-6 text-gray-700"><%= privacy_value(number_with_precision(entry.quantity, precision: 8, strip_insignificant_zeros: true)) %></td>
                       <td class="py-4 pr-6 text-gray-700">
                         <% if entry.price_source == :market %>
                           <% price_tone_class =
@@ -257,19 +261,19 @@
                           %>
                           <div class="<%= price_tone_class %> whitespace-nowrap font-medium">
                             <%= entry.market_price > entry.average_price ? "↑" : entry.market_price < entry.average_price ? "↓" : "" %>
-                            <%= number_to_currency(entry.market_price, unit: "R$ ", separator: ",", delimiter: ".") %>
+                            <%= privacy_value(number_to_currency(entry.market_price, unit: "R$ ", separator: ",", delimiter: ".")) %>
                           </div>
                         <% else %>
                           <div>-</div>
                           <div class="mt-1 text-xs text-amber-700">Sem cotação</div>
                         <% end %>
                       </td>
-                      <td class="py-4 pr-6 text-gray-700"><%= number_to_currency(entry.average_price, unit: "R$ ", separator: ",", delimiter: ".") %></td>
-                      <td class="py-4 pr-6 text-gray-700"><%= number_to_currency(entry.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %></td>
-                      <td class="py-4 pr-6 text-gray-700"><%= number_to_currency(entry.current_value, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                      <td class="py-4 pr-6 text-gray-700"><%= privacy_value(number_to_currency(entry.average_price, unit: "R$ ", separator: ",", delimiter: ".")) %></td>
+                      <td class="py-4 pr-6 text-gray-700"><%= privacy_value(number_to_currency(entry.invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %></td>
+                      <td class="py-4 pr-6 text-gray-700"><%= privacy_value(number_to_currency(entry.current_value, unit: "R$ ", separator: ",", delimiter: ".")) %></td>
                       <td class="py-4">
                         <div class="flex items-center gap-3">
-                          <span class="min-w-16 text-gray-700"><%= number_with_precision(entry.allocation_percentage, precision: 2) %>%</span>
+                          <span class="min-w-16 text-gray-700"><%= privacy_value("#{number_with_precision(entry.allocation_percentage, precision: 2)}%") %></span>
                         </div>
                       </td>
                     </tr>
@@ -300,12 +304,12 @@
                         <div>
                           <p class="font-medium text-gray-900"><%= allocation.label %></p>
                           <p class="text-sm text-gray-500">
-                            <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                            <%= privacy_value(number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
                           </p>
                         </div>
 
                         <span class="text-sm font-medium text-gray-700">
-                          <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                          <%= privacy_value("#{number_with_precision(allocation.allocation_percentage, precision: 2)}%") %>
                         </span>
                       </div>
 
@@ -338,12 +342,12 @@
                         <div>
                           <p class="font-medium text-gray-900"><%= allocation.label %></p>
                           <p class="text-sm text-gray-500">
-                            <%= number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".") %>
+                            <%= privacy_value(number_to_currency(allocation.invested_amount, unit: "R$ ", separator: ",", delimiter: ".")) %>
                           </p>
                         </div>
 
                         <span class="text-sm font-medium text-gray-700">
-                          <%= number_with_precision(allocation.allocation_percentage, precision: 2) %>%
+                          <%= privacy_value("#{number_with_precision(allocation.allocation_percentage, precision: 2)}%") %>
                         </span>
                       </div>
 
