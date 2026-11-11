@@ -22,6 +22,8 @@ module Admin
     end
 
     def call
+      # The dump is created outside the public application tree and is handed back
+      # to the caller so the controller can stream it and clean it up afterwards.
       FileUtils.mkdir_p(@output_directory)
 
       path = File.join(@output_directory, filename)
@@ -44,6 +46,8 @@ module Admin
     end
 
     def command(path)
+      # Pass arguments directly to Open3 instead of building a shell command.
+      # This keeps database and file paths from being interpreted as shell input.
       [
         "pg_dump",
         "--format=custom",

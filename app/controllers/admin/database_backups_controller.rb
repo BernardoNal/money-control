@@ -9,6 +9,7 @@ module Admin
 
     def create
       backup = DatabaseBackup.call
+      # send_data makes the download independent from the temporary file lifecycle.
       send_data File.binread(backup[:path]),
                 filename: backup[:filename],
                 type: "application/octet-stream",
@@ -16,6 +17,8 @@ module Admin
     rescue DatabaseBackup::Error => e
       redirect_to admin_database_backup_path, alert: e.message
     ensure
+      # A database dump contains sensitive financial data and must not remain on disk
+      # after the response has been prepared.
       File.delete(backup[:path]) if defined?(backup) && backup && File.exist?(backup[:path])
     end
 
