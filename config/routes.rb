@@ -25,6 +25,9 @@ Rails.application.routes.draw do
     get "income-tax-report", to: "income_tax_reports#show", as: :income_tax_report
     resources :transactions
   end
+  namespace :admin do
+    resource :database_backup, only: %i[show create]
+  end
 
   root to: "transactions#dashboard"
   devise_for :users

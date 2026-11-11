@@ -64,6 +64,13 @@
                   <span>Minha conta</span>
                 <% end %>
 
+                <% if current_user.admin? %>
+                  <%= link_to admin_database_backup_path, class: "mt-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" do %>
+                    <i class="fa-solid fa-database w-4"></i>
+                    <span>Backup do banco</span>
+                  <% end %>
+                <% end %>
+
                 <%= button_to destroy_user_session_path, method: :delete, form: { class: "mt-1 w-full" }, class: "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-emerald-300 transition hover:bg-slate-800 hover:text-emerald-200" do %>
                   <i class="fa-solid fa-right-from-bracket w-4"></i>
                   <span>Sair</span>
@@ -160,6 +167,13 @@
             <%= link_to edit_user_registration_path, class: "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white", data: { mobile_nav_close: true } do %>
               <i class="fa-solid fa-user-gear w-4"></i>
               <span>Minha conta</span>
+            <% end %>
+
+            <% if current_user.admin? %>
+              <%= link_to admin_database_backup_path, class: "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white", data: { mobile_nav_close: true } do %>
+                <i class="fa-solid fa-database w-4"></i>
+                <span>Backup do banco</span>
+              <% end %>
             <% end %>
 
             <%= button_to destroy_user_session_path, method: :delete, form: { class: "w-full" }, class: "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-emerald-300 transition hover:bg-slate-800 hover:text-emerald-200" do %>
