@@ -1,12 +1,14 @@
 # Money Control
 
+[English](README.md) | [Português](README.pt-BR.md)
+
 Money Control is a Ruby on Rails application for organizing personal finances. It brings accounts, transactions, categories, investment portfolios, market assets, investment transactions, and income records into one authenticated application.
 
 ## Current capabilities
 
 - Manage financial accounts and account balances.
 - Create, edit, filter, and import transactions from CSV files.
-- Organize transactions with user-scoped and shared categories.
+- Category organization is currently under analysis and testing; its continuation will be evaluated before being treated as a stable capability.
 - Manage investment portfolios and positions.
 - Track investment transactions and income records.
 - Import investment income from XLSX files with manual review and duplicate checks.
