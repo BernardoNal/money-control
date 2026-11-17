@@ -15,8 +15,19 @@
           </div>
 
           <div>
-            <%= f.label :bank, "Banco", class: "mb-1.5 block text-sm font-medium" %>
-            <%= f.text_field :bank, class: "w-full", placeholder: "BB, C6, Nubank...", required: true %>
+            <% bank_options = @bank_institutions.map { |bank| ["#{bank.bank_code} - #{bank.short_name.presence || bank.name}", bank.short_name.presence || bank.name] } %>
+            <% if @account.bank.present? && bank_options.none? { |_, value| value == @account.bank } %>
+              <% bank_options.unshift(["#{@account.bank} (cadastro atual)", @account.bank]) %>
+            <% end %>
+            <%= render Investments::SearchableSelectComponent.new(
+                        form: f,
+                        attribute: :bank,
+                        selected: @account.bank,
+                        label: "Banco",
+                        selected_label: @account.bank,
+                        placeholder: "Buscar banco",
+                        options: bank_options
+                      ) %>
           </div>
 
           <div>
