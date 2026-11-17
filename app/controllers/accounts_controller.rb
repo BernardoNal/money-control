@@ -1,5 +1,6 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: %i[show edit update destroy]
+  before_action :set_bank_institutions, only: %i[new create edit update]
 
   def index
     @accounts = policy_scope(Account)
@@ -56,6 +57,11 @@ class AccountsController < ApplicationController
   def set_account
     @account = Account.find(params[:id])
     authorize @account
+  end
+
+  def set_bank_institutions
+    # Keep the form dependent on the local catalog populated by the maintenance task.
+    @bank_institutions = BankInstitution.active.ordered
   end
 
 end

@@ -31,6 +31,18 @@ RSpec.describe "Accounts", type: :request do
 
       expect(response).to have_http_status(:success)
     end
+
+    it "renders active banks from the local catalog" do
+      BankInstitution.create!(bank_code: "001", name: "Banco do Brasil S.A.", short_name: "Banco do Brasil")
+      BankInstitution.create!(bank_code: "000", name: "First Bank", short_name: "First Bank")
+      BankInstitution.create!(bank_code: "999", name: "Inactive Bank", short_name: "Inactive Bank", active: false)
+
+      get new_account_path
+
+      expect(response.body.index("000 - First Bank")).to be < response.body.index("001 - Banco do Brasil")
+      expect(response.body).to include("001 - Banco do Brasil")
+      expect(response.body).not_to include("999 - Inactive Bank")
+    end
   end
 
   describe "GET /show" do

@@ -3,5 +3,5 @@ class BankInstitution < ApplicationRecord
   validates :bank_code, uniqueness: { scope: :source }
 
   scope :active, -> { where(active: true) }
-  scope :ordered, -> { order(:short_name, :name) }
+  scope :ordered, -> { order(:bank_code) }
 end
