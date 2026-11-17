@@ -55,7 +55,7 @@ module BankCatalog
     def normalize_record(record)
       bank_code = record[:bank_code].presence || record["bank_code"].presence
       name = record[:name].presence || record["name"].presence
-      return if bank_code.blank? || name.blank?
+      return if bank_code.blank? || name.blank? || bank_code.to_s.strip.casecmp?("n/a")
 
       {
         bank_code: bank_code.to_s.strip,
