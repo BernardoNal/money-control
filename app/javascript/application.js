@@ -311,6 +311,9 @@ const initializeSearchableSelect = () => {
     const suggestion = root.querySelector("[data-searchable-select-suggestion]")
     const form = root.closest("form")
     const searchUrl = root.dataset.searchUrl
+    const localOptions = root.dataset.searchableSelectOptions
+      ? JSON.parse(root.dataset.searchableSelectOptions).map(([label, value]) => ({ label, value }))
+      : null
     let timer
     let requestId = 0
 
@@ -327,7 +330,7 @@ const initializeSearchableSelect = () => {
 
     const selectOption = (optionData) => {
       input.value = optionData.label
-      hidden.value = optionData.id
+      hidden.value = optionData.id ?? optionData.value
       showError("")
       closeResults()
     }
@@ -364,6 +367,22 @@ const initializeSearchableSelect = () => {
       input.setAttribute("aria-expanded", "true")
     }
 
+    const renderLocalResults = (query = "") => {
+      const normalizedQuery = query.trim().toLocaleLowerCase()
+      const filteredOptions = localOptions.filter(({ label, value }) =>
+        `${label} ${value}`.toLocaleLowerCase().includes(normalizedQuery)
+      )
+
+      renderResults(filteredOptions)
+      if (!filteredOptions.length) {
+        results.querySelector("p").textContent = "Nenhum banco encontrado."
+      }
+    }
+
+    if (localOptions) {
+      input.addEventListener("focus", () => renderLocalResults(input.value))
+    }
+
     input.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeResults()
       if (event.key === "ArrowDown") {
@@ -380,6 +399,11 @@ const initializeSearchableSelect = () => {
       showError("")
       window.clearTimeout(timer)
       const query = input.value.trim()
+      if (localOptions) {
+        renderLocalResults(query)
+        return
+      }
+
       results.textContent = "Buscando ativos..."
       results.classList.remove("hidden")
       input.setAttribute("aria-expanded", "true")
@@ -413,7 +437,7 @@ const initializeSearchableSelect = () => {
     form.addEventListener("submit", (event) => {
       if (input.value.trim() && !hidden.value) {
         event.preventDefault()
-        showError("Selecione um ativo da lista de resultados.")
+        showError(localOptions ? "Selecione um banco da lista de resultados." : "Selecione um ativo da lista de resultados.")
       }
     })
   })

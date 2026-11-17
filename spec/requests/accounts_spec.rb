@@ -40,6 +40,7 @@ RSpec.describe "Accounts", type: :request do
       get new_account_path
 
       expect(response.body.index("000 - First Bank")).to be < response.body.index("001 - Banco do Brasil")
+      expect(response.body).to include("data-searchable-select", "Buscar banco", "data-searchable-select-options")
       expect(response.body).to include("001 - Banco do Brasil")
       expect(response.body).not_to include("999 - Inactive Bank")
     end
