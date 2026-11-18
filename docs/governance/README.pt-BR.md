@@ -26,6 +26,13 @@ Documentação de código:
 - documentar decisões de domínio, regras de escopo por usuário e pontos de expansão arquitetural
 - evitar comentários redundantes ou linha a linha
 
+Organização JavaScript:
+
+- manter `app/javascript/application.js` apenas como entrypoint e agregador de módulos
+- organizar novos comportamentos em módulos focados por responsabilidade
+- reutilizar componentes existentes quando o comportamento for compartilhado
+- documentar e justificar no plano qualquer exceção a essa organização
+
 Commits e entrega:
 
 - pedir confirmação explícita separada antes de criar cada commit

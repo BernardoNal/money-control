@@ -135,6 +135,18 @@ After implementation, review:
 - Turbo and Hotwire behavior
 - accessibility
 
+### JavaScript Organization
+
+JavaScript must be organized by responsibility whenever new behavior is added or an existing behavior is changed:
+
+- keep `app/javascript/application.js` limited to the main entrypoint and module imports
+- place feature behavior in focused modules under a responsibility-based directory
+- reuse or extend an existing component when the behavior is shared by more than one flow
+- preserve the current Turbo lifecycle registration when extracting modules
+- document and explicitly justify any exception that keeps feature logic in the entrypoint or combines unrelated responsibilities
+
+This rule applies to all future JavaScript changes, including small UI interactions, unless the exception is documented in the implementation plan.
+
 ### Pagination UX
 
 Paginated interfaces must preserve the user's context across navigation:
