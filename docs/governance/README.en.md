@@ -19,6 +19,13 @@ Recommended order:
 Approval to implement, commit, push, and open a pull request are independent.
 Approval of an implementation or checkpoint does not automatically authorize Git operations.
 
+JavaScript organization:
+
+- keep `app/javascript/application.js` limited to the entrypoint and module imports
+- organize new behavior in responsibility-focused modules
+- reuse existing components when behavior is shared across flows
+- document and justify any exception to this organization in the implementation plan
+
 Commits and delivery:
 
 - request separate explicit confirmation before creating each commit
