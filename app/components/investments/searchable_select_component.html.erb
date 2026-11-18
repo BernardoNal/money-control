@@ -1,7 +1,8 @@
 <div data-searchable-select
      data-search-url="<%= search_url %>"
+     <% if local? %>data-searchable-select-options="<%= json_escape(options.to_json) %>"<% end %>
      data-search-params="<%= json_escape(search_params.to_json) %>">
-  <%= form.label attribute, label, class: "mb-2 block text-sm font-medium text-slate-900" %>
+  <%= form.label attribute, label, class: "mb-1.5 block text-sm font-medium" %>
   <input id="<%= input_id %>"
          type="search"
          value="<%= selected_text %>"
@@ -11,8 +12,9 @@
          aria-autocomplete="list"
          aria-expanded="false"
          aria-controls="<%= input_id %>_results"
+         <%= "required" if local? %>
          data-searchable-select-input
-         class="block w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+         class="block w-full">
   <%= form.hidden_field attribute, value: selected_id, data: { searchable_select_value: true } %>
   <div id="<%= input_id %>_results"
        role="listbox"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_20_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_17_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -26,6 +26,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_20_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_accounts_on_user_id"
+  end
+
+  create_table "bank_institutions", force: :cascade do |t|
+    t.string "bank_code", null: false
+    t.string "ispb"
+    t.string "name", null: false
+    t.string "short_name"
+    t.string "institution_type"
+    t.string "source", default: "bcb", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "source_updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_bank_institutions_on_active"
+    t.index ["ispb"], name: "index_bank_institutions_on_ispb"
+    t.index ["source", "bank_code"], name: "index_bank_institutions_on_source_and_bank_code", unique: true
   end
 
   create_table "categories", force: :cascade do |t|
