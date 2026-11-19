@@ -180,7 +180,8 @@
 
                 <td class="px-4 py-4">
                   <div class="flex items-center justify-end gap-3">
-                    <%= link_to investments_transaction_path(transaction),
+                    <%= link_to investments_transactions_path(modal: "show", transaction_id: transaction.id),
+                                data: { modal_target: "investment-transaction-modal-#{transaction.id}" },
                                 class: "text-lg text-slate-500 transition hover:text-slate-900",
                                 title: "Visualizar" do %>
                       <i class="fa-solid fa-eye"></i>
@@ -261,4 +262,13 @@
       </div>
     <% end %>
   </section>
+
+  <% if @transaction_modal == "show" && @modal_transaction.present? %>
+    <%= render ModalComponent.new(
+          id: "investment-transaction-modal-#{@modal_transaction.id}",
+          title: "Detalhes da movimentação"
+        ) do %>
+      <%= render "modal_details", transaction: @modal_transaction %>
+    <% end %>
+  <% end %>
 </div>

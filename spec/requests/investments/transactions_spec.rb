@@ -74,6 +74,25 @@ RSpec.describe "Investments::Transactions", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("AAPL")
     end
+
+    it "renders the selected transaction inside the reusable modal" do
+      get investments_transactions_path, params: { modal: "show", transaction_id: transaction.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(
+        "investment-transaction-modal-#{transaction.id}",
+        "data-modal",
+        "Detalhes da movimentação",
+        "Apple Inc."
+      )
+    end
+
+    it "does not expose another user's transaction in the modal" do
+      get investments_transactions_path, params: { modal: "show", transaction_id: other_transaction.id }
+
+      expect(response).to redirect_to(investments_transactions_path)
+      expect(flash[:alert]).to eq("Movimentação não encontrada ou indisponível.")
+    end
   end
 
   describe "GET /show" do

@@ -28,6 +28,9 @@ module Investments
         .order(date: :desc)
         .limit(@total_transactions)
         .offset(@offset)
+
+      @transaction_modal = params[:modal] == "show" ? "show" : nil
+      @modal_transaction = transaction_for_modal if @transaction_modal.present?
     end
 
     def show
@@ -172,6 +175,14 @@ module Investments
       @transaction.portfolio = current_user.investment_portfolios.find(portfolio_id)
     rescue ActiveRecord::RecordNotFound
       redirect_to root_path
+    end
+
+    def transaction_for_modal
+      # The scoped lookup is the authorization boundary for modal content.
+      policy_scope(Investments::Transaction).find(params[:transaction_id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to investments_transactions_path, alert: "Movimentação não encontrada ou indisponível."
+      nil
     end
   end
 end
