@@ -33,8 +33,3 @@
     <p class="mt-2 whitespace-pre-line text-base leading-6 text-slate-700"><%= transaction.notes %></p>
   </div>
 <% end %>
-
-<div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
-  <%= render ButtonComponent.new(label: "Editar", href: edit_investments_transaction_path(transaction), variant: :primary, icon: "fa-solid fa-pen-to-square") %>
-  <%= render ButtonComponent.new(label: "Apagar", href: investments_transaction_path(transaction), variant: :danger, icon: "fa-solid fa-trash", data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja excluir esta movimentação?" }) %>
-</div>

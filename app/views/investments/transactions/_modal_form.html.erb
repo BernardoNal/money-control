@@ -1,0 +1,13 @@
+<%= form_with model: transaction, local: true do |f| %>
+  <%= render "form_fields", f: f %>
+
+  <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
+    <button type="button" data-modal-close class="inline-flex items-center justify-center gap-2 rounded-full border border-[#808000]/40 bg-[#808000]/10 px-5 py-3 text-sm font-medium text-[#808000] transition hover:bg-[#808000]/20">
+      Cancelar
+    </button>
+    <%= f.button :submit, class: ButtonComponent::VARIANT_STYLES[:primary] do %>
+      <i class="fa-solid fa-floppy-disk"></i>
+      <%= transaction.persisted? ? "Salvar alterações" : "Criar movimentação" %>
+    <% end %>
+  </div>
+<% end %>
