@@ -74,6 +74,7 @@ end
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(
         "transaction-dialog-#{transaction.id}",
+        "data-modal",
         "Ver detalhes da transação",
         category.name
       )
