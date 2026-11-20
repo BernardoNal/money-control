@@ -1,0 +1,40 @@
+<% if f.object.errors.any? %>
+  <div class="mb-6 rounded-2xl border border-red-300 bg-red-50 p-4 text-red-700">
+    <p class="font-semibold">Não foi possível salvar o provento:</p>
+    <ul class="mt-2 list-disc pl-5"><% f.object.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+  </div>
+<% end %>
+
+<div class="grid gap-5 md:grid-cols-3">
+  <div>
+    <%= f.label :portfolio_id, "Portfólio", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.select :portfolio_id, options_for_select(@portfolios, f.object.portfolio_id), { include_blank: "Selecione um portfólio" }, class: "w-full" %>
+  </div>
+  <div>
+    <%= render Investments::SearchableSelectComponent.new(form: f, attribute: :asset_id, selected: f.object.asset, selected_label: f.object.asset && "#{f.object.asset.symbol} - #{f.object.asset.name}", search_url: search_investments_assets_path, label: "Ativo") %>
+  </div>
+  <div>
+    <%= f.label :income_type, "Tipo de Provento", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.select :income_type, options_for_select(@income_types, f.object.income_type), { include_blank: "Selecione o tipo" }, class: "w-full" %>
+  </div>
+  <div>
+    <%= f.label :gross_amount, "Valor Bruto", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.number_field :gross_amount, step: 0.0001, class: "w-full", required: true %>
+  </div>
+  <div>
+    <%= f.label :tax_amount, "Imposto retido", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.number_field :tax_amount, step: 0.0001, class: "w-full" %>
+  </div>
+  <div>
+    <%= f.label :payment_date, "Data de Pagamento", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.date_field :payment_date, class: "w-full", required: true %>
+  </div>
+  <div class="mt-4 md:col-span-3">
+    <%= f.label :reference_date, "Data de Referência", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.date_field :reference_date, class: "w-full" %>
+  </div>
+  <div class="mt-4 md:col-span-3">
+    <%= f.label :notes, "Observações", class: "mb-1.5 block text-sm font-medium" %>
+    <%= f.text_area :notes, rows: 4, class: "w-full" %>
+  </div>
+</div>

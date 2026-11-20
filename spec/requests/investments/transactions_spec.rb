@@ -82,6 +82,7 @@ RSpec.describe "Investments::Transactions", type: :request do
       expect(response.body).to include(
         "investment-transaction-modal-#{transaction.id}",
         "data-modal",
+        'data-modal-open="true"',
         "Detalhes da movimentação",
         "Apple Inc."
       )

@@ -101,6 +101,25 @@ RSpec.describe "Investments::Incomes", type: :request do
       expect(response.body).to include("income_chart=bar")
     end
 
+    it "renders the selected income inside the reusable modal" do
+      income = Investments::Income.create!(portfolio: portfolio, asset: asset, income_type: :dividends, gross_amount: 10, tax_amount: 0, payment_date: Date.current)
+
+      get investments_incomes_path, params: { tab: "list", modal: "show", income_id: income.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("investment-income-#{income.id}", "data-modal", 'data-modal-open="true"', "Detalhes do provento", "MXRF11")
+    end
+
+    it "renders new and edit income forms inside the modal" do
+      income = Investments::Income.create!(portfolio: portfolio, asset: asset, income_type: :dividends, gross_amount: 10, tax_amount: 0, payment_date: Date.current)
+
+      get investments_incomes_path, params: { tab: "list", modal: "new" }
+      expect(response.body).to include("Novo provento", "Criar provento")
+
+      get investments_incomes_path, params: { tab: "list", modal: "edit", income_id: income.id }
+      expect(response.body).to include("Editar provento", "Salvar alterações")
+    end
+
     it "renders an empty state when there is no monthly income history" do
       get investments_incomes_path
 
@@ -205,7 +224,7 @@ RSpec.describe "Investments::Incomes", type: :request do
 
       get investments_income_path(income)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to redirect_to(investments_incomes_path(tab: "list", modal: "show", income_id: income.id))
     end
 
      it "does not expose another user's income" do
@@ -304,9 +323,7 @@ RSpec.describe "Investments::Incomes", type: :request do
         }
       end.to change(Investments::Income, :count).by(1)
 
-      expect(response).to redirect_to(
-        investments_income_path(Investments::Income.last)
-      )
+      expect(response).to redirect_to(investments_incomes_path(tab: "list", modal: "show", income_id: Investments::Income.last.id))
     end
 
     it "does not allow creating an income in another user's portfolio" do
@@ -367,7 +384,7 @@ RSpec.describe "Investments::Incomes", type: :request do
         investments_income: { portfolio_id: destination_portfolio.id }
       }
 
-      expect(response).to redirect_to(investments_income_path(income))
+      expect(response).to redirect_to(investments_incomes_path(tab: "list", modal: "show", income_id: income.id))
       expect(income.reload.portfolio).to eq(destination_portfolio)
     end
 

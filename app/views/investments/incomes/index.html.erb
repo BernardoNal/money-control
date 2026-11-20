@@ -12,7 +12,7 @@
 
       <div class="flex flex-wrap gap-3">
         <%= render ButtonComponent.new(label: "Relatório fiscal", href: investments_income_tax_report_path, variant: :soft_olive, icon: "fa-solid fa-file-invoice-dollar") %>
-        <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+        <%= render ButtonComponent.new(label: "Novo provento", href: investments_incomes_path(tab: "list", modal: "new"), variant: :primary, icon: "fa-solid fa-circle-plus", data: { modal_target: "investment-income-form-modal" }) %>
       </div>
     </div>
 
@@ -320,11 +320,14 @@
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center justify-end gap-3">
-                    <%= link_to investments_income_path(income),  class: "text-lg text-slate-500 transition hover:text-slate-900" do %>
+                    <%= link_to investments_incomes_path(tab: "list", modal: "show", income_id: income.id), data: { modal_target: "investment-income-#{income.id}" }, class: "text-lg text-slate-500 transition hover:text-slate-900" do %>
                     <i class="fa-solid fa-eye"></i>
                     <% end %>
-                    <%= link_to edit_investments_income_path(income), class: "text-lg text-emerald-600 transition hover:text-emerald-700" do %>
+                    <%= link_to investments_incomes_path(tab: "list", modal: "edit", income_id: income.id), data: { modal_target: "investment-income-form-modal" }, class: "text-lg text-emerald-600 transition hover:text-emerald-700" do %>
                       <i class="fa-solid fa-pen-to-square"></i>
+                    <% end %>
+                    <%= link_to investments_income_path(income), data: { turbo_method: :delete, turbo_confirm: "Tem certeza que deseja remover este provento?" }, class: "text-lg text-rose-600 transition hover:text-rose-700", title: "Excluir" do %>
+                      <i class="fa-solid fa-trash"></i>
                     <% end %>
                   </div>
                 </td>
@@ -356,10 +359,22 @@
         <h2 class="text-xl font-semibold text-slate-950">Nenhum provento encontrado</h2>
         <p class="mt-2 text-sm text-slate-600">Ajuste os filtros ou cadastre um novo provento.</p>
         <div class="mt-6 flex justify-center">
-          <%= render ButtonComponent.new(label: "Novo provento", href: new_investments_income_path, variant: :primary, icon: "fa-solid fa-circle-plus") %>
+          <%= render ButtonComponent.new(label: "Novo provento", href: investments_incomes_path(tab: "list", modal: "new"), variant: :primary, icon: "fa-solid fa-circle-plus", data: { modal_target: "investment-income-form-modal" }) %>
         </div>
       </div>
       <% end %>
     <% end %>
   </section>
+
+  <% if @income_modal == "show" && @modal_income.present? %>
+    <%= render ModalComponent.new(id: "investment-income-#{@modal_income.id}", title: "Detalhes do provento", open: true) do %>
+      <%= render "modal_details", income: @modal_income %>
+    <% end %>
+  <% end %>
+
+  <% if %w[new edit].include?(@income_modal) && @modal_income.present? %>
+    <%= render ModalComponent.new(id: "investment-income-form-modal", title: @income_modal == "new" ? "Novo provento" : "Editar provento", open: true) do %>
+      <%= render "modal_form", transaction: @modal_income %>
+    <% end %>
+  <% end %>
 </div>

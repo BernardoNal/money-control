@@ -8,8 +8,9 @@ const initializeModalDialogs = () => {
 
     const openModal = (event) => {
       event?.preventDefault()
-      lastFocusedElement = event?.currentTarget || document.activeElement
-      dialog.showModal()
+      lastFocusedElement = event?.currentTarget || triggers[0] || document.activeElement
+      if (!dialog.open) dialog.showModal()
+      dialog.querySelector("[data-modal-close]")?.focus()
     }
 
     const closeModal = () => dialog.close()
@@ -20,6 +21,8 @@ const initializeModalDialogs = () => {
       if (event.target === dialog) closeModal()
     })
     dialog.addEventListener("close", () => lastFocusedElement?.focus())
+
+    if (dialog.dataset.modalOpen === "true") openModal()
   })
 }
 

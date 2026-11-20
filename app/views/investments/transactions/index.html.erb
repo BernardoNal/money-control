@@ -269,7 +269,8 @@
   <% if @transaction_modal == "show" && @modal_transaction.present? %>
     <%= render ModalComponent.new(
           id: "investment-transaction-modal-#{@modal_transaction.id}",
-          title: "Detalhes da movimentação"
+          title: "Detalhes da movimentação",
+          open: true
         ) do %>
       <%= render "modal_details", transaction: @modal_transaction %>
     <% end %>
@@ -278,7 +279,8 @@
   <% if %w[new edit].include?(@transaction_modal) && @modal_transaction.present? %>
     <%= render ModalComponent.new(
           id: "investment-transaction-form-modal",
-          title: @transaction_modal == "new" ? "Nova movimentação" : "Editar movimentação"
+          title: @transaction_modal == "new" ? "Nova movimentação" : "Editar movimentação",
+          open: true
         ) do %>
       <%= render "modal_form", transaction: @modal_transaction %>
     <% end %>
