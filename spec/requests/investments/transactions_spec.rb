@@ -74,12 +74,46 @@ RSpec.describe "Investments::Transactions", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("AAPL")
     end
+
+    it "renders the selected transaction inside the reusable modal" do
+      get investments_transactions_path, params: { modal: "show", transaction_id: transaction.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(
+        "investment-transaction-modal-#{transaction.id}",
+        "data-modal",
+        'data-modal-open="true"',
+        "Detalhes da movimentação",
+        "Apple Inc."
+      )
+    end
+
+    it "does not expose another user's transaction in the modal" do
+      get investments_transactions_path, params: { modal: "show", transaction_id: other_transaction.id }
+
+      expect(response).to redirect_to(investments_transactions_path)
+      expect(flash[:alert]).to eq("Movimentação não encontrada ou indisponível.")
+    end
+
+    it "renders the new transaction form inside the modal" do
+      get investments_transactions_path, params: { modal: "new" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Nova movimentação", "Criar movimentação", "investments_transaction[quantity]")
+    end
+
+    it "renders the edit transaction form inside the modal" do
+      get investments_transactions_path, params: { modal: "edit", transaction_id: transaction.id }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Editar movimentação", "Salvar alterações", "value=\"10.0\"")
+    end
   end
 
   describe "GET /show" do
     it "allows access to a transaction owned by the current user" do
       get investments_transaction_path(transaction)
-      expect(response).to have_http_status(:ok)
+      expect(response).to redirect_to(investments_transactions_path(modal: "show", transaction_id: transaction.id))
     end
 
     it "does not expose another user's transaction" do
@@ -114,7 +148,7 @@ RSpec.describe "Investments::Transactions", type: :request do
 
       transaction = Investments::Transaction.order(:created_at).last
 
-      expect(response).to redirect_to(investments_transaction_path(transaction))
+      expect(response).to redirect_to(investments_transactions_path(modal: "show", transaction_id: transaction.id))
       expect(transaction.portfolio).to eq(portfolio)
       expect(transaction.asset).to eq(asset)
       expect(transaction.transaction_type).to eq("buy")
@@ -144,7 +178,7 @@ RSpec.describe "Investments::Transactions", type: :request do
     it "allows editing a transaction owned by the current user" do
       get edit_investments_transaction_path(transaction)
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to redirect_to(investments_transactions_path(modal: "edit", transaction_id: transaction.id))
     end
 
     it "does not expose the edit form for another user's transaction" do
@@ -166,9 +200,7 @@ RSpec.describe "Investments::Transactions", type: :request do
         }
       end.not_to change(Investments::Transaction, :count)
 
-      expect(response).to redirect_to(
-        investments_transaction_path(transaction)
-      )
+      expect(response).to redirect_to(investments_transactions_path(modal: "show", transaction_id: transaction.id))
 
       transaction.reload
 
@@ -187,7 +219,7 @@ RSpec.describe "Investments::Transactions", type: :request do
         investments_transaction: { portfolio_id: destination_portfolio.id }
       }
 
-      expect(response).to redirect_to(investments_transaction_path(transaction))
+      expect(response).to redirect_to(investments_transactions_path(modal: "show", transaction_id: transaction.id))
       expect(transaction.reload.portfolio).to eq(destination_portfolio)
     end
 

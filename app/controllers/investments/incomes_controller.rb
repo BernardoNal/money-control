@@ -4,6 +4,59 @@ class Investments::IncomesController < ApplicationController
   before_action :load_form_collections, only: %i[new create edit update]
 
   def index
+    load_index_view
+    @income_modal = permitted_modal(params[:modal])
+    @modal_income = income_for_modal(@income_modal) if @income_modal.present?
+    load_form_collections if %w[new edit].include?(@income_modal)
+  end
+
+  def show
+    redirect_to investments_incomes_path(tab: "list", modal: "show", income_id: @income.id)
+  end
+
+  def new
+    redirect_to investments_incomes_path(tab: "list", modal: "new")
+  end
+
+  def create
+    @income = Investments::Income.new(income_params)
+    set_income_portfolio
+    return if performed?
+
+    if @income.save
+      redirect_to investments_incomes_path(tab: "list", modal: "show", income_id: @income.id), notice: t(".created")
+    else
+      prepare_invalid_modal("new")
+      render :index, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+    redirect_to investments_incomes_path(tab: "list", modal: "edit", income_id: @income.id)
+  end
+
+  def update
+    set_income_portfolio
+    return if performed?
+
+    if @income.update(income_params.except(:portfolio_id))
+      redirect_to investments_incomes_path(tab: "list", modal: "show", income_id: @income.id), notice: t(".updated")
+    else
+      prepare_invalid_modal("edit")
+      render :index, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @income.delete
+
+    redirect_to investments_incomes_path,
+                notice: t(".destroyed")
+  end
+
+  private
+
+  def load_index_view
     @total_incomes = 10
     @offset = params[:set].to_i % @total_incomes == 0 ? params[:set].to_i : 0
 
@@ -24,52 +77,25 @@ class Investments::IncomesController < ApplicationController
     @visible_incomes = @incomes.order(payment_date: :desc).limit(@total_incomes).offset(@offset)
   end
 
-  def show
+  def prepare_invalid_modal(modal)
+    load_index_view
+    @income_modal = modal
+    @modal_income = @income
+    load_form_collections
   end
 
-  def new
-    @income = Investments::Income.new
-    render :form
+  def permitted_modal(value)
+    %w[new edit show].include?(value) ? value : nil
   end
 
-  def create
-    @income = Investments::Income.new(income_params)
+  def income_for_modal(modal)
+    return Investments::Income.new if modal == "new"
 
-  set_income_portfolio
-  return if performed?
-
-    if @income.save
-      redirect_to investments_income_path(@income),
-                 notice: t(".created")
-    else
-      render :form, status: :unprocessable_entity
-    end
+    policy_scope(Investments::Income).find(params[:income_id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to investments_incomes_path, alert: "Provento não encontrado ou indisponível."
+    nil
   end
-
-  def edit
-    render :form
-  end
-
-  def update
-    set_income_portfolio
-    return if performed?
-
-    if @income.update(income_params.except(:portfolio_id))
-      redirect_to investments_income_path(@income),
-                  notice: t(".updated")
-    else
-      render :form, status: :unprocessable_entity
-    end
-  end
-
-  def destroy
-    @income.delete
-
-    redirect_to investments_incomes_path,
-                notice: t(".destroyed")
-  end
-
-  private
 
   def set_income
     @income = Investments::Income.find(params[:id])

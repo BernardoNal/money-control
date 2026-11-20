@@ -17,9 +17,10 @@
 
       <%= render ButtonComponent.new(
             label: "Nova movimentação",
-            href: new_investments_transaction_path,
+            href: investments_transactions_path(modal: "new"),
             variant: :primary,
-            icon: "fa-solid fa-circle-plus"
+            icon: "fa-solid fa-circle-plus",
+            data: { modal_target: "investment-transaction-form-modal" }
           ) %>
     </div>
 
@@ -180,13 +181,15 @@
 
                 <td class="px-4 py-4">
                   <div class="flex items-center justify-end gap-3">
-                    <%= link_to investments_transaction_path(transaction),
+                    <%= link_to investments_transactions_path(modal: "show", transaction_id: transaction.id),
+                                data: { modal_target: "investment-transaction-modal-#{transaction.id}" },
                                 class: "text-lg text-slate-500 transition hover:text-slate-900",
                                 title: "Visualizar" do %>
                       <i class="fa-solid fa-eye"></i>
                     <% end %>
 
-                    <%= link_to edit_investments_transaction_path(transaction),
+                    <%= link_to investments_transactions_path(modal: "edit", transaction_id: transaction.id),
+                                data: { modal_target: "investment-transaction-form-modal" },
                                 class: "text-lg text-emerald-600 transition hover:text-emerald-700",
                                 title: "Editar" do %>
                       <i class="fa-solid fa-pen-to-square"></i>
@@ -253,12 +256,33 @@
         <div class="mt-6 flex justify-center">
           <%= render ButtonComponent.new(
                 label: "Nova movimentação",
-                href: new_investments_transaction_path,
+                href: investments_transactions_path(modal: "new"),
                 variant: :primary,
-                icon: "fa-solid fa-circle-plus"
+                icon: "fa-solid fa-circle-plus",
+                data: { modal_target: "investment-transaction-form-modal" }
               ) %>
         </div>
       </div>
     <% end %>
   </section>
+
+  <% if @transaction_modal == "show" && @modal_transaction.present? %>
+    <%= render ModalComponent.new(
+          id: "investment-transaction-modal-#{@modal_transaction.id}",
+          title: "Detalhes da movimentação",
+          open: true
+        ) do %>
+      <%= render "modal_details", transaction: @modal_transaction %>
+    <% end %>
+  <% end %>
+
+  <% if %w[new edit].include?(@transaction_modal) && @modal_transaction.present? %>
+    <%= render ModalComponent.new(
+          id: "investment-transaction-form-modal",
+          title: @transaction_modal == "new" ? "Nova movimentação" : "Editar movimentação",
+          open: true
+        ) do %>
+      <%= render "modal_form", transaction: @modal_transaction %>
+    <% end %>
+  <% end %>
 </div>

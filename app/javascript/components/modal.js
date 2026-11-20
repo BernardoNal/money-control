@@ -1,19 +1,29 @@
-const initializeTransactionDialogs = () => {
-  document.querySelectorAll("[data-transaction-dialog]").forEach((dialog) => {
-    if (dialog.dataset.initialized === "true") return
-    dialog.dataset.initialized = "true"
+const initializeModalDialogs = () => {
+  document.querySelectorAll("[data-modal]").forEach((dialog) => {
+    if (dialog.dataset.modalInitialized === "true") return
+    dialog.dataset.modalInitialized = "true"
 
-    const opener = document.querySelector(`[data-transaction-dialog-target="${dialog.id}"]`)
+    const triggers = document.querySelectorAll(`[data-modal-target="${dialog.id}"]`)
     let lastFocusedElement
-    opener?.addEventListener("click", () => {
-      lastFocusedElement = document.activeElement
-      dialog.showModal()
-    })
+
+    const openModal = (event) => {
+      event?.preventDefault()
+      lastFocusedElement = event?.currentTarget || triggers[0] || document.activeElement
+      if (!dialog.open) dialog.showModal()
+      dialog.querySelector("[data-modal-close]")?.focus()
+    }
+
+    const closeModal = () => dialog.close()
+
+    triggers.forEach((trigger) => trigger.addEventListener("click", openModal))
+    dialog.querySelectorAll("[data-modal-close]").forEach((closeButton) => closeButton.addEventListener("click", closeModal))
     dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) dialog.close()
+      if (event.target === dialog) closeModal()
     })
     dialog.addEventListener("close", () => lastFocusedElement?.focus())
+
+    if (dialog.dataset.modalOpen === "true") openModal()
   })
 }
 
-document.addEventListener("turbo:load", initializeTransactionDialogs)
+document.addEventListener("turbo:load", initializeModalDialogs)

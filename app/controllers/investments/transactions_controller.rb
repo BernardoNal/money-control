@@ -8,6 +8,61 @@ module Investments
     ]
 
     def index
+      load_index_view
+
+      @transaction_modal = permitted_modal(params[:modal])
+      @modal_transaction = transaction_for_modal(@transaction_modal) if @transaction_modal.present?
+      load_form_collections if %w[new edit].include?(@transaction_modal)
+    end
+
+    def show
+      redirect_to investments_transactions_path(modal: "show", transaction_id: @transaction.id)
+    end
+
+    def new
+      redirect_to investments_transactions_path(modal: "new")
+    end
+
+    def create
+      @transaction = Investments::Transaction.new(transaction_params)
+
+      set_transaction_portfolio
+      return if performed?
+
+      if @transaction.save
+        redirect_to investments_transactions_path(modal: "show", transaction_id: @transaction.id), notice: t(".created")
+      else
+        prepare_invalid_modal("new")
+        render :index, status: :unprocessable_entity
+      end
+    end
+
+    def edit
+      redirect_to investments_transactions_path(modal: "edit", transaction_id: @transaction.id)
+    end
+
+    def update
+      set_transaction_portfolio
+      return if performed?
+
+      if @transaction.update(transaction_params.except(:portfolio_id))
+        redirect_to investments_transactions_path(modal: "show", transaction_id: @transaction.id), notice: t(".updated")
+      else
+        prepare_invalid_modal("edit")
+        render :index, status: :unprocessable_entity
+      end
+    end
+
+    def destroy
+      @transaction.destroy
+
+      redirect_to investments_transactions_path,
+                  notice: t(".destroyed")
+    end
+
+    private
+
+    def load_index_view
       @total_transactions = 5
       @offset = params[:set].to_i % @total_transactions == 0 ? params[:set].to_i : 0
 
@@ -28,63 +83,28 @@ module Investments
         .order(date: :desc)
         .limit(@total_transactions)
         .offset(@offset)
+
     end
 
-    def show
-    end
-
-    def new
-      @transaction = Investments::Transaction.new
-
+    def prepare_invalid_modal(modal)
+      load_index_view
+      @transaction_modal = modal
+      @modal_transaction = @transaction
       load_form_collections
-
-      render :form
     end
 
-    def create
-      @transaction = Investments::Transaction.new(transaction_params)
-
-        set_transaction_portfolio
-        return if performed?
-
-      load_form_collections
-
-      if @transaction.save
-        redirect_to investments_transaction_path(@transaction),
-                    notice: t(".created")
-      else
-        render :form, status: :unprocessable_entity
-      end
+    def permitted_modal(value)
+      %w[new edit show].include?(value) ? value : nil
     end
 
-    def edit
-      load_form_collections
+    def transaction_for_modal(modal)
+      return Investments::Transaction.new if modal == "new"
 
-      render :form
+      policy_scope(Investments::Transaction).find(params[:transaction_id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to investments_transactions_path, alert: "Movimentação não encontrada ou indisponível."
+      nil
     end
-
-    def update
-      set_transaction_portfolio
-      return if performed?
-
-      load_form_collections
-
-      if @transaction.update(transaction_params.except(:portfolio_id))
-        redirect_to investments_transaction_path(@transaction),
-                    notice: t(".updated")
-      else
-        render :form, status: :unprocessable_entity
-      end
-    end
-
-    def destroy
-      @transaction.destroy
-
-      redirect_to investments_transactions_path,
-                  notice: t(".destroyed")
-    end
-
-    private
 
     def transaction_params
       params.require(:investments_transaction).permit(
@@ -173,5 +193,6 @@ module Investments
     rescue ActiveRecord::RecordNotFound
       redirect_to root_path
     end
+
   end
 end
