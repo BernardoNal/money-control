@@ -1,5 +1,6 @@
 class Account < ApplicationRecord
   belongs_to :user
+  belongs_to :bank_institution, optional: true
   has_many :transactions, dependent: :destroy
   has_many :transaction_imports, dependent: :destroy
 
