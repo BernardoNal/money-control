@@ -43,16 +43,21 @@ user_categories.each do |cat|
 end
 
 puts "Criando contas..."
+nu_pagamentos = BankInstitution.find_or_create_by!(source: "bcb", bank_code: "260") do |bank|
+  bank.name = "NU PAGAMENTOS S.A. - INSTITUIÇÃO DE PAGAMENTO"
+  bank.short_name = "NU PAGAMENTOS - IP"
+end
+
 account1 = Account.create!(
   name: "Conta Corrente",
-  bank: "Nubank",
+  bank_institution: nu_pagamentos,
   initial_balance: 1500.00,
   user_id: user.id
 )
 
 account2 = Account.create!(
   name: "Cartão Nubank",
-  bank: "Nubank",
+  bank_institution: nu_pagamentos,
   initial_balance: 0.00,
   limit: 2000,
   last_digits: "1234",
