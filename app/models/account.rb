@@ -1,4 +1,6 @@
 class Account < ApplicationRecord
+  before_validation :sync_legacy_bank_name
+
   belongs_to :user
   belongs_to :bank_institution, optional: true
   has_many :transactions, dependent: :destroy
@@ -16,6 +18,18 @@ class Account < ApplicationRecord
     value = initial_balance.to_f + transactions.sum(:amount)
      ActionController::Base.helpers.number_with_precision(value, precision: 2, separator: ",", delimiter: ".")
   end
+
+  def bank_display_name
+    bank_institution&.short_name.presence || bank_institution&.name.presence || bank.presence || "-"
+  end
+
   private
+
+  # Keep the legacy text synchronized while existing records are migrated.
+  def sync_legacy_bank_name
+    return unless bank_institution
+
+    self.bank = bank_institution.short_name.presence || bank_institution.name
+  end
 
 end

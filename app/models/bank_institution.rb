@@ -6,4 +6,8 @@ class BankInstitution < ApplicationRecord
 
   scope :active, -> { where(active: true) }
   scope :ordered, -> { order(:bank_code) }
+
+  def display_name
+    "#{bank_code} - #{short_name.presence || name}"
+  end
 end

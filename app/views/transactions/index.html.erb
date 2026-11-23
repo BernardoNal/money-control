@@ -87,7 +87,7 @@
                 </span>
               </td>
               <td class="px-5 py-4 text-slate-700"><%= transaction.date.strftime("%d/%m/%Y") %></td>
-              <td class="px-5 py-4 text-slate-700"><%= "#{transaction.account.name} - #{transaction.account.bank}" %></td>
+              <td class="px-5 py-4 text-slate-700"><%= "#{transaction.account.name} - #{transaction.account.bank_display_name}" %></td>
               <td class="px-5 py-4 text-slate-700"><%= transaction_category_label(transaction.category) %></td>
               <td class="px-5 py-4">
                 <div class="flex items-center justify-end gap-3">

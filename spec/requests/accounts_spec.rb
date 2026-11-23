@@ -44,6 +44,14 @@ RSpec.describe "Accounts", type: :request do
       expect(response.body).to include("001 - Banco do Brasil")
       expect(response.body).not_to include("999 - Inactive Bank")
     end
+
+    it "submits the selected bank institution id" do
+      bank = BankInstitution.create!(bank_code: "001", name: "Banco do Brasil S.A.", short_name: "Banco do Brasil")
+
+      get new_account_path
+
+      expect(response.body).to include("name=\"account[bank_institution_id]\"", bank.display_name, "#{bank.id}")
+    end
   end
 
   describe "GET /show" do
@@ -85,6 +93,25 @@ RSpec.describe "Accounts", type: :request do
 
       expect(created_account.user).to eq(user)
       expect(response).to redirect_to(account_path(created_account))
+    end
+
+    it "stores the selected bank institution and synchronizes the legacy display value" do
+      bank = BankInstitution.create!(bank_code: "260", name: "Nu Pagamentos S.A.", short_name: "NU PAGAMENTOS - IP")
+
+      expect do
+        post accounts_path, params: {
+          account: {
+            name: "Carteira digital",
+            bank_institution_id: bank.id,
+            initial_balance: 0
+          }
+        }
+      end.to change(Account, :count).by(1)
+
+      created_account = Account.order(:created_at).last
+
+      expect(created_account.bank_institution).to eq(bank)
+      expect(created_account.bank).to eq("NU PAGAMENTOS - IP")
     end
   end
 
