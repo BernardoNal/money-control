@@ -5,7 +5,7 @@ RSpec.describe "Transactions::Imports", type: :request do
     User.create!(name: "Import User", email: "import@example.com", password: "password123")
   end
   let!(:account) do
-    Account.create!(user: user, name: "Conta principal", bank: "Banco do Brasil", initial_balance: 0)
+    Account.create!(user: user, name: "Conta principal", bank_institution: test_bank("Banco do Brasil"), initial_balance: 0)
   end
   let!(:category) do
     Category.create!(
@@ -88,7 +88,7 @@ RSpec.describe "Transactions::Imports", type: :request do
 
   it "does not allow access to an account owned by another user" do
     other_user = User.create!(name: "Other", email: "other-import@example.com", password: "password123")
-    other_account = Account.create!(user: other_user, name: "Outra", bank: "Inter", initial_balance: 0)
+    other_account = Account.create!(user: other_user, name: "Outra", bank_institution: test_bank("Inter"), initial_balance: 0)
 
     get account_transaction_import_path(other_account)
 
@@ -355,7 +355,7 @@ RSpec.describe "Transactions::Imports", type: :request do
   end
 
   it "does not match a stable identifier from another account" do
-    other_account = Account.create!(user: user, name: "Outra conta", bank: "Outro banco", initial_balance: 0)
+    other_account = Account.create!(user: user, name: "Outra conta", bank_institution: test_bank("Outro banco"), initial_balance: 0)
     Transaction.create!(
       account: other_account,
       category: income_category,

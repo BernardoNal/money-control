@@ -31,7 +31,7 @@ RSpec.describe TransactionPolicy, type: :policy do
     Account.create!(
       user: user,
       name: "Conta Principal",
-      bank: "Banco do Brasil",
+      bank_institution: test_bank("Banco do Brasil"),
       initial_balance: 0
     )
   end
@@ -40,7 +40,7 @@ RSpec.describe TransactionPolicy, type: :policy do
     Account.create!(
       user: other_user,
       name: "Outra Conta",
-      bank: "Banco do Brasil",
+      bank_institution: test_bank("Banco do Brasil"),
       initial_balance: 0
     )
   end

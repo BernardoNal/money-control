@@ -21,7 +21,7 @@ RSpec.describe AccountPolicy, type: :policy do
     Account.create!(
       user: user,
       name: "User Account",
-      bank: "Test Bank",
+      bank_institution: test_bank("Test Bank"),
       initial_balance: 1000
     )
   end
@@ -30,7 +30,7 @@ RSpec.describe AccountPolicy, type: :policy do
     Account.create!(
       user: other_user,
       name: "Other Account",
-      bank: "Other Bank",
+      bank_institution: test_bank("Other Bank"),
       initial_balance: 500
     )
   end

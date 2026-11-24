@@ -13,7 +13,7 @@ RSpec.describe Transaction, type: :model do
     Account.create!(
       user: user,
       name: "Principal",
-      bank: "Nubank",
+      bank_institution: test_bank("Nubank"),
       initial_balance: 100.0
     )
   end

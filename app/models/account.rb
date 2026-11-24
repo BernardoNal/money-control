@@ -1,12 +1,10 @@
 class Account < ApplicationRecord
-  before_validation :sync_legacy_bank_name
-
   belongs_to :user
-  belongs_to :bank_institution, optional: true
+  belongs_to :bank_institution
   has_many :transactions, dependent: :destroy
   has_many :transaction_imports, dependent: :destroy
 
-  validates :name,:bank,:initial_balance, presence: true
+  validates :name, :initial_balance, presence: true
 
   # Validação de valores numéricos
   validates :limit, :initial_balance, numericality: {  greater_than_or_equal_to: 0 }, allow_nil: true
@@ -20,16 +18,6 @@ class Account < ApplicationRecord
   end
 
   def bank_display_name
-    bank_institution&.short_name.presence || bank_institution&.name.presence || bank.presence || "-"
+    bank_institution.short_name.presence || bank_institution.name
   end
-
-  private
-
-  # Keep the legacy text synchronized while existing records are migrated.
-  def sync_legacy_bank_name
-    return unless bank_institution
-
-    self.bank = bank_institution.short_name.presence || bank_institution.name
-  end
-
 end

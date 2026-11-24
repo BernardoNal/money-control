@@ -13,7 +13,7 @@ RSpec.describe "Accounts", type: :request do
     Account.create!(
       user: user,
       name: "Principal",
-      bank: "Nubank",
+      bank_institution: test_bank("Nubank"),
       initial_balance: 100.0,
       limit: 500.0,
       last_digits: "1234",
@@ -80,7 +80,7 @@ RSpec.describe "Accounts", type: :request do
         post accounts_path, params: {
           account: {
             name: "Investimentos",
-            bank: "Inter",
+            bank_institution_id: test_bank("Inter").id,
             initial_balance: 1000.0,
             limit: 500.0,
             last_digits: "5678",
@@ -95,7 +95,7 @@ RSpec.describe "Accounts", type: :request do
       expect(response).to redirect_to(account_path(created_account))
     end
 
-    it "stores the selected bank institution and synchronizes the legacy display value" do
+    it "stores the selected bank institution" do
       bank = BankInstitution.create!(bank_code: "260", name: "Nu Pagamentos S.A.", short_name: "NU PAGAMENTOS - IP")
 
       expect do
@@ -111,7 +111,7 @@ RSpec.describe "Accounts", type: :request do
       created_account = Account.order(:created_at).last
 
       expect(created_account.bank_institution).to eq(bank)
-      expect(created_account.bank).to eq("NU PAGAMENTOS - IP")
+      expect(created_account.bank_display_name).to eq("NU PAGAMENTOS - IP")
     end
   end
 
@@ -121,7 +121,7 @@ RSpec.describe "Accounts", type: :request do
         patch account_path(account), params: {
           account: {
             name: "Reserva",
-            bank: "Inter",
+            bank_institution_id: test_bank("Inter").id,
             initial_balance: 250.0
           }
         }
@@ -131,7 +131,7 @@ RSpec.describe "Accounts", type: :request do
 
       account.reload
       expect(account.name).to eq("Reserva")
-      expect(account.bank).to eq("Inter")
+      expect(account.bank_institution).to eq(test_bank("Inter"))
       expect(account.initial_balance.to_f).to eq(250.0)
     end
 
@@ -139,7 +139,7 @@ RSpec.describe "Accounts", type: :request do
       patch account_path(account), params: {
         account: {
           name: "",
-          bank: "",
+          bank_institution_id: "",
           initial_balance: ""
         }
       }
@@ -148,7 +148,7 @@ RSpec.describe "Accounts", type: :request do
 
       account.reload
       expect(account.name).to eq("Principal")
-      expect(account.bank).to eq("Nubank")
+      expect(account.bank_institution).to eq(test_bank("Nubank"))
     end
   end
 
@@ -165,7 +165,7 @@ RSpec.describe "Accounts", type: :request do
       Account.create!(
         user: other_user,
         name: "Other Account",
-        bank: "Inter",
+        bank_institution: test_bank("Inter"),
         initial_balance: 500.0,
         limit: 1000.0,
         last_digits: "5678",

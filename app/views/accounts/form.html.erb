@@ -21,7 +21,7 @@
                         attribute: :bank_institution_id,
                         selected: @account.bank_institution,
                         label: "Banco",
-                        selected_label: @account.bank_institution&.display_name || @account.bank,
+                        selected_label: @account.bank_institution&.display_name,
                         placeholder: "Buscar banco",
                         options: bank_options
                       ) %>
