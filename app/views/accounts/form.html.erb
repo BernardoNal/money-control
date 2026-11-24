@@ -15,16 +15,13 @@
           </div>
 
           <div>
-            <% bank_options = @bank_institutions.map { |bank| ["#{bank.bank_code} - #{bank.short_name.presence || bank.name}", bank.short_name.presence || bank.name] } %>
-            <% if @account.bank.present? && bank_options.none? { |_, value| value == @account.bank } %>
-              <% bank_options.unshift(["#{@account.bank} (cadastro atual)", @account.bank]) %>
-            <% end %>
+            <% bank_options = @bank_institutions.map { |bank| [bank.display_name, bank.id] } %>
             <%= render Investments::SearchableSelectComponent.new(
                         form: f,
-                        attribute: :bank,
-                        selected: @account.bank,
+                        attribute: :bank_institution_id,
+                        selected: @account.bank_institution,
                         label: "Banco",
-                        selected_label: @account.bank,
+                        selected_label: @account.bank_institution&.display_name,
                         placeholder: "Buscar banco",
                         options: bank_options
                       ) %>

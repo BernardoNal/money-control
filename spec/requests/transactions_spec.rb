@@ -13,7 +13,7 @@ RSpec.describe "Transactions", type: :request do
     Account.create!(
       user: user,
       name: "Principal",
-      bank: "Nubank",
+      bank_institution: test_bank("Nubank"),
       initial_balance: 100.0
     )
   end
@@ -30,7 +30,7 @@ RSpec.describe "Transactions", type: :request do
     Account.create!(
       user: other_user,
       name: "Outra Conta",
-      bank: "Nubank",
+      bank_institution: test_bank("Nubank"),
       initial_balance: 100.0
     )
   end
@@ -118,7 +118,7 @@ end
     end
 
     it "filters transactions by an account and category owned by the current user" do
-      destination_account = Account.create!(user: user, name: "Reserva", bank: "Inter", initial_balance: 0)
+      destination_account = Account.create!(user: user, name: "Reserva", bank_institution: test_bank("Inter"), initial_balance: 0)
       destination_category = Category.create!(user: user, name: "Moradia", is_income: false, icon: "🏠", color: "#0055aa")
       matching_transaction = Transaction.create!(
         account: destination_account,
@@ -295,7 +295,7 @@ end
       destination_account = Account.create!(
         user: user,
         name: "Reserva",
-        bank: "Inter",
+        bank_institution: test_bank("Inter"),
         initial_balance: 0
       )
       transaction = Transaction.create!(

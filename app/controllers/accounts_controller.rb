@@ -3,7 +3,7 @@ class AccountsController < ApplicationController
   before_action :set_bank_institutions, only: %i[new create edit update]
 
   def index
-    @accounts = policy_scope(Account)
+    @accounts = policy_scope(Account).includes(:bank_institution)
   end
 
   def show
@@ -51,7 +51,7 @@ class AccountsController < ApplicationController
 
   # Permits account parameters
   def account_params
-    params.require(:account).permit(:name, :card_type, :bank, :initial_balance, :limit, :last_digits, :due_day)
+    params.require(:account).permit(:name, :card_type, :bank_institution_id, :initial_balance, :limit, :last_digits, :due_day)
   end
 
   def set_account
@@ -61,7 +61,10 @@ class AccountsController < ApplicationController
 
   def set_bank_institutions
     # Keep the form dependent on the local catalog populated by the maintenance task.
-    @bank_institutions = BankInstitution.active.ordered
+    institutions = BankInstitution.active.ordered.to_a
+    selected_institution = @account&.bank_institution
+    institutions.unshift(selected_institution) if selected_institution && !institutions.include?(selected_institution)
+    @bank_institutions = institutions
   end
 
 end

@@ -9,4 +9,5 @@ namespace :bank_catalog do
   rescue BankCatalog::BcbClient::Error => e
     abort e.message
   end
+
 end

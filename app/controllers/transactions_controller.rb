@@ -83,7 +83,7 @@ class TransactionsController < ApplicationController
   end
 
   def filtered_transactions
-    scope = policy_scope(Transaction).includes(:account, :category).order(date: :desc)
+    scope = policy_scope(Transaction).includes(account: :bank_institution, category: {}).order(date: :desc)
     scope = scope.where(account_id: @filters[:account_id]) if @filters[:account_id].present? && @filter_accounts.exists?(id: @filters[:account_id])
     scope = scope.where(category_id: @filters[:category_id]) if @filters[:category_id].present? && @filter_categories.exists?(id: @filters[:category_id])
     scope = scope.where("amount >= 0") if @filters[:direction] == "income"
