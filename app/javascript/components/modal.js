@@ -13,7 +13,20 @@ const initializeModalDialogs = () => {
       dialog.querySelector("[data-modal-close]")?.focus()
     }
 
-    const closeModal = () => dialog.close()
+    const clearModalParams = () => {
+      const paramsToClear = (dialog.dataset.modalClearParams || "").split(",").filter(Boolean)
+      if (paramsToClear.length === 0) return
+
+      const url = new URL(window.location.href)
+      paramsToClear.forEach((param) => url.searchParams.delete(param))
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`)
+    }
+
+    const closeModal = () => {
+      if (!dialog.open) return
+      dialog.close()
+      clearModalParams()
+    }
 
     triggers.forEach((trigger) => trigger.addEventListener("click", openModal))
     dialog.querySelectorAll("[data-modal-close]").forEach((closeButton) => closeButton.addEventListener("click", closeModal))

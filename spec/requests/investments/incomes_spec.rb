@@ -108,6 +108,7 @@ RSpec.describe "Investments::Incomes", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("investment-income-#{income.id}", "data-modal", 'data-modal-open="true"', "Detalhes do provento", "MXRF11")
+      expect(response.body).to include("href=\"/investments/incomes?tab=overview\"")
     end
 
     it "renders new and edit income forms inside the modal" do

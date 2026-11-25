@@ -19,4 +19,10 @@ RSpec.describe ModalComponent, type: :component do
 
     expect(page).to have_css("dialog.max-w-lg")
   end
+
+  it "declares query parameters to clear when the modal closes" do
+    render_inline(described_class.new(id: "income-modal", title: "Detalhes", clear_params: %w[modal income_id]))
+
+    expect(page).to have_css("dialog[data-modal-clear-params='modal,income_id']")
+  end
 end
