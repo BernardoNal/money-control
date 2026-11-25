@@ -8,15 +8,16 @@ class ModalComponent < ViewComponent::Base
     xl: "max-w-7xl"
   }.freeze
 
-  def initialize(id:, title:, size: :lg, close_label: "Fechar modal", open: false)
+  def initialize(id:, title:, size: :lg, close_label: "Fechar modal", open: false, clear_params: [])
     @id = id
     @title = title
     @size = size.to_sym
     @close_label = close_label
     @open = open
+    @clear_params = Array(clear_params).map(&:to_s)
   end
 
-  attr_reader :id, :title, :close_label
+  attr_reader :id, :title, :close_label, :clear_params
 
   def open?
     @open
