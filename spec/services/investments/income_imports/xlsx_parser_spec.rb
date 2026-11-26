@@ -133,6 +133,27 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(result.rows.first.symbol_suggestion).to eq("B3SA")
   end
 
+  it "normalizes separators in corporate event identifiers" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SA-ACNOR 6", "0,30"]
+    ])
+
+    expect(result.rows.first).to have_attributes(
+      source_event_identifier: "BRB3SAACNOR6",
+      symbol_suggestion: "B3SA"
+    )
+  end
+
+  it "does not suggest an asset for an incomplete corporate event identifier" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SA", "0,30"]
+    ])
+
+    expect(result.rows.first).to have_attributes(source_event_identifier: nil, symbol_suggestion: nil)
+  end
+
   it "preserves the source description and normalizes repeated whitespace" do
     result = parse([
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
