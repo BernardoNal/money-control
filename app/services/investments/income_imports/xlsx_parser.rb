@@ -143,6 +143,10 @@ module Investments
 
         rows = []
         sheet_rows.drop_while { |row| row != header_row }.drop(1).each do |row|
+          # Brokerage exports may repeat the column header after a page break.
+          # It is metadata, not a movement, and must not reach date/amount parsing.
+          next if header_row?(row[:cells])
+
           description = row[:cells][headers[:description]].to_s.strip
           break if normalize_header(description).start_with?("nao_ha_lancamentos")
 
@@ -210,9 +214,10 @@ module Investments
       end
 
       def unsupported_reason_for(description)
-        return unless normalize_header(description).include?("tesouro_direto")
+        normalized = normalize_header(description)
 
-        "Tesouro Direto ainda não é suportado."
+        return "Tesouro Direto ainda não é suportado." if normalized.include?("tesouro_direto")
+        return "Operações em bolsa ainda não são suportadas." if normalized.include?("operacoes_em_bolsa")
       end
 
       def pair_related_rows(rows)
