@@ -9,6 +9,8 @@ module Investments
       MAX_FILE_SIZE = 10.megabytes
       MAX_ROWS = 5_000
       EXCEL_EPOCH = Date.new(1899, 12, 30)
+      CORPORATE_EVENT_SUFFIXES = %w[ACNOR ACNPR BDR CTF].freeze
+      CORPORATE_EVENT_IDENTIFIER_PATTERN = /\bBR(?<issuer>[A-Z0-9]{3,5})[\s-]*(?:#{CORPORATE_EVENT_SUFFIXES.join('|')})[\s-]*\d+\b/.freeze
 
       NormalizedRow = Struct.new(
         :line_number,
@@ -141,6 +143,10 @@ module Investments
 
         rows = []
         sheet_rows.drop_while { |row| row != header_row }.drop(1).each do |row|
+          # Brokerage exports may repeat the column header after a page break.
+          # It is metadata, not a movement, and must not reach date/amount parsing.
+          next if header_row?(row[:cells])
+
           description = row[:cells][headers[:description]].to_s.strip
           break if normalize_header(description).start_with?("nao_ha_lancamentos")
 
@@ -208,9 +214,10 @@ module Investments
       end
 
       def unsupported_reason_for(description)
-        return unless normalize_header(description).include?("tesouro_direto")
+        normalized = normalize_header(description)
 
-        "Tesouro Direto ainda não é suportado."
+        return "Tesouro Direto ainda não é suportado." if normalized.include?("tesouro_direto")
+        return "Operações em bolsa ainda não são suportadas." if normalized.include?("operacoes_em_bolsa")
       end
 
       def pair_related_rows(rows)
@@ -271,11 +278,11 @@ module Investments
         tokens.find { |token| token.match?(/\A(?=.*[A-Z])(?=.*\d)[A-Z0-9]{4,6}\z/) } || description.upcase[/\bBTC\s+([A-Z]{4,6}\d{0,2})\b/, 1]
       end
 
-      # Corporate-event identifiers can contain an issuer prefix without a
-      # complete ticker. Keep it as a suggestion only; another issue will
-      # define authoritative event-to-asset resolution.
+      # Extract only the issuer portion because the event identifier is not a
+      # ticker. The catalog lookup remains a suggestion and never confirms an
+      # asset automatically.
       def extract_symbol_suggestion(description)
-        description.to_s.upcase[/\bBR([A-Z0-9]{3,5})(?:ACNOR|ACNPR|BDR|CTF)\d+\b/, 1]
+        corporate_event_match(description)&.[](:issuer)
       end
 
       # Some brokerage descriptions contain the ticker base after BTC while
@@ -287,7 +294,14 @@ module Investments
       end
 
       def extract_event_identifier(description)
-        description.to_s.upcase[/\bBR[A-Z0-9]{3,}(?:ACNOR|ACNPR|BDR|CTF)\d+\b/]
+        match = corporate_event_match(description)
+        return unless match
+
+        match[0].delete(" -")
+      end
+
+      def corporate_event_match(description)
+        description.to_s.upcase.match(CORPORATE_EVENT_IDENTIFIER_PATTERN)
       end
 
       def parse_date(value, errors, label)

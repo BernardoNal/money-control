@@ -114,6 +114,21 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     expect(missing_header.errors.first).to include("Cabeçalho")
   end
 
+  it "ignores repeated movement headers inside the worksheet" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "DIVIDENDOS DE CLIENTES COCA34 S/ 5", "1,51"],
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "DIVIDENDOS DE CLIENTES B3SA3 S/ 3", "0,19"]
+    ])
+
+    expect(result).to be_valid
+    expect(result.valid_rows.map(&:description)).to eq([
+      "DIVIDENDOS DE CLIENTES COCA34 S/ 5",
+      "DIVIDENDOS DE CLIENTES B3SA3 S/ 3"
+    ])
+  end
+
   it "marks treasury direct movements as unsupported" do
     result = parse([
       ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
@@ -121,6 +136,18 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
     ])
 
     expect(result.rows.first.unsupported_reason).to eq("Tesouro Direto ainda não é suportado.")
+  end
+
+  it "marks stock exchange operations as unsupported in the income import" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46323, 46323, "OPERAÇÕES EM BOLSA PR 28/10/2026 NOTA Nº 147667337", "-252,36"]
+    ])
+
+    expect(result.rows.first).to have_attributes(
+      classification: "other",
+      unsupported_reason: "Operações em bolsa ainda não são suportadas."
+    )
   end
 
   it "keeps a corporate event issuer as an unvalidated asset suggestion" do
@@ -131,6 +158,27 @@ RSpec.describe Investments::IncomeImports::XlsxParser do
 
     expect(result.rows.first.symbol).to be_nil
     expect(result.rows.first.symbol_suggestion).to eq("B3SA")
+  end
+
+  it "normalizes separators in corporate event identifiers" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SA-ACNOR 6", "0,30"]
+    ])
+
+    expect(result.rows.first).to have_attributes(
+      source_event_identifier: "BRB3SAACNOR6",
+      symbol_suggestion: "B3SA"
+    )
+  end
+
+  it "does not suggest an asset for an incomplete corporate event identifier" do
+    result = parse([
+      ["Movimentação", "Liquidação", "Lançamento", "Valor (R$)"],
+      [46310, 46310, "CREDITO DE REEMBOLSO DE EVENTO BRB3SA", "0,30"]
+    ])
+
+    expect(result.rows.first).to have_attributes(source_event_identifier: nil, symbol_suggestion: nil)
   end
 
   it "preserves the source description and normalizes repeated whitespace" do
